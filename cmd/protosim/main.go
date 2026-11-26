@@ -22,7 +22,7 @@ import (
 	"github.com/dx86683-lab/protosim/web"
 )
 
-const Version = "1.0.0"
+var Version = "1.0.0"
 
 func main() {
 	if len(os.Args) < 2 {
