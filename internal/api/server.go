@@ -143,7 +143,9 @@ func (s *Server) authMiddleware(next http.Handler) http.Handler {
 				return
 			}
 		}
-		w.Header().Set("WWW-Authenticate", `Basic realm="ProtoSim"`)
+		if auth.Username != "" && auth.Token == "" {
+			w.Header().Set("WWW-Authenticate", `Basic realm="ProtoSim"`)
+		}
 		writeError(w, http.StatusUnauthorized, "unauthorized")
 	})
 }
