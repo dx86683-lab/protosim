@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -219,6 +220,21 @@ func TestAPIv2SecurityHardening(t *testing.T) {
 		t.Fatalf("expected 302 -> /login for unauthenticated '/', got %d loc=%q", resp.StatusCode, resp.Header.Get("Location"))
 	}
 	resp.Body.Close()
+
+	resp, err = noFollow.Get(ts.URL + "/login")
+	if err != nil || resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected public login page, got %v: %v", resp, err)
+	}
+	loginPage, err := io.ReadAll(resp.Body)
+	resp.Body.Close()
+	if err != nil || !bytes.Contains(loginPage, []byte(`id="loginForm"`)) {
+		t.Fatalf("expected login form, read error: %v", err)
+	}
+	for _, key := range []string{"protosim.locale", "protosim.theme"} {
+		if bytes.Contains(loginPage, []byte(key)) {
+			t.Errorf("public login page includes display preference %q", key)
+		}
+	}
 
 	resp, err = noFollow.Get(ts.URL + "/assets/app.js")
 	if err != nil || resp.StatusCode != http.StatusUnauthorized {

@@ -22,29 +22,28 @@
 
 ## 功能截图
 
-### 1. 服务端强制登录门控（`/login`）
-![登录门控](docs/screenshots/01-login.png)
+登录后，可在控制台右上角切换简体中文／英文和浅色／深色主题。浏览器会保留你的选择。下面的七张控制台截图均为深色模式，使用示例数据。
 
-### 2. 态势总览（探测趋势、协议 TopN 与扫描器身份分布）
-![态势总览](docs/screenshots/02-dashboard.png)
+### 1. 态势总览（探测趋势、协议 TopN 与扫描器身份分布）
+![态势总览](docs/screenshots/zh-CN/01-dashboard.png)
 
-### 3. 探针聚类库（自动去重、Hex/ASCII 视图与一键导出 Python/Go 复现脚本）
-![探针聚类库](docs/screenshots/03-probe-library.png)
+### 2. 探针聚类库（自动去重、Hex/ASCII 视图与一键导出 Python/Go 复现脚本）
+![探针聚类库](docs/screenshots/zh-CN/02-probe-library.png)
 
-### 4. 测试批次与 159 协议覆盖率矩阵
-![测试批次与覆盖率](docs/screenshots/04-test-runs.png)
+### 3. 测试批次与 159 协议覆盖率矩阵
+![测试批次与覆盖率](docs/screenshots/zh-CN/03-test-runs.png)
 
-### 5. 会话检索回放与 `.pcap` 下载
-![会话检索与回放](docs/screenshots/05-sessions.png)
+### 4. 会话检索回放与 `.pcap` 下载
+![会话检索与回放](docs/screenshots/zh-CN/04-sessions.png)
 
-### 6. 实时事件流（SSE 推流 + 最近事件预加载）
-![实时事件流](docs/screenshots/06-live-stream.png)
+### 5. 实时事件流（SSE 推流 + 最近事件预加载）
+![实时事件流](docs/screenshots/zh-CN/05-live-stream.png)
 
-### 7. 场景模板、159 协议服务编排与 Catch-All 兜底
-![场景与服务编排](docs/screenshots/07-scenarios-services.png)
+### 6. 场景模板、159 协议服务编排与 Catch-All 兜底
+![场景与服务编排](docs/screenshots/zh-CN/06-scenarios-services.png)
 
-### 8. 扫描器打标规则与系统设置
-![打标规则与设置](docs/screenshots/08-settings-rules.png)
+### 7. 扫描器打标规则与系统设置
+![打标规则与设置](docs/screenshots/zh-CN/07-settings-rules.png)
 
 ---
 

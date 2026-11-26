@@ -1,41 +1,41 @@
 <template>
   <div>
     <div class="page-header">
-      <h2 class="page-title">测试批次与全协议覆盖率</h2>
+      <h2 class="page-title">{{ t('测试批次与全协议覆盖率') }}</h2>
       <div style="display: flex; gap: 8px">
-        <el-button type="primary" size="small" @click="createDialog = true">+ 开始新测试批次</el-button>
-        <el-button size="small" @click="load">刷新</el-button>
+        <el-button type="primary" size="small" @click="createDialog = true">{{ t('+ 开始新测试批次') }}</el-button>
+        <el-button size="small" @click="load">{{ t('刷新') }}</el-button>
       </div>
     </div>
 
     <el-row :gutter="16">
       <el-col :span="9">
         <el-card shadow="never">
-          <template #header><span>历史测试批次</span></template>
+          <template #header><span>{{ t('历史测试批次') }}</span></template>
           <el-table :data="runs" size="small" highlight-current-row @current-change="selectRun">
-            <el-table-column prop="name" label="批次名称" show-overflow-tooltip />
-            <el-table-column label="状态" width="76">
+            <el-table-column prop="name" :label="t('批次名称')" show-overflow-tooltip />
+            <el-table-column :label="t('状态')" width="95">
               <template #default="{ row }">
-                <el-tag size="small" :type="row.ended_at ? 'info' : 'success'">{{ row.ended_at ? '已结束' : '进行中' }}</el-tag>
+                <el-tag size="small" :type="row.ended_at ? 'info' : 'success'">{{ t(row.ended_at ? '已结束' : '进行中') }}</el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="76">
+            <el-table-column :label="t('操作')" width="76">
               <template #default="{ row }">
-                <el-button v-if="!row.ended_at" link type="danger" size="small" @click.stop="stopRun(row.id)">结束</el-button>
+                <el-button v-if="!row.ended_at" link type="danger" size="small" @click.stop="stopRun(row.id)">{{ t('结束') }}</el-button>
               </template>
             </el-table-column>
           </el-table>
 
-          <div style="margin-top: 16px; border-top: 1px solid #e2e8f0; padding-top: 12px">
-            <div style="font-size: 13px; font-weight: 600; margin-bottom: 8px">双批次覆盖率对比 (Diff)</div>
+          <div style="margin-top: 16px; border-top: 1px solid var(--el-border-color); padding-top: 12px">
+            <div style="font-size: 13px; font-weight: 600; margin-bottom: 8px">{{ t('双批次覆盖率对比 (Diff)') }}</div>
             <div style="display: flex; gap: 8px; flex-wrap: wrap">
-              <el-select v-model="diffBase" size="small" placeholder="基准批次" style="width: 140px">
+              <el-select v-model="diffBase" size="small" :placeholder="t('基准批次')" style="width: 140px">
                 <el-option v-for="r in runs" :key="r.id" :label="r.name" :value="r.id" />
               </el-select>
-              <el-select v-model="diffTarget" size="small" placeholder="目标批次" style="width: 140px">
+              <el-select v-model="diffTarget" size="small" :placeholder="t('目标批次')" style="width: 140px">
                 <el-option v-for="r in runs" :key="r.id" :label="r.name" :value="r.id" />
               </el-select>
-              <el-button size="small" type="primary" :disabled="!diffBase || !diffTarget" @click="runDiff">对比</el-button>
+              <el-button size="small" type="primary" :disabled="!diffBase || !diffTarget" @click="runDiff">{{ t('对比') }}</el-button>
             </div>
           </div>
         </el-card>
@@ -45,67 +45,71 @@
         <el-card shadow="never" v-if="diffResult" style="margin-bottom: 14px">
           <template #header>
             <div style="display: flex; justify-content: space-between">
-              <span>批次对比: {{ diffResult.base_run.name }} → {{ diffResult.target_run.name }}</span>
-              <el-button link size="small" @click="diffResult = null">关闭对比</el-button>
+              <span>{{ t('批次对比: {base} → {target}', { base: diffResult.base_run.name, target: diffResult.target_run.name }) }}</span>
+              <el-button link size="small" @click="diffResult = null">{{ t('关闭对比') }}</el-button>
             </div>
           </template>
-          <div style="display: flex; gap: 16px; margin-bottom: 10px; font-size: 13px">
-            <span>基准覆盖率: <b>{{ diffResult.base_coverage_pct.toFixed(1) }}%</b></span>
-            <span>目标覆盖率: <b>{{ diffResult.target_coverage_pct.toFixed(1) }}%</b></span>
-            <span style="color: #16a34a">新增命中: {{ diffResult.newly_hit.join(', ') || '无' }}</span>
-            <span style="color: #dc2626">退化缺失: {{ diffResult.regressed.join(', ') || '无' }}</span>
+          <div style="display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 10px; font-size: 13px">
+            <span>{{ t('基准覆盖率: {coverage}%', { coverage: diffResult.base_coverage_pct.toFixed(1) }) }}</span>
+            <span>{{ t('目标覆盖率: {coverage}%', { coverage: diffResult.target_coverage_pct.toFixed(1) }) }}</span>
+            <span style="color: var(--el-color-success-dark-2)">{{ t('新增命中: {protocols}', { protocols: diffResult.newly_hit.join(', ') || t('无') }) }}</span>
+            <span style="color: var(--el-color-danger-dark-2)">{{ t('退化缺失: {protocols}', { protocols: diffResult.regressed.join(', ') || t('无') }) }}</span>
           </div>
         </el-card>
 
         <el-card shadow="never" v-if="coverage">
           <template #header>
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px">
-              <span>{{ coverage.run.name }} — 交互命中 {{ coverage.coverage_pct.toFixed(1) }}%（含 Banner {{ (coverage.effective_coverage_pct || coverage.coverage_pct).toFixed(1) }}%）</span>
+              <span>{{ t('{name} — 交互命中 {coverage}%（含 Banner {effectiveCoverage}%）', {
+                name: coverage.run.name,
+                coverage: coverage.coverage_pct.toFixed(1),
+                effectiveCoverage: (coverage.effective_coverage_pct ?? coverage.coverage_pct).toFixed(1),
+              }) }}</span>
               <div style="display: flex; gap: 6px; flex-wrap: wrap">
-                <el-tag type="success" size="small">协议交互 {{ coverage.hit_count }}</el-tag>
-                <el-tag type="primary" size="small">仅 Banner {{ coverage.banner_only_count || 0 }}</el-tag>
-                <el-tag type="warning" size="small">空连接/探活 {{ coverage.connect_only_count || 0 }}</el-tag>
-                <el-tag type="danger" size="small">解析异常 {{ coverage.error_only_count }}</el-tag>
-                <el-tag type="info" size="small">未命中 {{ coverage.missed_count }}</el-tag>
+                <el-tag type="success" size="small">{{ t('协议交互 {count}', { count: coverage.hit_count }) }}</el-tag>
+                <el-tag type="primary" size="small">{{ t('仅 Banner {count}', { count: coverage.banner_only_count || 0 }) }}</el-tag>
+                <el-tag type="warning" size="small">{{ t('空连接/探活 {count}', { count: coverage.connect_only_count || 0 }) }}</el-tag>
+                <el-tag type="danger" size="small">{{ t('解析异常 {count}', { count: coverage.error_only_count }) }}</el-tag>
+                <el-tag type="info" size="small">{{ t('未命中 {count}', { count: coverage.missed_count }) }}</el-tag>
               </div>
             </div>
           </template>
 
           <div style="display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap">
-            <el-input v-model="protoSearch" size="small" placeholder="筛选协议名" clearable style="width: 170px" />
+            <el-input v-model="protoSearch" size="small" :placeholder="t('筛选协议名')" clearable style="width: 170px" />
             <el-radio-group v-model="statusFilter" size="small">
-              <el-radio-button value="all">全部 ({{ coverage.total_protocols }})</el-radio-button>
-              <el-radio-button value="hit">协议交互 ({{ coverage.hit_count }})</el-radio-button>
-              <el-radio-button value="banner_only">仅 Banner ({{ coverage.banner_only_count || 0 }})</el-radio-button>
-              <el-radio-button value="connect_only">空连接 ({{ coverage.connect_only_count || 0 }})</el-radio-button>
-              <el-radio-button value="parse_error">异常 ({{ coverage.error_only_count }})</el-radio-button>
-              <el-radio-button value="missed">未命中 ({{ coverage.missed_count }})</el-radio-button>
+              <el-radio-button value="all">{{ t('全部 ({count})', { count: coverage.total_protocols }) }}</el-radio-button>
+              <el-radio-button value="hit">{{ t('协议交互 ({count})', { count: coverage.hit_count }) }}</el-radio-button>
+              <el-radio-button value="banner_only">{{ t('仅 Banner ({count})', { count: coverage.banner_only_count || 0 }) }}</el-radio-button>
+              <el-radio-button value="connect_only">{{ t('空连接 ({count})', { count: coverage.connect_only_count || 0 }) }}</el-radio-button>
+              <el-radio-button value="parse_error">{{ t('异常 ({count})', { count: coverage.error_only_count }) }}</el-radio-button>
+              <el-radio-button value="missed">{{ t('未命中 ({count})', { count: coverage.missed_count }) }}</el-radio-button>
             </el-radio-group>
           </div>
 
           <div class="matrix-grid">
             <div v-for="p in filteredProtocols" :key="p.protocol" class="matrix-cell" :class="'cell-' + p.status">
               <div class="cell-name">{{ p.protocol }}</div>
-              <div class="cell-meta">{{ p.session_count }} 会话 · {{ p.event_count }} 事件 · {{ p.avg_latency_ms.toFixed(0) }}ms</div>
+              <div class="cell-meta">{{ t('{sessions} 会话 · {events} 事件 · {latency}ms', { sessions: p.session_count, events: p.event_count, latency: p.avg_latency_ms.toFixed(0) }) }}</div>
             </div>
           </div>
         </el-card>
-        <el-empty v-else description="请选择或创建一个测试批次查看全协议覆盖矩阵" />
+        <el-empty v-else :description="t('请选择或创建一个测试批次查看全协议覆盖矩阵')" />
       </el-col>
     </el-row>
 
-    <el-dialog v-model="createDialog" title="开始新测试批次" width="420px">
-      <el-form label-width="80px" size="small">
-        <el-form-item label="批次名称">
-          <el-input v-model="newRun.name" placeholder="例如 internal-scanner-v2.4 全量回归" />
+    <el-dialog v-model="createDialog" :title="t('开始新测试批次')" width="420px">
+      <el-form label-width="auto" size="small">
+        <el-form-item :label="t('批次名称')">
+          <el-input v-model="newRun.name" :placeholder="t('例如 internal-scanner-v2.4 全量回归')" />
         </el-form-item>
-        <el-form-item label="备注">
+        <el-form-item :label="t('备注')">
           <el-input v-model="newRun.notes" type="textarea" :rows="2" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="createDialog = false">取消</el-button>
-        <el-button type="primary" @click="createRun">立即开始</el-button>
+        <el-button @click="createDialog = false">{{ t('取消') }}</el-button>
+        <el-button type="primary" @click="createRun">{{ t('立即开始') }}</el-button>
       </template>
     </el-dialog>
   </div>
@@ -115,6 +119,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { api } from '../api'
+import { t } from '../i18n'
 
 const runs = ref<any[]>([])
 const coverage = ref<any>(null)
@@ -153,14 +158,14 @@ async function createRun() {
   const created = await api.createTestRun(newRun.value)
   createDialog.value = false
   newRun.value = { name: '', notes: '' }
-  ElMessage.success('测试批次已开始')
+  ElMessage.success(t('测试批次已开始'))
   await load()
   await selectRun(created)
 }
 
 async function stopRun(id: string) {
   await api.stopTestRun(id)
-  ElMessage.success('测试批次已结束')
+  ElMessage.success(t('测试批次已结束'))
   await load()
   if (coverage.value?.run?.id === id) {
     coverage.value = await api.testRunCoverage(id)
@@ -183,32 +188,31 @@ onMounted(load)
 .matrix-cell {
   border-radius: 6px;
   padding: 8px 10px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--el-border-color);
 }
 .cell-hit {
-  background: #f0fdf4;
-  border-color: #86efac;
-  color: #166534;
+  background: var(--el-color-success-light-9);
+  border-color: var(--el-color-success-light-5);
+  color: var(--el-color-success-dark-2);
 }
 .cell-banner_only {
-  background: #eff6ff;
-  border-color: #93c5fd;
-  color: #1d4ed8;
+  background: var(--el-color-primary-light-9);
+  border-color: var(--el-color-primary-light-5);
+  color: var(--el-color-primary-dark-2);
 }
 .cell-connect_only {
-  background: #fffbeb;
-  border-color: #fcd34d;
-  color: #92400e;
+  background: var(--el-color-warning-light-9);
+  border-color: var(--el-color-warning-light-5);
+  color: var(--el-color-warning-dark-2);
 }
 .cell-parse_error {
-  background: #fef2f2;
-  border-color: #fca5a5;
-  color: #991b1b;
+  background: var(--el-color-danger-light-9);
+  border-color: var(--el-color-danger-light-5);
+  color: var(--el-color-danger-dark-2);
 }
 .cell-missed {
-  background: #f8fafc;
-  border-color: #e2e8f0;
-  color: #64748b;
+  background: var(--el-fill-color-light);
+  color: var(--el-text-color-secondary);
 }
 .cell-name {
   font-weight: 600;
@@ -217,6 +221,5 @@ onMounted(load)
 .cell-meta {
   font-size: 11px;
   margin-top: 2px;
-  opacity: 0.85;
 }
 </style>

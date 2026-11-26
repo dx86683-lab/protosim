@@ -1,3 +1,5 @@
+import { locale, t } from './i18n'
+
 export interface ApiOptions {
   method?: string
   body?: any
@@ -13,7 +15,7 @@ async function req<T = any>(path: string, opts: ApiOptions = {}): Promise<T> {
   const resp = await fetch(`/api/v2${path}`, init)
   if (resp.status === 401) {
     window.location.replace('/login')
-    throw new Error('需要认证，正在跳转登录页')
+    throw new Error(t('需要认证，正在跳转登录页'))
   }
   if (!resp.ok) {
     let msg = `HTTP ${resp.status}`
@@ -99,7 +101,7 @@ export function formatTime(ts?: string | null): string {
   if (!ts) return '-'
   const d = new Date(ts)
   if (isNaN(d.getTime())) return ts
-  return d.toLocaleString('zh-CN', { hour12: false })
+  return d.toLocaleString(locale.value, { hourCycle: 'h23' })
 }
 
 export function formatBytes(n?: number): string {
@@ -115,7 +117,7 @@ export function formatBytes(n?: number): string {
 }
 
 export function formatHexDump(hexStr: string): string {
-  if (!hexStr) return '(empty)'
+  if (!hexStr) return t('（空）')
   const bytes: number[] = []
   for (let i = 0; i < hexStr.length; i += 2) {
     bytes.push(parseInt(hexStr.slice(i, i + 2), 16))

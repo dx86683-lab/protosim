@@ -22,29 +22,28 @@
 
 ## Screenshots
 
-### 1. Server-Side Login Gate (`/login`)
-![Login Gate](docs/screenshots/01-login.png)
+After signing in, use the controls at the top right to switch between English and Simplified Chinese or between light and dark mode. The browser remembers your selections. The seven console views below use the dark theme and sample data.
 
-### 2. Dashboard (Trends, Protocol TopN & Scanner Attribution)
-![Dashboard](docs/screenshots/02-dashboard.png)
+### 1. Dashboard (Trends, Protocol TopN & Scanner Attribution)
+![Dashboard](docs/screenshots/en/01-dashboard.png)
 
-### 3. Probe Library (Auto-Clustering, Hex/ASCII Viewer & Python/Go Export)
-![Probe Library](docs/screenshots/03-probe-library.png)
+### 2. Probe Library (Auto-Clustering, Hex/ASCII Viewer & Python/Go Export)
+![Probe Library](docs/screenshots/en/02-probe-library.png)
 
-### 4. Test Runs & 159-Protocol Coverage Matrix
-![Test Runs](docs/screenshots/04-test-runs.png)
+### 3. Test Runs & 159-Protocol Coverage Matrix
+![Test Runs](docs/screenshots/en/03-test-runs.png)
 
-### 5. Session Replay & Wireshark `.pcap` Export
-![Sessions](docs/screenshots/05-sessions.png)
+### 4. Session Replay & Wireshark `.pcap` Export
+![Sessions](docs/screenshots/en/04-sessions.png)
 
-### 6. Live Event Stream (SSE + Recent Preload)
-![Live Stream](docs/screenshots/06-live-stream.png)
+### 5. Live Event Stream (SSE + Recent Preload)
+![Live Stream](docs/screenshots/en/05-live-stream.png)
 
-### 7. Scenarios, 159 Services & Catch-All Orchestration
-![Scenarios and Services](docs/screenshots/07-scenarios-services.png)
+### 6. Scenarios, 159 Services & Catch-All Orchestration
+![Scenarios and Services](docs/screenshots/en/06-scenarios-services.png)
 
-### 8. Scanner Attribution Rules & Runtime Settings
-![Settings and Rules](docs/screenshots/08-settings-rules.png)
+### 7. Scanner Attribution Rules & Runtime Settings
+![Settings and Rules](docs/screenshots/en/07-settings-rules.png)
 
 ---
 
