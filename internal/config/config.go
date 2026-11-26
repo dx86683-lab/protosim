@@ -106,7 +106,7 @@ type ServiceConfig struct {
 // DefaultConfig returns a ready-to-run Config with safe defaults.
 func DefaultConfig() *Config {
 	return &Config{
-		Scenario: "all-61-standard",
+		Scenario: "all-standard",
 		Network: NetworkConfig{
 			Mode:       ModeLocalhost,
 			CIDR:       "0.0.0.0/24",

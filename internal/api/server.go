@@ -496,8 +496,12 @@ func (s *Server) handleScenarioApply(w http.ResponseWriter, r *http.Request) {
 		if len(s.cfg.Hosts) > 0 && s.cfg.Hosts[0].IP != "" {
 			bindIP = s.cfg.Hosts[0].IP
 		}
+		reqID := body.ID
+		if reqID == "all-61-standard" {
+			reqID = "all-standard"
+		}
 		for _, p := range config.BuiltinScenarios(bindIP, true) {
-			if p.ID == body.ID {
+			if p.ID == reqID {
 				cp := p
 				target = &cp
 				break

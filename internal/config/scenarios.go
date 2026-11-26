@@ -230,9 +230,9 @@ func BuiltinScenarios(bindIP string, safeSSHPort bool) []ScenarioPreset {
 	}
 	return []ScenarioPreset{
 		{
-			ID:          "all-61-standard",
-			Name:        "All 61 Protocols (Standard Ports)",
-			Description: "Full 61 RFC-verified protocols bound on standard ports (SSH on 2222 when safe mode enabled).",
+			ID:          "all-standard",
+			Name:        "All 159 Protocols (Standard Ports)",
+			Description: "Full 159 RFC-verified protocols bound on standard ports (SSH on 2222 when safe mode enabled).",
 			Mode:        ModeLocalhost,
 			Hosts: []HostConfig{
 				{IP: bindIP, Services: Standard61Services(safeSSHPort)},
@@ -240,8 +240,8 @@ func BuiltinScenarios(bindIP string, safeSSHPort bool) []ScenarioPreset {
 		},
 		{
 			ID:          "high-ports-obfuscated",
-			Name:        "All 61 Protocols (Non-Standard High Ports)",
-			Description: "All 61 protocols shifted to 20001-20061 to test port-agnostic protocol recognition.",
+			Name:        "All 159 Protocols (Non-Standard High Ports)",
+			Description: "All 159 protocols shifted to 20001-20159 to test port-agnostic protocol recognition.",
 			Mode:        ModeLocalhost,
 			Hosts: []HostConfig{
 				{IP: bindIP, Services: HighPortServices()},

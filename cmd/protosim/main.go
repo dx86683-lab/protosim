@@ -22,7 +22,7 @@ import (
 	"github.com/dx86683-lab/protosim/web"
 )
 
-var Version = "1.0.0"
+var Version = "1.2.1"
 
 func main() {
 	if len(os.Args) < 2 {
@@ -58,7 +58,7 @@ func printUsage() {
 Usage:
   protosim run [flags]           Start protocol simulator, SQLite observatory & Web UI
   protosim gen-config [flags]    Generate a ready-to-use JSON/YAML configuration file
-  protosim list-protocols        List all 61+ supported protocols and default ports
+  protosim list-protocols        List all 159+ supported protocols and default ports
   protosim version               Print version information
 `, Version)
 }
@@ -77,7 +77,7 @@ func genConfigCmd(args []string) {
 	mode := fs.String("mode", config.ModeLocalhost, "Network mode: localhost | userdef | all")
 	cidr := fs.String("cidr", "0.0.0.0/24", "Network CIDR or IP")
 	listen := fs.String("listen", "0.0.0.0:5555", "Web UI & API listen address")
-	scenario := fs.String("scenario", "all-61-standard", "Preset scenario: all-61-standard | high-ports-obfuscated | core-20-quick | virtual-multi-ip-gvisor")
+	scenario := fs.String("scenario", "all-standard", "Preset scenario: all-standard | high-ports-obfuscated | core-20-quick | virtual-multi-ip-gvisor")
 	safeSSH := fs.Bool("safe-ssh", true, "Bind simulated SSH to port 2222 instead of 22")
 	_ = fs.Parse(args)
 

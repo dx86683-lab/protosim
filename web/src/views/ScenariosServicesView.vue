@@ -44,7 +44,8 @@
     <el-tabs v-model="tab">
       <el-tab-pane :label="`运行中服务 (${services.length})`" name="services">
         <el-card shadow="never">
-          <el-table :data="services" size="small" stripe>
+          <el-input v-model="svcSearch" size="small" placeholder="按协议名或端口搜索运行中服务" clearable style="width: 240px; margin-bottom: 10px" />
+          <el-table :data="filteredServices" size="small" stripe>
             <el-table-column prop="protocol" label="协议" width="140">
               <template #default="{ row }"><el-tag size="small">{{ row.protocol }}</el-tag></template>
             </el-table-column>
@@ -65,7 +66,8 @@
 
       <el-tab-pane :label="`已注册协议目录 (${protocols.length})`" name="protocols">
         <el-card shadow="never">
-          <el-table :data="protocols" size="small" stripe>
+          <el-input v-model="protoSearch" size="small" placeholder="按协议名或端口搜索已注册协议" clearable style="width: 240px; margin-bottom: 10px" />
+          <el-table :data="filteredProtocols" size="small" stripe>
             <el-table-column prop="name" label="协议名" width="170" class-name="mono" />
             <el-table-column prop="transport" label="传输层" width="100" />
             <el-table-column prop="default_port" label="默认端口" width="100" class-name="mono" />
@@ -102,7 +104,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { api, formatTime } from '../api'
 
@@ -112,6 +114,20 @@ const scenarios = ref<any[]>([])
 const activeScenario = ref('')
 const services = ref<any[]>([])
 const protocols = ref<any[]>([])
+const svcSearch = ref('')
+const protoSearch = ref('')
+
+const filteredServices = computed(() => {
+  const q = svcSearch.value.trim().toLowerCase()
+  if (!q) return services.value
+  return services.value.filter((s) => s.protocol.toLowerCase().includes(q) || String(s.port).includes(q))
+})
+
+const filteredProtocols = computed(() => {
+  const q = protoSearch.value.trim().toLowerCase()
+  if (!q) return protocols.value
+  return protocols.value.filter((p) => p.name.toLowerCase().includes(q) || String(p.default_port).includes(q))
+})
 const catchAll = ref({ enabled: false, tcp_ports: [] as number[], udp_ports: [] as number[] })
 const catchTcpText = ref('')
 const catchUdpText = ref('')

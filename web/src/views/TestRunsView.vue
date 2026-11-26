@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="page-header">
-      <h2 class="page-title">测试批次与 61 协议覆盖率</h2>
+      <h2 class="page-title">测试批次与全协议覆盖率</h2>
       <div style="display: flex; gap: 8px">
         <el-button type="primary" size="small" @click="createDialog = true">+ 开始新测试批次</el-button>
         <el-button size="small" @click="load">刷新</el-button>
@@ -69,14 +69,24 @@
             </div>
           </template>
 
+          <div style="display: flex; gap: 8px; margin-bottom: 10px">
+            <el-input v-model="protoSearch" size="small" placeholder="筛选协议名" clearable style="width: 180px" />
+            <el-radio-group v-model="statusFilter" size="small">
+              <el-radio-button value="all">全部 ({{ coverage.total_protocols }})</el-radio-button>
+              <el-radio-button value="hit">已命中 ({{ coverage.hit_count }})</el-radio-button>
+              <el-radio-button value="missed">未命中 ({{ coverage.missed_count }})</el-radio-button>
+              <el-radio-button value="parse_error">异常 ({{ coverage.error_only_count }})</el-radio-button>
+            </el-radio-group>
+          </div>
+
           <div class="matrix-grid">
-            <div v-for="p in coverage.protocols" :key="p.protocol" class="matrix-cell" :class="'cell-' + p.status">
+            <div v-for="p in filteredProtocols" :key="p.protocol" class="matrix-cell" :class="'cell-' + p.status">
               <div class="cell-name">{{ p.protocol }}</div>
               <div class="cell-meta">{{ p.session_count }} 会话 · {{ p.avg_latency_ms.toFixed(0) }}ms</div>
             </div>
           </div>
         </el-card>
-        <el-empty v-else description="请选择或创建一个测试批次查看 61 协议覆盖矩阵" />
+        <el-empty v-else description="请选择或创建一个测试批次查看全协议覆盖矩阵" />
       </el-col>
     </el-row>
 
@@ -98,12 +108,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { api } from '../api'
 
 const runs = ref<any[]>([])
 const coverage = ref<any>(null)
+const protoSearch = ref('')
+const statusFilter = ref('all')
+
+const filteredProtocols = computed(() => {
+  const list = coverage.value?.protocols || []
+  const q = protoSearch.value.trim().toLowerCase()
+  return list.filter((p: any) => {
+    if (statusFilter.value !== 'all' && p.status !== statusFilter.value) return false
+    if (q && !p.protocol.toLowerCase().includes(q)) return false
+    return true
+  })
+})
 const createDialog = ref(false)
 const newRun = ref({ name: '', notes: '' })
 const diffBase = ref('')
