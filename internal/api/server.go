@@ -1,7 +1,6 @@
 package api
 
 import (
-	"crypto/subtle"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -25,31 +24,37 @@ import (
 
 // Server exposes the /api/v2/* REST & SSE API and embedded Vue 3 SPA.
 type Server struct {
-	cfg     *config.Config
-	bus     *telemetry.Bus
-	store   *telemetry.Store
-	mgr     *network.Manager
-	webFS   fs.FS
-	version string
+	cfg        *config.Config
+	bus        *telemetry.Bus
+	store      *telemetry.Store
+	mgr        *network.Manager
+	webFS      fs.FS
+	version    string
+	sessionKey []byte
 }
 
 func NewServer(cfg *config.Config, bus *telemetry.Bus, mgr *network.Manager, webFS fs.FS, version string) *Server {
 	return &Server{
-		cfg:     cfg,
-		bus:     bus,
-		store:   bus.Store(),
-		mgr:     mgr,
-		webFS:   webFS,
-		version: version,
+		cfg:        cfg,
+		bus:        bus,
+		store:      bus.Store(),
+		mgr:        mgr,
+		webFS:      webFS,
+		version:    version,
+		sessionKey: newSessionSecret(),
 	}
 }
 
 func (s *Server) Router() http.Handler {
 	r := mux.NewRouter()
+	r.HandleFunc("/login", s.handleLoginPage).Methods(http.MethodGet)
+
 	apiR := r.PathPrefix("/api/v2").Subrouter()
 	apiR.Use(s.corsMiddleware)
 	apiR.Use(s.authMiddleware)
 
+	apiR.HandleFunc("/auth/login", s.handleAuthLogin).Methods(http.MethodPost, http.MethodOptions)
+	apiR.HandleFunc("/auth/logout", s.handleAuthLogout).Methods(http.MethodPost, http.MethodOptions)
 	apiR.HandleFunc("/health", s.handleHealth).Methods(http.MethodGet, http.MethodOptions)
 	apiR.HandleFunc("/overview", s.handleOverview).Methods(http.MethodGet, http.MethodOptions)
 
@@ -114,37 +119,16 @@ func (s *Server) corsMiddleware(next http.Handler) http.Handler {
 
 func (s *Server) authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		auth := s.cfg.API.Auth
-		if !auth.Enabled || r.URL.Path == "/api/v2/health" {
+		if !s.cfg.API.Auth.Enabled ||
+			r.URL.Path == "/api/v2/health" ||
+			r.URL.Path == "/api/v2/auth/login" ||
+			r.URL.Path == "/api/v2/auth/logout" {
 			next.ServeHTTP(w, r)
 			return
 		}
-		// Check bearer / X-API-Token / query token (for SSE)
-		if auth.Token != "" {
-			tok := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
-			if tok == "" {
-				tok = r.Header.Get("X-API-Token")
-			}
-			if tok == "" {
-				tok = r.URL.Query().Get("token")
-			}
-			if subtle.ConstantTimeCompare([]byte(tok), []byte(auth.Token)) == 1 {
-				next.ServeHTTP(w, r)
-				return
-			}
-		}
-		// Check HTTP Basic Auth
-		if auth.Username != "" {
-			u, p, ok := r.BasicAuth()
-			if ok &&
-				subtle.ConstantTimeCompare([]byte(u), []byte(auth.Username)) == 1 &&
-				subtle.ConstantTimeCompare([]byte(p), []byte(auth.Password)) == 1 {
-				next.ServeHTTP(w, r)
-				return
-			}
-		}
-		if auth.Username != "" && auth.Token == "" {
-			w.Header().Set("WWW-Authenticate", `Basic realm="ProtoSim"`)
+		if s.isAuthenticated(r) {
+			next.ServeHTTP(w, r)
+			return
 		}
 		writeError(w, http.StatusUnauthorized, "unauthorized")
 	})
@@ -153,6 +137,15 @@ func (s *Server) authMiddleware(next http.Handler) http.Handler {
 func (s *Server) spaHandler(staticFS fs.FS) http.Handler {
 	fileServer := http.FileServer(http.FS(staticFS))
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Strict server-side auth gate: never serve SPA HTML or JS/CSS bundles before authentication.
+		if s.cfg.API.Auth.Enabled && !s.isAuthenticated(r) {
+			if strings.HasPrefix(r.URL.Path, "/assets/") || strings.Contains(filepath.Base(r.URL.Path), ".") {
+				writeError(w, http.StatusUnauthorized, "unauthorized")
+				return
+			}
+			http.Redirect(w, r, "/login", http.StatusFound)
+			return
+		}
 		clean := strings.TrimPrefix(filepath.Clean(r.URL.Path), "/")
 		if clean == "" || clean == "." {
 			clean = "index.html"
@@ -173,7 +166,15 @@ func (s *Server) spaHandler(staticFS fs.FS) http.Handler {
 	})
 }
 
-func (s *Server) handleHealth(w http.ResponseWriter, _ *http.Request) {
+func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
+	if s.cfg.API.Auth.Enabled && !s.isAuthenticated(r) {
+		// Minimal unauthenticated health response to avoid leaking version/mode/services topology.
+		writeJSON(w, http.StatusOK, map[string]any{
+			"status":       "ok",
+			"auth_enabled": true,
+		})
+		return
+	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"status":       "ok",
 		"version":      s.version,

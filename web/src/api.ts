@@ -5,19 +5,15 @@ export interface ApiOptions {
 
 async function req<T = any>(path: string, opts: ApiOptions = {}): Promise<T> {
   const headers: Record<string, string> = {}
-  const init: RequestInit = { method: opts.method || 'GET', headers }
+  const init: RequestInit = { method: opts.method || 'GET', headers, credentials: 'same-origin' }
   if (opts.body !== undefined) {
     headers['Content-Type'] = 'application/json'
     init.body = JSON.stringify(opts.body)
   }
-  const token = localStorage.getItem('protosim_token')
-  if (token) {
-    headers['X-API-Token'] = token
-  }
   const resp = await fetch(`/api/v2${path}`, init)
   if (resp.status === 401) {
-    window.dispatchEvent(new CustomEvent('protosim:unauthorized'))
-    throw new Error('需要认证，请输入 API Token')
+    window.location.replace('/login')
+    throw new Error('需要认证，正在跳转登录页')
   }
   if (!resp.ok) {
     let msg = `HTTP ${resp.status}`
@@ -42,11 +38,8 @@ export const api = {
     return req(`/sessions?${q.toString()}`)
   },
   sessionDetail: (id: string) => req(`/sessions/${encodeURIComponent(id)}`),
-  sessionPcapUrl: (id: string) => {
-    const base = `/api/v2/sessions/${encodeURIComponent(id)}/pcap`
-    const token = localStorage.getItem('protosim_token')
-    return token ? `${base}?token=${encodeURIComponent(token)}` : base
-  },
+  sessionPcapUrl: (id: string) => `/api/v2/sessions/${encodeURIComponent(id)}/pcap`,
+  logout: () => req('/auth/logout', { method: 'POST' }),
 
   events: (params: Record<string, any> = {}) => {
     const q = new URLSearchParams()

@@ -211,4 +211,46 @@ func TestAPIv2SecurityHardening(t *testing.T) {
 		t.Fatalf("expected 400 for metadata webhook SSRF, got %v", resp)
 	}
 	resp.Body.Close()
+
+	// 5. Server-side auth gate: unauthenticated '/' redirects to '/login' (never returns SPA), '/assets/*' returns 401
+	noFollow := &http.Client{CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
+	resp, err = noFollow.Get(ts.URL + "/")
+	if err != nil || resp.StatusCode != http.StatusFound || resp.Header.Get("Location") != "/login" {
+		t.Fatalf("expected 302 -> /login for unauthenticated '/', got %d loc=%q", resp.StatusCode, resp.Header.Get("Location"))
+	}
+	resp.Body.Close()
+
+	resp, err = noFollow.Get(ts.URL + "/assets/app.js")
+	if err != nil || resp.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("expected 401 for unauthenticated '/assets/app.js', got %d", resp.StatusCode)
+	}
+	resp.Body.Close()
+
+	// Unauthenticated /health must NOT leak services or version
+	resp, err = noFollow.Get(ts.URL + "/api/v2/health")
+	var hMap map[string]any
+	_ = json.NewDecoder(resp.Body).Decode(&hMap)
+	resp.Body.Close()
+	if _, leaked := hMap["services"]; leaked {
+		t.Fatalf("unauthenticated /health must not leak services: %v", hMap)
+	}
+
+	// 6. Login via /api/v2/auth/login -> HttpOnly cookie -> '/' and '/api/v2/overview' return 200
+	resp, err = noFollow.Post(ts.URL+"/api/v2/auth/login", "application/json", bytes.NewBufferString(`{"token":"s3cr3t-token"}`))
+	if err != nil || resp.StatusCode != http.StatusOK {
+		t.Fatalf("login failed: %v", resp)
+	}
+	cookies := resp.Cookies()
+	resp.Body.Close()
+	if len(cookies) == 0 || !cookies[0].HttpOnly || cookies[0].Name != sessionCookieName {
+		t.Fatalf("expected HttpOnly %s cookie, got %+v", sessionCookieName, cookies)
+	}
+
+	req, _ = http.NewRequest(http.MethodGet, ts.URL+"/", nil)
+	req.AddCookie(cookies[0])
+	resp, err = noFollow.Do(req)
+	if err != nil || resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200 for authenticated '/', got %d", resp.StatusCode)
+	}
+	resp.Body.Close()
 }
