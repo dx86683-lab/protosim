@@ -256,6 +256,8 @@ func (m *Manager) StartService(ip string, svc config.ServiceConfig) error {
 		"pop3s":  "pop3",
 		"ftps":   "ftp",
 		"winrms": "winrm",
+		"mqtts":  "mqtt",
+		"amqps":  "amqp",
 	}
 	handlerName := protoName
 	params := make(map[string]interface{})
@@ -913,7 +915,9 @@ func ListRegisteredProtocols() []ProtocolDescriptor {
 		{Name: "ftps", DefaultPort: 990, Transport: "tcp", Params: map[string]interface{}{"ssl": true}},
 		{Name: "imaps", DefaultPort: 993, Transport: "tcp", Params: map[string]interface{}{"ssl": true}},
 		{Name: "pop3s", DefaultPort: 995, Transport: "tcp", Params: map[string]interface{}{"ssl": true}},
+		{Name: "amqps", DefaultPort: 5671, Transport: "tcp", Params: map[string]interface{}{"ssl": true}},
 		{Name: "winrms", DefaultPort: 5986, Transport: "tcp", Params: map[string]interface{}{"ssl": true}},
+		{Name: "mqtts", DefaultPort: 8883, Transport: "tcp", Params: map[string]interface{}{"ssl": true}},
 	}
 	existing := map[string]bool{}
 	for _, p := range out {

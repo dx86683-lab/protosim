@@ -182,4 +182,63 @@ func TestExtendedProtocolsBatch(t *testing.T) {
 			t.Fatalf("bad knx response: %x (%v)", buf[:n], err)
 		}
 	})
+
+	t.Run("cloud_devops_and_special", func(t *testing.T) {
+		logger := logrus.New()
+		logger.SetOutput(io.Discard)
+		ci := &ConfigInfo{BindInfo: &BindInfo{Handler: "test", Params: map[string]interface{}{}}, Log: logrus.NewEntry(logger)}
+
+		for _, tc := range []struct {
+			h    http.Handler
+			path string
+			want string
+		}{
+			{K8sAPIServer(ci), "/version", "gitVersion"},
+			{DockerRegistry(ci), "/v2/_catalog", "repositories"},
+			{HashiCorpVault(ci), "/v1/sys/health", "vault-cluster"},
+			{PrometheusHTTP(ci), "/api/v1/status/buildinfo", "2.52.0"},
+			{GrafanaHTTP(ci), "/api/health", "10.4.2"},
+			{KibanaHTTP(ci), "/api/status", "8.13.4"},
+			{JenkinsHTTP(ci), "/api/json", "Jenkins"},
+		} {
+			srv := httptest.NewServer(tc.h)
+			resp, err := http.Get(srv.URL + tc.path)
+			if err != nil || resp.StatusCode != 200 {
+				srv.Close()
+				t.Fatalf("GET %s failed: %v", tc.path, err)
+			}
+			b, _ := io.ReadAll(resp.Body)
+			resp.Body.Close()
+			srv.Close()
+			if !strings.Contains(string(b), tc.want) {
+				t.Fatalf("GET %s missing %q in %s", tc.path, tc.want, b)
+			}
+		}
+
+		buf := make([]byte, 256)
+		cm, _ := testSessionPair(t, "ceph-mon", CephMon)
+		n, _ := cm.Read(buf)
+		if !strings.HasPrefix(string(buf[:n]), "ceph v027") {
+			t.Fatalf("bad ceph-mon: %q", string(buf[:n]))
+		}
+
+		dc, _ := testSessionPair(t, "dict", DICT)
+		n, _ = dc.Read(buf)
+		if !strings.HasPrefix(string(buf[:n]), "220 dict.protosim.local") {
+			t.Fatalf("bad dict: %q", string(buf[:n]))
+		}
+
+		mc, _ := testSessionPair(t, "minecraft", Minecraft)
+		_, _ = mc.Write([]byte{0x05, 0x00, 0x00, 0x00, 0x01})
+		n, _ = mc.Read(buf)
+		if !strings.Contains(string(buf[:n]), "1.20.4") {
+			t.Fatalf("bad minecraft: %q", string(buf[:n]))
+		}
+
+		ip, _ := testSessionPair(t, "ipfs", IPFSLibp2p)
+		n, _ = ip.Read(buf)
+		if !strings.Contains(string(buf[:n]), "/multistream/1.0.0") {
+			t.Fatalf("bad ipfs: %q", string(buf[:n]))
+		}
+	})
 }
