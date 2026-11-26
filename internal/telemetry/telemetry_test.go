@@ -167,14 +167,20 @@ func TestTestRunCoverageAndDiff(t *testing.T) {
 	}
 	defer store.Close()
 
-	targets := []string{"http", "ssh", "mysql", "redis"}
+	targets := []string{"http", "ssh", "mysql", "ldap", "redis"}
 	run1, err := store.CreateTestRun("Baseline", "core", "", targets)
 	if err != nil {
 		t.Fatalf("CreateTestRun 1: %v", err)
 	}
 	_, err = store.WriteBatch([]BatchWriteItem{
-		{Session: &Session{ID: "r1-http", Protocol: "http", Transport: "tcp", RemoteIP: "1.1.1.1", StartedAt: time.Now().UTC(), ParseOK: true, Status: "closed"}},
-		{Session: &Session{ID: "r1-ssh", Protocol: "ssh", Transport: "tcp", RemoteIP: "1.1.1.1", StartedAt: time.Now().UTC(), ParseOK: false, Status: "parse_error"}},
+		// http: active interaction -> hit
+		{Session: &Session{ID: "r1-http", Protocol: "http", Transport: "tcp", RemoteIP: "1.1.1.1", StartedAt: time.Now().UTC(), BytesIn: 64, BytesOut: 128, ParseOK: true, Status: "closed"}},
+		// ssh: malformed input -> parse_error
+		{Session: &Session{ID: "r1-ssh", Protocol: "ssh", Transport: "tcp", RemoteIP: "1.1.1.1", StartedAt: time.Now().UTC(), BytesIn: 16, BytesOut: 0, ParseOK: false, Status: "parse_error"}},
+		// mysql: server-first banner only (bytes_in=0, bytes_out>0) -> banner_only
+		{Session: &Session{ID: "r1-mysql", Protocol: "mysql", Transport: "tcp", RemoteIP: "1.1.1.1", StartedAt: time.Now().UTC(), BytesIn: 0, BytesOut: 77, ParseOK: true, Status: "banner_only"}},
+		// ldap: empty TCP connect probe (bytes_in=0, bytes_out=0) -> connect_only (MUST NOT count as hit!)
+		{Session: &Session{ID: "r1-ldap", Protocol: "ldap", Transport: "tcp", RemoteIP: "1.1.1.1", StartedAt: time.Now().UTC(), BytesIn: 0, BytesOut: 0, ParseOK: true, Status: "connect_only"}},
 	})
 	if err != nil {
 		t.Fatalf("WriteBatch 1: %v", err)
@@ -182,6 +188,16 @@ func TestTestRunCoverageAndDiff(t *testing.T) {
 	if _, err := store.StopTestRun(run1.ID); err != nil {
 		t.Fatalf("StopTestRun 1: %v", err)
 	}
+
+	cov1, err := store.GetTestRunCoverage(run1.ID, targets)
+	if err != nil {
+		t.Fatalf("GetTestRunCoverage 1: %v", err)
+	}
+	if cov1.HitCount != 1 || cov1.BannerOnlyCount != 1 || cov1.ConnectOnlyCount != 1 || cov1.ErrorOnlyCount != 1 || cov1.MissedCount != 1 {
+		t.Fatalf("unexpected 5-state coverage: hit=%d banner=%d conn_only=%d err=%d missed=%d",
+			cov1.HitCount, cov1.BannerOnlyCount, cov1.ConnectOnlyCount, cov1.ErrorOnlyCount, cov1.MissedCount)
+	}
+
 	time.Sleep(5 * time.Millisecond)
 
 	run2, err := store.CreateTestRun("Improved", "core", "", targets)
@@ -189,8 +205,8 @@ func TestTestRunCoverageAndDiff(t *testing.T) {
 		t.Fatalf("CreateTestRun 2: %v", err)
 	}
 	_, err = store.WriteBatch([]BatchWriteItem{
-		{Session: &Session{ID: "r2-http", Protocol: "http", Transport: "tcp", RemoteIP: "1.1.1.1", StartedAt: time.Now().UTC(), ParseOK: true, Status: "closed"}},
-		{Session: &Session{ID: "r2-mysql", Protocol: "mysql", Transport: "tcp", RemoteIP: "1.1.1.1", StartedAt: time.Now().UTC(), ParseOK: true, Status: "closed"}},
+		{Session: &Session{ID: "r2-http", Protocol: "http", Transport: "tcp", RemoteIP: "1.1.1.1", StartedAt: time.Now().UTC(), BytesIn: 64, BytesOut: 128, ParseOK: true, Status: "closed"}},
+		{Session: &Session{ID: "r2-mysql", Protocol: "mysql", Transport: "tcp", RemoteIP: "1.1.1.1", StartedAt: time.Now().UTC(), BytesIn: 48, BytesOut: 77, ParseOK: true, Status: "closed"}},
 	})
 	if err != nil {
 		t.Fatalf("WriteBatch 2: %v", err)

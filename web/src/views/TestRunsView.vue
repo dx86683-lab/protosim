@@ -59,30 +59,34 @@
 
         <el-card shadow="never" v-if="coverage">
           <template #header>
-            <div style="display: flex; justify-content: space-between; align-items: center">
-              <span>{{ coverage.run.name }} — 覆盖率 {{ coverage.coverage_pct.toFixed(1) }}%</span>
-              <div style="display: flex; gap: 8px">
-                <el-tag type="success" size="small">命中 {{ coverage.hit_count }}</el-tag>
-                <el-tag type="danger" size="small">解析失败 {{ coverage.error_only_count }}</el-tag>
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px">
+              <span>{{ coverage.run.name }} — 交互命中 {{ coverage.coverage_pct.toFixed(1) }}%（含 Banner {{ (coverage.effective_coverage_pct || coverage.coverage_pct).toFixed(1) }}%）</span>
+              <div style="display: flex; gap: 6px; flex-wrap: wrap">
+                <el-tag type="success" size="small">协议交互 {{ coverage.hit_count }}</el-tag>
+                <el-tag type="primary" size="small">仅 Banner {{ coverage.banner_only_count || 0 }}</el-tag>
+                <el-tag type="warning" size="small">空连接/探活 {{ coverage.connect_only_count || 0 }}</el-tag>
+                <el-tag type="danger" size="small">解析异常 {{ coverage.error_only_count }}</el-tag>
                 <el-tag type="info" size="small">未命中 {{ coverage.missed_count }}</el-tag>
               </div>
             </div>
           </template>
 
-          <div style="display: flex; gap: 8px; margin-bottom: 10px">
-            <el-input v-model="protoSearch" size="small" placeholder="筛选协议名" clearable style="width: 180px" />
+          <div style="display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap">
+            <el-input v-model="protoSearch" size="small" placeholder="筛选协议名" clearable style="width: 170px" />
             <el-radio-group v-model="statusFilter" size="small">
               <el-radio-button value="all">全部 ({{ coverage.total_protocols }})</el-radio-button>
-              <el-radio-button value="hit">已命中 ({{ coverage.hit_count }})</el-radio-button>
-              <el-radio-button value="missed">未命中 ({{ coverage.missed_count }})</el-radio-button>
+              <el-radio-button value="hit">协议交互 ({{ coverage.hit_count }})</el-radio-button>
+              <el-radio-button value="banner_only">仅 Banner ({{ coverage.banner_only_count || 0 }})</el-radio-button>
+              <el-radio-button value="connect_only">空连接 ({{ coverage.connect_only_count || 0 }})</el-radio-button>
               <el-radio-button value="parse_error">异常 ({{ coverage.error_only_count }})</el-radio-button>
+              <el-radio-button value="missed">未命中 ({{ coverage.missed_count }})</el-radio-button>
             </el-radio-group>
           </div>
 
           <div class="matrix-grid">
             <div v-for="p in filteredProtocols" :key="p.protocol" class="matrix-cell" :class="'cell-' + p.status">
               <div class="cell-name">{{ p.protocol }}</div>
-              <div class="cell-meta">{{ p.session_count }} 会话 · {{ p.avg_latency_ms.toFixed(0) }}ms</div>
+              <div class="cell-meta">{{ p.session_count }} 会话 · {{ p.event_count }} 事件 · {{ p.avg_latency_ms.toFixed(0) }}ms</div>
             </div>
           </div>
         </el-card>
@@ -185,6 +189,16 @@ onMounted(load)
   background: #f0fdf4;
   border-color: #86efac;
   color: #166534;
+}
+.cell-banner_only {
+  background: #eff6ff;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+}
+.cell-connect_only {
+  background: #fffbeb;
+  border-color: #fcd34d;
+  color: #92400e;
 }
 .cell-parse_error {
   background: #fef2f2;

@@ -1161,8 +1161,11 @@ func (s *Store) GetTestRunCoverage(id string, fallbackProtocols []string) (*Test
 	rows, err := s.db.Query(`
 		SELECT protocol,
 			COUNT(1) AS sess_cnt,
+			COALESCE(SUM(CASE WHEN bytes_in > 0 AND parse_ok = 1 THEN 1 ELSE 0 END), 0) AS hit_cnt,
+			COALESCE(SUM(CASE WHEN bytes_in = 0 AND bytes_out > 0 AND parse_ok = 1 THEN 1 ELSE 0 END), 0) AS banner_cnt,
+			COALESCE(SUM(CASE WHEN bytes_in = 0 AND bytes_out = 0 THEN 1 ELSE 0 END), 0) AS conn_only_cnt,
 			COALESCE(SUM(event_count), 0) AS ev_cnt,
-			COALESCE(SUM(CASE WHEN parse_ok = 0 THEN 1 ELSE 0 END), 0) AS err_cnt,
+			COALESCE(SUM(CASE WHEN bytes_in > 0 AND parse_ok = 0 THEN 1 ELSE 0 END), 0) AS err_cnt,
 			COUNT(DISTINCT CASE WHEN probe_hash != '' THEN probe_hash END) AS uniq_probes,
 			COALESCE(AVG(duration_ms), 0) AS avg_ms
 		FROM sessions
@@ -1176,9 +1179,9 @@ func (s *Store) GetTestRunCoverage(id string, fallbackProtocols []string) (*Test
 
 	for rows.Next() {
 		var proto string
-		var sessCnt, evCnt, errCnt, uniqProbes int64
+		var sessCnt, hitCnt, bannerCnt, connOnlyCnt, evCnt, errCnt, uniqProbes int64
 		var avgMs float64
-		if err := rows.Scan(&proto, &sessCnt, &evCnt, &errCnt, &uniqProbes, &avgMs); err != nil {
+		if err := rows.Scan(&proto, &sessCnt, &hitCnt, &bannerCnt, &connOnlyCnt, &evCnt, &errCnt, &uniqProbes, &avgMs); err != nil {
 			continue
 		}
 		entry, ok := agg[proto]
@@ -1187,16 +1190,24 @@ func (s *Store) GetTestRunCoverage(id string, fallbackProtocols []string) (*Test
 			agg[proto] = entry
 		}
 		entry.SessionCount = sessCnt
+		entry.HitSessions = hitCnt
+		entry.BannerSessions = bannerCnt
+		entry.ConnectOnlySessions = connOnlyCnt
 		entry.EventCount = evCnt
 		entry.ErrorCount = errCnt
 		entry.UniqueProbes = uniqProbes
 		entry.AvgLatencyMs = avgMs
-		if sessCnt > 0 {
-			if errCnt == sessCnt {
-				entry.Status = "parse_error"
-			} else {
-				entry.Status = "hit"
-			}
+		switch {
+		case hitCnt > 0:
+			entry.Status = "hit"
+		case bannerCnt > 0:
+			entry.Status = "banner_only"
+		case errCnt > 0:
+			entry.Status = "parse_error"
+		case connOnlyCnt > 0 || sessCnt > 0:
+			entry.Status = "connect_only"
+		default:
+			entry.Status = "missed"
 		}
 	}
 
@@ -1209,6 +1220,10 @@ func (s *Store) GetTestRunCoverage(id string, fallbackProtocols []string) (*Test
 		switch e.Status {
 		case "hit":
 			cov.HitCount++
+		case "banner_only":
+			cov.BannerOnlyCount++
+		case "connect_only":
+			cov.ConnectOnlyCount++
 		case "parse_error":
 			cov.ErrorOnlyCount++
 		default:
@@ -1221,6 +1236,7 @@ func (s *Store) GetTestRunCoverage(id string, fallbackProtocols []string) (*Test
 	cov.TotalProtocols = len(cov.Protocols)
 	if cov.TotalProtocols > 0 {
 		cov.CoveragePct = float64(cov.HitCount) * 100.0 / float64(cov.TotalProtocols)
+		cov.EffectiveCoveragePct = float64(cov.HitCount+cov.BannerOnlyCount) * 100.0 / float64(cov.TotalProtocols)
 	}
 	return cov, nil
 }

@@ -345,10 +345,19 @@ func (tc *TelemetryConn) Close() error {
 			tc.tracker.Unregister(tc.protocol, tc.remoteKey)
 		}
 		if tc.bus != nil {
+			tc.mu.Lock()
 			status := tc.status
 			if status == "open" {
-				status = "closed"
+				switch {
+				case tc.bytesIn == 0 && tc.bytesOut == 0:
+					status = "connect_only"
+				case tc.bytesIn == 0 && tc.bytesOut > 0:
+					status = "banner_only"
+				default:
+					status = "closed"
+				}
 			}
+			tc.mu.Unlock()
 			snap := tc.snapshot(status)
 			tc.bus.RecordSession(snap)
 			tc.bus.RecordEvent(telemetry.Event{

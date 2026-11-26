@@ -50,9 +50,9 @@
         </el-table-column>
         <el-table-column prop="duration_ms" label="耗时(ms)" width="85" align="right" />
         <el-table-column prop="event_count" label="事件数" width="75" align="right" />
-        <el-table-column label="状态" width="95">
+        <el-table-column label="状态" width="115">
           <template #default="{ row }">
-            <el-tag size="small" :type="row.parse_ok ? 'success' : 'danger'">{{ row.status }}</el-tag>
+            <el-tag size="small" :type="sessionStatusTag(row)">{{ sessionStatusLabel(row) }}</el-tag>
           </template>
         </el-table-column>
       </el-table>
@@ -148,6 +148,20 @@ async function openDetail(row: any) {
   detail.value = await api.sessionDetail(row.id)
   detailTab.value = 'events'
   drawerOpen.value = true
+}
+
+function sessionStatusTag(row: any) {
+  if (!row.parse_ok || row.status === 'parse_error') return 'danger'
+  if (row.status === 'connect_only' || (row.bytes_in === 0 && row.bytes_out === 0)) return 'warning'
+  if (row.status === 'banner_only' || (row.bytes_in === 0 && row.bytes_out > 0)) return 'primary'
+  return 'success'
+}
+
+function sessionStatusLabel(row: any) {
+  if (!row.parse_ok || row.status === 'parse_error') return 'parse_error'
+  if (row.status === 'connect_only' || (row.bytes_in === 0 && row.bytes_out === 0)) return 'connect_only'
+  if (row.status === 'banner_only' || (row.bytes_in === 0 && row.bytes_out > 0)) return 'banner_only'
+  return row.status || 'closed'
 }
 
 onMounted(load)

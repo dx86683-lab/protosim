@@ -107,24 +107,30 @@ type TestRun struct {
 
 // ProtocolCoverageEntry describes how one protocol performed during a TestRun.
 type ProtocolCoverageEntry struct {
-	Protocol     string  `json:"protocol"`
-	Status       string  `json:"status"` // hit | missed | parse_error
-	SessionCount int64   `json:"session_count"`
-	EventCount   int64   `json:"event_count"`
-	ErrorCount   int64   `json:"error_count"`
-	UniqueProbes int64   `json:"unique_probes"`
-	AvgLatencyMs float64 `json:"avg_latency_ms"`
+	Protocol            string  `json:"protocol"`
+	Status              string  `json:"status"` // hit | banner_only | connect_only | parse_error | missed
+	SessionCount        int64   `json:"session_count"`
+	HitSessions         int64   `json:"hit_sessions"`
+	BannerSessions      int64   `json:"banner_sessions"`
+	ConnectOnlySessions int64   `json:"connect_only_sessions"`
+	EventCount          int64   `json:"event_count"`
+	ErrorCount          int64   `json:"error_count"`
+	UniqueProbes        int64   `json:"unique_probes"`
+	AvgLatencyMs        float64 `json:"avg_latency_ms"`
 }
 
-// TestRunCoverage aggregates 61-protocol coverage for a TestRun.
+// TestRunCoverage aggregates per-protocol coverage for a TestRun using a 5-state interaction model.
 type TestRunCoverage struct {
-	Run            TestRun                 `json:"run"`
-	TotalProtocols int                     `json:"total_protocols"`
-	HitCount       int                     `json:"hit_count"`
-	MissedCount    int                     `json:"missed_count"`
-	ErrorOnlyCount int                     `json:"error_only_count"`
-	CoveragePct    float64                 `json:"coverage_pct"`
-	Protocols      []ProtocolCoverageEntry `json:"protocols"`
+	Run                  TestRun                 `json:"run"`
+	TotalProtocols       int                     `json:"total_protocols"`
+	HitCount             int                     `json:"hit_count"`
+	BannerOnlyCount      int                     `json:"banner_only_count"`
+	ConnectOnlyCount     int                     `json:"connect_only_count"`
+	MissedCount          int                     `json:"missed_count"`
+	ErrorOnlyCount       int                     `json:"error_only_count"`
+	CoveragePct          float64                 `json:"coverage_pct"`           // hit / total (active client-server interaction)
+	EffectiveCoveragePct float64                 `json:"effective_coverage_pct"` // (hit + banner_only) / total
+	Protocols            []ProtocolCoverageEntry `json:"protocols"`
 }
 
 // TestRunDiff compares two TestRuns protocol-by-protocol.
