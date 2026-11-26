@@ -203,4 +203,115 @@ func TestNewScannerProtocols(t *testing.T) {
 			t.Fatalf("expected TFTP DATA packet, got %x (%v)", buf[:n], err)
 		}
 	})
+
+	t.Run("activemq", func(t *testing.T) {
+		c, _ := testSessionPair(t, "activemq", ActiveMQ)
+		buf := make([]byte, 64)
+		n, err := c.Read(buf)
+		if err != nil || !strings.Contains(string(buf[:n]), "ActiveMQ") {
+			t.Fatalf("expected ActiveMQ OpenWire greeting, got %q (%v)", string(buf[:n]), err)
+		}
+	})
+
+	t.Run("dubbo", func(t *testing.T) {
+		c, _ := testSessionPair(t, "dubbo", Dubbo)
+		_, _ = c.Write([]byte("ls\r\n"))
+		buf := make([]byte, 256)
+		n, err := c.Read(buf)
+		if err != nil || !strings.Contains(string(buf[:n]), "UserService") {
+			t.Fatalf("expected Dubbo service list, got %q (%v)", string(buf[:n]), err)
+		}
+	})
+
+	t.Run("nats", func(t *testing.T) {
+		c, _ := testSessionPair(t, "nats", NATS)
+		r := bufio.NewReader(c)
+		info, err := r.ReadString('\n')
+		if err != nil || !strings.HasPrefix(info, "INFO ") {
+			t.Fatalf("expected NATS INFO, got %q (%v)", info, err)
+		}
+		_, _ = c.Write([]byte("PING\r\n"))
+		pong, _ := r.ReadString('\n')
+		if strings.TrimSpace(pong) != "PONG" {
+			t.Fatalf("expected PONG, got %q", pong)
+		}
+	})
+
+	t.Run("kerberos", func(t *testing.T) {
+		c, _ := testSessionPair(t, "kerberos", Kerberos)
+		_, _ = c.Write([]byte{0, 0, 0, 4, 0x6a, 0x02, 0x05, 0x00})
+		lenBuf := make([]byte, 4)
+		if _, err := io.ReadFull(c, lenBuf); err != nil {
+			t.Fatalf("kerberos read len: %v", err)
+		}
+		resp := make([]byte, binary.BigEndian.Uint32(lenBuf))
+		_, _ = io.ReadFull(c, resp)
+		if len(resp) < 10 || resp[0] != 0x7e { // APPLICATION 30 (KRB-ERROR)
+			t.Fatalf("expected KRB-ERROR (0x7e), got %x", resp)
+		}
+	})
+
+	t.Run("irc_and_nntp", func(t *testing.T) {
+		ic, _ := testSessionPair(t, "irc", IRC)
+		ir := bufio.NewReader(ic)
+		_, _ = ir.ReadString('\n')
+		_, _ = ic.Write([]byte("NICK bot\r\nUSER bot 0 * :Bot\r\nQUIT\r\n"))
+		line, _ := ir.ReadString('\n')
+		if !strings.Contains(line, " 001 ") {
+			t.Fatalf("expected IRC 001 welcome, got %q", line)
+		}
+
+		nc, _ := testSessionPair(t, "nntp", NNTP)
+		nr := bufio.NewReader(nc)
+		banner, _ := nr.ReadString('\n')
+		if !strings.HasPrefix(banner, "200 ") {
+			t.Fatalf("expected NNTP 200 banner, got %q", banner)
+		}
+	})
+
+	t.Run("winrm_ipp_kubelet_clickhouse_consul", func(t *testing.T) {
+		logger := logrus.New()
+		logger.SetOutput(io.Discard)
+		ci := &ConfigInfo{BindInfo: &BindInfo{Handler: "test", Params: map[string]interface{}{}}, Log: logrus.NewEntry(logger)}
+
+		ws := httptest.NewServer(WinRM(ci))
+		defer ws.Close()
+		resp, err := http.Post(ws.URL+"/wsman", "application/soap+xml", nil)
+		if err != nil || resp.StatusCode != 401 {
+			t.Fatalf("winrm expected 401, got %v", err)
+		}
+		resp.Body.Close()
+
+		is := httptest.NewServer(IPP(ci))
+		defer is.Close()
+		resp, err = http.Post(is.URL+"/ipp/print", "application/ipp", strings.NewReader("\x02\x00\x00\x0b\x00\x00\x00\x01\x03"))
+		if err != nil || resp.StatusCode != 200 || resp.Header.Get("Content-Type") != "application/ipp" {
+			t.Fatalf("ipp failed: %v", err)
+		}
+		resp.Body.Close()
+
+		ks := httptest.NewServer(KubeletAPI(ci))
+		defer ks.Close()
+		resp, err = http.Get(ks.URL + "/pods")
+		if err != nil || resp.StatusCode != 200 {
+			t.Fatalf("kubelet failed: %v", err)
+		}
+		resp.Body.Close()
+
+		cs := httptest.NewServer(ClickHouseHTTP(ci))
+		defer cs.Close()
+		resp, err = http.Get(cs.URL + "/?query=SELECT+version()")
+		if err != nil || resp.StatusCode != 200 {
+			t.Fatalf("clickhouse failed: %v", err)
+		}
+		resp.Body.Close()
+
+		co := httptest.NewServer(ConsulAPI(ci))
+		defer co.Close()
+		resp, err = http.Get(co.URL + "/v1/agent/self")
+		if err != nil || resp.StatusCode != 200 {
+			t.Fatalf("consul failed: %v", err)
+		}
+		resp.Body.Close()
+	})
 }

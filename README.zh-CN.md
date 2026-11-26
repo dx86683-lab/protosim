@@ -10,7 +10,7 @@
 
 ## 核心特性
 
-- **全量 71 种 RFC 级协议**：覆盖 Web、远程访问、数据库、中间件、云原生（`docker`、`etcd`、`kafka`、`zookeeper`）、Java/应用中间件（`ajp`、`jdwp`、`java-rmi`、`weblogic`）、工控（ICS/SCADA）、物联网与网络设备（`bgp`、`tftp`、`rsync`、`socks4/5`）等 71 种协议，支持 `localhost`、`userdef`（TUN + gVisor 虚拟子网）与 `all` 三种组网模式。
+- **全量 83 种 RFC 级协议**：覆盖 Web、远程访问（`winrm`、`ssh`、`rdp`、`vnc`、`telnet`）、数据库（`mysql`、`postgres`、`mssql`、`oracle/tns`、`mongodb`、`redis`、`clickhouse`）、云原生与微服务（`docker`、`kubelet`、`etcd`、`consul`、`kafka`、`nats`、`zookeeper`）、Java/中间件（`ajp`、`jdwp`、`activemq`、`dubbo`、`java-rmi`、`weblogic`）、工控（ICS/SCADA）、物联网与网络基础（`bgp`、`kerberos`、`ipp`、`mdns`、`irc`、`nntp`、`tftp`、`rsync`、`socks4/5`）等 83 种协议，支持 `localhost`、`userdef`（TUN + gVisor 虚拟子网）与 `all` 三种组网模式。
 - **零外部依赖的 SQLite WAL 观测库**：内置纯 Go SQLite（`modernc.org/sqlite`），异步批量刷盘与滚动保留（默认 30 天 / 2 GB），且**唯一探针库与收藏样本永久保留**。
 - **探针聚类库（Probe Library）**：按 `(protocol, port, first_payload_sha256)` 自动聚类去重，记录首/末次命中时间、命中数、独立来源 IP、Hex/ASCII 视图与归档状态（`new` / `known` / `adopted`），支持一键导出 **Hex / Python / Go** 复现脚本。
 - **扫描器身份归因引擎**：支持 `cidr`、`ua`（HTTP User-Agent）、`ja3`（TLS 指纹）、`payload_regex`（首包正则）四维规则打标，自动区分己方扫描器、Nmap、ZGrab、Censys、Shodan、Masscan 等来源并支持前端热更新。
