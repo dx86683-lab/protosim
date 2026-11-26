@@ -82,7 +82,7 @@ func IsExclusion(remoteAddr net.Addr) bool {
 		case *net.TCPAddr:
 			ip = addr.IP.String()
 		default:
-			panic("unknown remoteAddr")
+			ip = remoteAddr.String()
 		}
 		_, ok := exclusions[ip]
 		return ok
@@ -132,7 +132,7 @@ func BuildRemoteInfo(remoteAddr net.Addr, fieldMaps ...map[string]interface{}) l
 			ip = addr.IP.String()
 			port = uint(addr.Port)
 		default:
-			panic("unknown remoteAddr")
+			ip = remoteAddr.String()
 		}
 		fields := map[string]interface{}{
 			"remote_ip":   ip,

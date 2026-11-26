@@ -10,7 +10,7 @@
 
 ## Key Features
 
-- **61 RFC-Verified Protocols**: Covers web, remote access, databases, middleware, ICS/SCADA, IoT, and network infrastructure protocols, with full support for `localhost`, `userdef` (TUN + gVisor virtual subnet), and `all` networking modes.
+- **71 RFC-Verified Protocols**: Covers web, remote access, databases, middleware, cloud-native (`docker`, `etcd`, `kafka`, `zookeeper`), Java/app servers (`ajp`, `jdwp`, `java-rmi`, `weblogic`), ICS/SCADA, IoT, and network infrastructure (`bgp`, `tftp`, `rsync`, `socks4/5`) protocols, with full support for `localhost`, `userdef` (TUN + gVisor virtual subnet), and `all` networking modes.
 - **Zero-Dependency SQLite WAL Store**: Built-in pure-Go SQLite (`modernc.org/sqlite`) with asynchronous batched writes, rolling retention (default 30 days / 2 GB), and **permanent preservation of deduplicated probes and pinned samples**.
 - **Probe Library (Auto-Clustering)**: Deduplicates incoming probes by `(protocol, port, first_payload_sha256)`, tracking first/last seen, hit counts, unique source IPs, Hex/ASCII previews, triage status (`new` / `known` / `adopted`), and 1-click export to **Hex / Python / Go** reproducer snippets.
 - **Scanner Attribution Engine**: Hot-reloadable rule engine matching `cidr`, `ua` (HTTP User-Agent), `ja3` (TLS fingerprint), and `payload_regex` to tag traffic (`nmap`, `zgrab`, `censys`, `shodan`, `masscan`, `self-scanner`, `unknown`, etc.).
