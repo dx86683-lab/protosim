@@ -8,6 +8,7 @@
         <el-button size="small" :type="paused ? 'warning' : 'default'" @click="paused = !paused">
           {{ paused ? '继续滚动' : '暂停' }}
         </el-button>
+        <el-button size="small" @click="loadRecent">加载最近 50 条</el-button>
         <el-button size="small" @click="events = []">清空</el-button>
       </div>
     </div>
@@ -36,7 +37,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { formatTime } from '../api'
+import { api, formatTime } from '../api'
 
 const connected = ref(false)
 const paused = ref(false)
@@ -55,6 +56,23 @@ function typeTag(row: any) {
   if (row.type === 'credential') return 'warning'
   if (row.type === 'session') return 'success'
   return 'info'
+}
+
+async function loadRecent() {
+  try {
+    const res = await api.events({ limit: 50 })
+    const hist = (res.items || []).map((ev: any) => ({
+      type: ev.kind || 'event',
+      ts: ev.ts,
+      protocol: ev.protocol,
+      remote_ip: ev.remote_ip,
+      local_port: ev.local_port,
+      scanner_tag: '-',
+      session_id: ev.session_id,
+      summary: ev.summary,
+    }))
+    events.value = hist
+  } catch {}
 }
 
 function connect() {
@@ -79,7 +97,10 @@ function connect() {
   }
 }
 
-onMounted(connect)
+onMounted(async () => {
+  await loadRecent()
+  connect()
+})
 onUnmounted(() => {
   es?.close()
 })
