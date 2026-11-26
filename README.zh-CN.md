@@ -92,6 +92,58 @@ sudo ./bin/protosim run -c protosim.json --catch-all-tcp 9999 --catch-all-udp 99
 
 ---
 
+## 发布包下载
+
+按操作系统和处理器架构选择压缩包，并用同一版本的 `checksums.txt` 核对 SHA-256。 [GitHub Releases](https://github.com/dx86683-lab/protosim/releases)
+
+| 平台 | 文件名后缀 | 构建方式 | 启动方式 |
+|---|---|---|---|
+| Linux x86-64（`uname -m` 为 `x86_64`） | `linux-amd64.tar.gz` | CGO + libpcap | 包含 systemd 服务文件 |
+| Linux ARM64（`uname -m` 为 `aarch64`） | `linux-arm64.tar.gz` | 纯 Go 构建 | 包含 systemd 服务文件 |
+| macOS Intel | `darwin-amd64.tar.gz` | 纯 Go 构建 | 终端运行 |
+| macOS Apple 芯片 | `darwin-arm64.tar.gz` | 纯 Go 构建 | 终端运行 |
+| Windows x86-64 | `windows-amd64.zip` | 纯 Go 构建 | 在终端运行 `protosim.exe` |
+
+Linux amd64 发布包在 Ubuntu 24.04 上构建，需要兼容的 glibc 和 libpcap 运行库。Ubuntu 24.04 的运行库包名为 `libpcap0.8t64`，可用 `ldd ./protosim` 检查动态库。纯 Go 发布包支持协议模拟、会话记录和会话 PCAP 导出。网卡级 SYN、UDP、ICMP 抓包需要启用 CGO 的 libpcap 构建和相应权限。
+
+### 在 Linux 上作为 systemd 服务运行
+
+服务要求 systemd 247 或更新版本。服务使用非 root 动态用户，并授予 `CAP_NET_BIND_SERVICE`，以便监听低于 1024 的端口。amd64 和 arm64 共用同一份服务文件，通过 systemd 凭据机制读取 root 持有的配置。该服务用于 `localhost` 模式下的 TCP/UDP 监听。TUN 模式和网卡级抓包需要分别配置设备访问和相应权限。
+
+首次安装时，在解压后的 Linux 发布包目录中执行以下命令，需安装 Python 3。从源码安装时，分别使用 `bin/protosim` 和 [deploy/systemd/protosim.service](deploy/systemd/protosim.service) 作为安装来源。升级时保留 `/etc/protosim/config.json` 和 `/var/lib/protosim`。
+
+```bash
+sudo install -D -m 0755 ./protosim /opt/protosim/protosim
+sudo install -D -m 0644 ./protosim.service /etc/systemd/system/protosim.service
+sudo install -d -m 0700 /etc/protosim
+
+./protosim gen-config -o protosim.json --scenario all-standard --safe-ssh=true --listen 127.0.0.1:5555
+python3 - <<'PY'
+import json
+from pathlib import Path
+
+path = Path("protosim.json")
+config = json.loads(path.read_text())
+for host in config["hosts"]:
+    host["ip"] = "127.0.0.1"
+config["storage"]["db_path"] = "/var/lib/protosim/protosim.db"
+path.write_text(json.dumps(config, indent=2) + "\n")
+PY
+sudo install -m 0600 ./protosim.json /etc/protosim/config.json
+
+sudo systemctl daemon-reload
+sudo systemctl enable --now protosim
+curl --fail http://127.0.0.1:5555/api/v2/health
+```
+
+示例将控制台和模拟服务均绑定在回环地址，模拟 SSH 使用 `2222`。对于已被其他服务占用的标准端口，需改用可用的绑定地址或端口。可通过控制台或 API 核对已运行的服务数量，通过 `journalctl -u protosim` 查看绑定错误。
+
+如需从独立测试机验证，将 `hosts[].ip` 设为服务器的测试网卡地址，并通过 systemd drop-in 为测试机的实际来源地址追加 `IPAddressAllow=`。在主机防火墙或云安全组中，为同一来源放行所需的 TCP 和 UDP 端口。控制台可以保持回环绑定，通过 SSH 隧道访问，也可以配置 HTTPS 和鉴权。
+
+macOS 可在终端执行 `./protosim run -c protosim.json`。Windows 可在 PowerShell 中执行 `.\protosim.exe run -c protosim.json`。
+
+---
+
 ## 从源码构建
 
 ```bash

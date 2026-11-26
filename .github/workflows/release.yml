@@ -16,7 +16,8 @@ permissions:
 
 jobs:
   build-and-release:
-    runs-on: ubuntu-latest
+    # Keep the dynamically linked Linux amd64 build on the Ubuntu 24.04 runtime baseline.
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -68,7 +69,7 @@ jobs:
 
           # 1. linux/amd64 (full build with libpcap cgo support)
           CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -ldflags "${LDFLAGS}" -o release/protosim ./cmd/protosim
-          tar -czf "release/protosim-${TAG}-linux-amd64.tar.gz" -C release protosim
+          tar -czf "release/protosim-${TAG}-linux-amd64.tar.gz" -C release protosim -C ../deploy/systemd protosim.service
           rm -f release/protosim
 
           # 2. Cross-platform pure-Go builds (CGO_ENABLED=0)
@@ -82,6 +83,8 @@ jobs:
             CGO_ENABLED=0 GOOS="${GOOS}" GOARCH="${GOARCH}" go build -ldflags "${LDFLAGS}" -o "release/${BIN}" ./cmd/protosim
             if [ "${GOOS}" = "windows" ]; then
               (cd release && zip -q "protosim-${TAG}-${GOOS}-${GOARCH}.zip" "${BIN}")
+            elif [ "${GOOS}" = "linux" ]; then
+              tar -czf "release/protosim-${TAG}-${GOOS}-${GOARCH}.tar.gz" -C release "${BIN}" -C ../deploy/systemd protosim.service
             else
               tar -czf "release/protosim-${TAG}-${GOOS}-${GOARCH}.tar.gz" -C release "${BIN}"
             fi

@@ -1,0 +1,28 @@
+[Unit]
+Description=ProtoSim protocol simulator and probe observatory
+After=network.target
+
+[Service]
+Type=simple
+DynamicUser=yes
+StateDirectory=protosim
+StateDirectoryMode=0700
+WorkingDirectory=/var/lib/protosim
+LoadCredential=config.json:/etc/protosim/config.json
+ExecStart=/opt/protosim/protosim run -c %d/config.json
+Restart=on-failure
+RestartSec=3s
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+IPAddressDeny=any
+IPAddressAllow=localhost
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

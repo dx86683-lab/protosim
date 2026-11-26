@@ -92,6 +92,58 @@ sudo ./bin/protosim run -c protosim.json --catch-all-tcp 9999 --catch-all-udp 99
 
 ---
 
+## Release Downloads
+
+Choose the archive for your operating system and CPU. Verify it against `checksums.txt` from the same release. [GitHub Releases](https://github.com/dx86683-lab/protosim/releases)
+
+| Platform | Archive suffix | Build | Startup |
+|---|---|---|---|
+| Linux x86-64 (`uname -m`: `x86_64`) | `linux-amd64.tar.gz` | Available through CGO and libpcap | Included |
+| Linux ARM64 (`uname -m`: `aarch64`) | `linux-arm64.tar.gz` | Pure Go build | Included |
+| macOS Intel | `darwin-amd64.tar.gz` | Pure Go build | Run in a terminal |
+| macOS Apple silicon | `darwin-arm64.tar.gz` | Pure Go build | Run in a terminal |
+| Windows x86-64 | `windows-amd64.zip` | Pure Go build | Run `protosim.exe` in a terminal |
+
+The Linux amd64 release binary is built on Ubuntu 24.04 and needs compatible glibc and libpcap runtime libraries (`libpcap0.8t64` on Ubuntu 24.04). Use `ldd ./protosim` to check its shared libraries. Pure Go releases support protocol simulation, session recording and session PCAP export. Interface-level SYN, UDP and ICMP capture requires a CGO build with libpcap and appropriate packet-capture privileges.
+
+### Run as a Linux systemd Service
+
+The unit requires systemd 247 or newer. It runs ProtoSim as a non-root dynamic user and grants `CAP_NET_BIND_SERVICE` for ports below 1024. It uses the same paths on amd64 and arm64 and reads a root-owned configuration file through systemd credentials. The unit is intended for `localhost` mode with TCP/UDP sockets. TUN modes and interface-level packet capture require their own device access and privileges.
+
+For a first install, run the following from the extracted Linux archive with Python 3 available. For a source build, use `bin/protosim` and [deploy/systemd/protosim.service](deploy/systemd/protosim.service) as the two install sources. Keep `/etc/protosim/config.json` and `/var/lib/protosim` when upgrading.
+
+```bash
+sudo install -D -m 0755 ./protosim /opt/protosim/protosim
+sudo install -D -m 0644 ./protosim.service /etc/systemd/system/protosim.service
+sudo install -d -m 0700 /etc/protosim
+
+./protosim gen-config -o protosim.json --scenario all-standard --safe-ssh=true --listen 127.0.0.1:5555
+python3 - <<'PY'
+import json
+from pathlib import Path
+
+path = Path("protosim.json")
+config = json.loads(path.read_text())
+for host in config["hosts"]:
+    host["ip"] = "127.0.0.1"
+config["storage"]["db_path"] = "/var/lib/protosim/protosim.db"
+path.write_text(json.dumps(config, indent=2) + "\n")
+PY
+sudo install -m 0600 ./protosim.json /etc/protosim/config.json
+
+sudo systemctl daemon-reload
+sudo systemctl enable --now protosim
+curl --fail http://127.0.0.1:5555/api/v2/health
+```
+
+The example binds the console and simulated services to loopback. Simulated SSH uses `2222`. Standard ports already occupied by another service still require a free bind address or a different port. Check the running service count through the console or API and review bind errors with `journalctl -u protosim`.
+
+For a separate test machine, set `hosts[].ip` to the server's test interface address and add the machine's source address as `IPAddressAllow=` in a systemd drop-in. Allow the required TCP and UDP ports from the same source in the host firewall or cloud security group. Keep the console on loopback for SSH forwarding or configure authenticated access over HTTPS.
+
+For a foreground run on macOS, use `./protosim run -c protosim.json`. On Windows PowerShell, use `.\protosim.exe run -c protosim.json`.
+
+---
+
 ## Building from Source
 
 ```bash
