@@ -38,6 +38,7 @@ type NetworkConfig struct {
 	DevName    string `json:"dev_name" yaml:"dev_name"`       // e.g. protosim0
 	MTU        int    `json:"mtu" yaml:"mtu"`                 // default 1500
 	TimeoutSec int    `json:"timeout_sec" yaml:"timeout_sec"` // per-session idle/read timeout
+	MaxConns   int    `json:"max_conns" yaml:"max_conns"`     // global concurrent TCP connection cap (default 4096)
 	LogLevel   string `json:"log_level" yaml:"log_level"`     // debug | info | warn | error
 }
 
@@ -113,6 +114,7 @@ func DefaultConfig() *Config {
 			DevName:    "protosim0",
 			MTU:        1500,
 			TimeoutSec: 30,
+			MaxConns:   4096,
 			LogLevel:   "info",
 		},
 		API: APIConfig{
@@ -182,6 +184,9 @@ func (c *Config) Normalize() error {
 	}
 	if c.Network.TimeoutSec <= 0 {
 		c.Network.TimeoutSec = 30
+	}
+	if c.Network.MaxConns <= 0 {
+		c.Network.MaxConns = 4096
 	}
 	if c.Network.LogLevel == "" {
 		c.Network.LogLevel = "info"

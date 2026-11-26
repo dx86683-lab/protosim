@@ -75,7 +75,8 @@ type Manager struct {
 
 	mu       sync.RWMutex
 	services map[string]*runningService
-	limiters sync.Map // ip -> *rate.Limiter
+	limiters sync.Map      // ip -> *rate.Limiter
+	connSem  chan struct{} // global concurrent TCP connection guard
 	connSeq  atomic.Uint32
 	closed   atomic.Bool
 }
@@ -101,6 +102,10 @@ func NewManager(cfg *config.Config, bus *telemetry.Bus) (*Manager, error) {
 	pLog.SetLevel(logrus.InfoLevel)
 	pLog.AddHook(NewTelemetryHook(bus, tracker))
 
+	maxConns := cfg.Network.MaxConns
+	if maxConns <= 0 {
+		maxConns = 4096
+	}
 	m := &Manager{
 		cfg:      cfg,
 		bus:      bus,
@@ -110,6 +115,7 @@ func NewManager(cfg *config.Config, bus *telemetry.Bus) (*Manager, error) {
 		ipNet:    ipNet,
 		nic:      1,
 		services: make(map[string]*runningService),
+		connSem:  make(chan struct{}, maxConns),
 	}
 	return m, nil
 }
@@ -513,7 +519,14 @@ func (m *Manager) startTCPService(ip string, port uint16, protoName string, bi *
 				_ = rawConn.Close()
 				continue
 			}
+			select {
+			case m.connSem <- struct{}{}:
+			default:
+				_ = rawConn.Close()
+				continue
+			}
 			go func(c net.Conn) {
+				defer func() { <-m.connSem }()
 				tc := NewTelemetryConn(c, m.bus, m.tracker, protoName, ip, port)
 				defer tc.Close()
 				if m.cfg.Network.TimeoutSec > 0 {

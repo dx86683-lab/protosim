@@ -15,6 +15,10 @@ async function req<T = any>(path: string, opts: ApiOptions = {}): Promise<T> {
     headers['X-API-Token'] = token
   }
   const resp = await fetch(`/api/v2${path}`, init)
+  if (resp.status === 401) {
+    window.dispatchEvent(new CustomEvent('protosim:unauthorized'))
+    throw new Error('需要认证，请输入 API Token')
+  }
   if (!resp.ok) {
     let msg = `HTTP ${resp.status}`
     try {
@@ -38,7 +42,11 @@ export const api = {
     return req(`/sessions?${q.toString()}`)
   },
   sessionDetail: (id: string) => req(`/sessions/${encodeURIComponent(id)}`),
-  sessionPcapUrl: (id: string) => `/api/v2/sessions/${encodeURIComponent(id)}/pcap`,
+  sessionPcapUrl: (id: string) => {
+    const base = `/api/v2/sessions/${encodeURIComponent(id)}/pcap`
+    const token = localStorage.getItem('protosim_token')
+    return token ? `${base}?token=${encodeURIComponent(token)}` : base
+  },
 
   events: (params: Record<string, any> = {}) => {
     const q = new URLSearchParams()

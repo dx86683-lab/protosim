@@ -22,7 +22,7 @@ import (
 	"github.com/dx86683-lab/protosim/web"
 )
 
-var Version = "1.2.1"
+var Version = "1.2.2"
 
 func main() {
 	if len(os.Args) < 2 {
@@ -198,8 +198,11 @@ func runCmd(args []string) {
 	}
 
 	go func() {
-		logrus.Infof("ProtoSim %s listening Web UI & API on http://%s (mode=%s, services=%d, db=%s)",
-			Version, cfg.API.Listen, cfg.Network.Mode, len(mgr.ListServices()), cfg.Storage.DBPath)
+		if !cfg.API.Auth.Enabled && (strings.HasPrefix(cfg.API.Listen, "0.0.0.0:") || strings.HasPrefix(cfg.API.Listen, ":")) {
+			logrus.Warn("[SECURITY] Web UI & API is listening on 0.0.0.0 WITHOUT authentication. Pass --auth-token <secret> or bind 127.0.0.1 when exposed to untrusted networks.")
+		}
+		logrus.Infof("ProtoSim %s listening Web UI & API on http://%s (mode=%s, services=%d, auth=%v, db=%s)",
+			Version, cfg.API.Listen, cfg.Network.Mode, len(mgr.ListServices()), cfg.API.Auth.Enabled, cfg.Storage.DBPath)
 		if err := httpSrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			logrus.Fatalf("API server error: %v", err)
 		}

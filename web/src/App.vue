@@ -52,12 +52,15 @@
           <span>{{ health.mode }} · {{ health.services }} 服务</span>
         </div>
         <div class="meta-line">场景: {{ health.scenario || '-' }}</div>
-        <div class="meta-line">版本: v{{ health.version }}</div>
+        <div class="meta-line" style="display: flex; justify-content: space-between; align-items: center">
+          <span>版本: v{{ health.version }}</span>
+          <el-button v-if="health.auth_enabled" link type="warning" size="small" @click="logout">退出登录</el-button>
+        </div>
       </div>
     </el-aside>
 
     <el-container class="main-wrap">
-      <el-main class="main-content">
+      <el-main class="main-content" :key="authEpoch">
         <DashboardView v-if="activeTab === 'dashboard'" @navigate="activeTab = $event" />
         <ProbeLibraryView v-else-if="activeTab === 'probes'" />
         <TestRunsView v-else-if="activeTab === 'testruns'" />
@@ -67,11 +70,20 @@
         <SettingsRulesView v-else-if="activeTab === 'settings'" />
       </el-main>
     </el-container>
+
+    <el-dialog v-model="authDialog" title="ProtoSim 访问认证" width="400px" :close-on-click-modal="false" :show-close="false">
+      <p style="margin: 0 0 12px; font-size: 13px; color: #475569">当前实例已启用访问鉴权，请输入启动时配置的 API Token：</p>
+      <el-input v-model="tokenInput" type="password" show-password placeholder="请输入 API Token" @keyup.enter="submitToken" />
+      <template #footer>
+        <el-button type="primary" :loading="authChecking" @click="submitToken">验证并登录</el-button>
+      </template>
+    </el-dialog>
   </el-container>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
+import { ElMessage } from 'element-plus'
 import { api } from './api'
 import DashboardView from './views/DashboardView.vue'
 import ProbeLibraryView from './views/ProbeLibraryView.vue'
@@ -83,16 +95,56 @@ import SettingsRulesView from './views/SettingsRulesView.vue'
 
 const activeTab = ref('dashboard')
 const health = ref<any>(null)
+const authDialog = ref(false)
+const authChecking = ref(false)
+const tokenInput = ref('')
+const authEpoch = ref(0)
 
 async function loadHealth() {
   try {
     health.value = await api.health()
+    if (health.value?.auth_enabled && !localStorage.getItem('protosim_token')) {
+      authDialog.value = true
+    }
   } catch {}
 }
 
+function onUnauthorized() {
+  authDialog.value = true
+}
+
+async function submitToken() {
+  const t = tokenInput.value.trim()
+  if (!t) return
+  authChecking.value = true
+  try {
+    localStorage.setItem('protosim_token', t)
+    await api.config()
+    authDialog.value = false
+    tokenInput.value = ''
+    authEpoch.value++
+    ElMessage.success('认证成功')
+  } catch {
+    localStorage.removeItem('protosim_token')
+    ElMessage.error('Token 无效，请检查后重试')
+  } finally {
+    authChecking.value = false
+  }
+}
+
+function logout() {
+  localStorage.removeItem('protosim_token')
+  authDialog.value = true
+}
+
 onMounted(() => {
+  window.addEventListener('protosim:unauthorized', onUnauthorized)
   loadHealth()
   setInterval(loadHealth, 15000)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('protosim:unauthorized', onUnauthorized)
 })
 </script>
 

@@ -139,3 +139,76 @@ func TestAPIv2EndToEnd(t *testing.T) {
 	}
 	resp.Body.Close()
 }
+
+func TestAPIv2SecurityHardening(t *testing.T) {
+	store, err := telemetry.OpenStore(":memory:")
+	if err != nil {
+		t.Fatalf("OpenStore: %v", err)
+	}
+	defer store.Close()
+
+	cfg := config.DefaultConfig()
+	cfg.Hosts = nil
+	cfg.API.Auth.Enabled = true
+	cfg.API.Auth.Token = "s3cr3t-token"
+
+	bus := telemetry.NewBus(store, cfg.Storage, cfg.Webhook)
+	defer bus.Close()
+	mgr, err := network.NewManager(cfg, bus)
+	if err != nil {
+		t.Fatalf("NewManager: %v", err)
+	}
+	defer mgr.Close()
+
+	srv := NewServer(cfg, bus, mgr, web.DistFS(), "1.2.2")
+	ts := httptest.NewServer(srv.Router())
+	defer ts.Close()
+
+	// 1. Without token -> 401 on protected endpoint, 200 on /health
+	resp, err := http.Get(ts.URL + "/api/v2/overview")
+	if err != nil || resp.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("expected 401 without token, got %v", resp)
+	}
+	resp.Body.Close()
+
+	resp, err = http.Get(ts.URL + "/api/v2/health")
+	if err != nil || resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200 on /health, got %v", resp)
+	}
+	resp.Body.Close()
+
+	// 2. With valid token -> 200, and no wildcard CORS
+	req, _ := http.NewRequest(http.MethodGet, ts.URL+"/api/v2/overview", nil)
+	req.Header.Set("X-API-Token", "s3cr3t-token")
+	resp, err = http.DefaultClient.Do(req)
+	if err != nil || resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200 with valid token, got %v", resp)
+	}
+	if resp.Header.Get("Access-Control-Allow-Origin") == "*" {
+		t.Fatalf("wildcard CORS must not be set")
+	}
+	resp.Body.Close()
+
+	// 3. Reject dynamic tcp_forward and arbitrary fs_path
+	for _, body := range []string{
+		`{"protocol":"tcp_forward","port":18079,"params":{"target":"127.0.0.1:22"}}`,
+		`{"protocol":"http","port":18080,"params":{"fs_path":"/etc"}}`,
+	} {
+		req, _ := http.NewRequest(http.MethodPost, ts.URL+"/api/v2/services", bytes.NewBufferString(body))
+		req.Header.Set("X-API-Token", "s3cr3t-token")
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil || resp.StatusCode != http.StatusBadRequest {
+			t.Fatalf("expected 400 for %s, got %v", body, resp)
+		}
+		resp.Body.Close()
+	}
+
+	// 4. Reject cloud metadata SSRF in webhook URL
+	req, _ = http.NewRequest(http.MethodPut, ts.URL+"/api/v2/config/runtime", bytes.NewBufferString(`{"webhook":{"enabled":true,"url":"http://169.254.169.254/latest/meta-data"}}`))
+	req.Header.Set("X-API-Token", "s3cr3t-token")
+	resp, err = http.DefaultClient.Do(req)
+	if err != nil || resp.StatusCode != http.StatusBadRequest {
+		t.Fatalf("expected 400 for metadata webhook SSRF, got %v", resp)
+	}
+	resp.Body.Close()
+}

@@ -7,8 +7,10 @@ import (
 	"io"
 	"io/fs"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -99,9 +101,9 @@ func (s *Server) Router() http.Handler {
 
 func (s *Server) corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-API-Token")
+		// Same-origin by default (no wildcard '*') to prevent cross-site CSRF on LAN instances.
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("X-Frame-Options", "DENY")
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)
 			return
@@ -171,12 +173,13 @@ func (s *Server) spaHandler(staticFS fs.FS) http.Handler {
 
 func (s *Server) handleHealth(w http.ResponseWriter, _ *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{
-		"status":   "ok",
-		"version":  s.version,
-		"mode":     s.cfg.Network.Mode,
-		"scenario": s.cfg.Scenario,
-		"services": len(s.mgr.ListServices()),
-		"time":     time.Now().UTC(),
+		"status":       "ok",
+		"version":      s.version,
+		"mode":         s.cfg.Network.Mode,
+		"scenario":     s.cfg.Scenario,
+		"services":     len(s.mgr.ListServices()),
+		"auth_enabled": s.cfg.API.Auth.Enabled,
+		"time":         time.Now().UTC(),
 	})
 }
 
@@ -527,6 +530,8 @@ func (s *Server) handleServicesList(w http.ResponseWriter, _ *http.Request) {
 	})
 }
 
+var safeFSNameRe = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
+
 func (s *Server) handleServiceAdd(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		IP       string                 `json:"ip"`
@@ -538,6 +543,20 @@ func (s *Server) handleServiceAdd(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(io.LimitReader(r.Body, 1<<20)).Decode(&body); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
+	}
+	protoLower := strings.ToLower(strings.TrimSpace(body.Protocol))
+	if protoLower == "tcp_forward" {
+		writeError(w, http.StatusBadRequest, "tcp_forward cannot be created dynamically via API for security reasons")
+		return
+	}
+	if body.Params != nil {
+		if rawFS, ok := body.Params["fs_path"]; ok {
+			fsStr, _ := rawFS.(string)
+			if fsStr != "" && !safeFSNameRe.MatchString(fsStr) {
+				writeError(w, http.StatusBadRequest, "fs_path via API only allows built-in static asset names (alphanumeric, '-', '_')")
+				return
+			}
+		}
 	}
 	if body.IP == "" {
 		body.IP = "0.0.0.0"
@@ -613,6 +632,12 @@ func (s *Server) handleConfigRuntimeUpdate(w http.ResponseWriter, r *http.Reques
 		}
 	}
 	if body.Webhook != nil {
+		if body.Webhook.URL != "" {
+			if err := validateWebhookURL(body.Webhook.URL); err != nil {
+				writeError(w, http.StatusBadRequest, err.Error())
+				return
+			}
+		}
 		s.cfg.Webhook.Enabled = body.Webhook.Enabled
 		s.cfg.Webhook.URL = body.Webhook.URL
 		s.cfg.Webhook.OnNewProbe = body.Webhook.OnNewProbe
@@ -651,21 +676,37 @@ func (s *Server) handleUploadRDP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer file.Close()
-	if err := os.MkdirAll("./data", 0o755); err != nil {
-		writeError(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-	dst, err := os.Create("./data/rdp-screen.png")
+	data, err := io.ReadAll(io.LimitReader(file, 10<<20))
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	defer dst.Close()
-	if _, err := io.Copy(dst, io.LimitReader(file, 10<<20)); err != nil {
+	ct := http.DetectContentType(data)
+	if ct != "image/png" && ct != "image/jpeg" {
+		writeError(w, http.StatusBadRequest, "only PNG or JPEG images are allowed")
+		return
+	}
+	if err := os.MkdirAll("./data", 0o755); err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	if err := os.WriteFile("./data/rdp-screen.png", data, 0o644); err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"path": "./data/rdp-screen.png"})
+}
+
+func validateWebhookURL(raw string) error {
+	u, err := url.Parse(strings.TrimSpace(raw))
+	if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
+		return fmt.Errorf("invalid webhook URL: must be http:// or https://")
+	}
+	host := strings.ToLower(u.Hostname())
+	if host == "169.254.169.254" || host == "metadata.google.internal" || host == "100.100.100.200" {
+		return fmt.Errorf("webhook URL cannot target cloud metadata endpoints")
+	}
+	return nil
 }
 
 func (s *Server) handleSSEStream(w http.ResponseWriter, r *http.Request) {
