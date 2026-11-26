@@ -8,7 +8,12 @@ import (
 	"time"
 )
 
-// BuildSessionPCAP synthesizes a standard Wireshark-compatible libpcap (.pcap) byte stream
+var (
+	clientMAC = []byte{0x02, 0x00, 0x00, 0x00, 0x00, 0x01}
+	serverMAC = []byte{0x02, 0x00, 0x00, 0x00, 0x00, 0x02}
+)
+
+// BuildSessionPCAP synthesizes a standard Wireshark/tcpdump-compatible libpcap (.pcap) byte stream
 // from a Session and its directional PayloadChunks (Ethernet + IPv4 + TCP/UDP).
 func BuildSessionPCAP(sess Session, chunks []PayloadChunk) []byte {
 	var buf bytes.Buffer
@@ -36,30 +41,39 @@ func BuildSessionPCAP(sess Session, chunks []PayloadChunk) []byte {
 	isUDP := strings.EqualFold(sess.Transport, "udp")
 	var clientSeq uint32 = 1000
 	var serverSeq uint32 = 5000
+	var ipID uint16 = 1
 
-	// For TCP sessions, emit a synthetic 3-way handshake so Wireshark reassembles the stream cleanly.
-	if !isUDP {
-		baseTS := sess.StartedAt
-		if baseTS.IsZero() {
-			baseTS = time.Now().UTC()
+	baseTS := sess.StartedAt
+	if baseTS.IsZero() {
+		baseTS = time.Now().UTC()
+	}
+	lastTS := baseTS
+	nextTS := func(candidate time.Time) time.Time {
+		if candidate.IsZero() || !candidate.After(lastTS) {
+			lastTS = lastTS.Add(time.Millisecond)
+			return lastTS
 		}
-		writePacket(&buf, baseTS, buildTCPFrame(remoteIP, localIP, remotePort, localPort, clientSeq, 0, 0x02, nil)) // SYN
+		lastTS = candidate
+		return lastTS
+	}
+	nextID := func() uint16 {
+		id := ipID
+		ipID++
+		return id
+	}
+
+	// For TCP sessions, emit a valid 3-way handshake with strictly increasing timestamps and IP IDs.
+	if !isUDP {
+		writePacket(&buf, baseTS, buildTCPFrame(clientMAC, serverMAC, remoteIP, localIP, remotePort, localPort, nextID(), clientSeq, 0, 0x02, nil)) // SYN
 		clientSeq++
-		writePacket(&buf, baseTS.Add(time.Millisecond), buildTCPFrame(localIP, remoteIP, localPort, remotePort, serverSeq, clientSeq, 0x12, nil)) // SYN-ACK
+		writePacket(&buf, nextTS(baseTS.Add(time.Millisecond)), buildTCPFrame(serverMAC, clientMAC, localIP, remoteIP, localPort, remotePort, nextID(), serverSeq, clientSeq, 0x12, nil)) // SYN-ACK
 		serverSeq++
-		writePacket(&buf, baseTS.Add(2*time.Millisecond), buildTCPFrame(remoteIP, localIP, remotePort, localPort, clientSeq, serverSeq, 0x10, nil)) // ACK
+		writePacket(&buf, nextTS(baseTS.Add(2*time.Millisecond)), buildTCPFrame(clientMAC, serverMAC, remoteIP, localIP, remotePort, localPort, nextID(), clientSeq, serverSeq, 0x10, nil)) // ACK
 	}
 
 	for _, ch := range chunks {
 		if len(ch.Data) == 0 {
 			continue
-		}
-		ts := ch.Timestamp
-		if ts.IsZero() {
-			ts = sess.StartedAt
-		}
-		if ts.IsZero() {
-			ts = time.Now().UTC()
 		}
 		// Fragment into <= 1400-byte frames to stay well within Ethernet MTU.
 		for offset := 0; offset < len(ch.Data); offset += 1400 {
@@ -68,22 +82,35 @@ func BuildSessionPCAP(sess Session, chunks []PayloadChunk) []byte {
 				end = len(ch.Data)
 			}
 			part := ch.Data[offset:end]
+			ts := nextTS(ch.Timestamp)
 			if isUDP {
 				if ch.Direction == "out" {
-					writePacket(&buf, ts, buildUDPFrame(localIP, remoteIP, localPort, remotePort, part))
+					writePacket(&buf, ts, buildUDPFrame(serverMAC, clientMAC, localIP, remoteIP, localPort, remotePort, nextID(), part))
 				} else {
-					writePacket(&buf, ts, buildUDPFrame(remoteIP, localIP, remotePort, localPort, part))
+					writePacket(&buf, ts, buildUDPFrame(clientMAC, serverMAC, remoteIP, localIP, remotePort, localPort, nextID(), part))
 				}
 			} else {
 				if ch.Direction == "out" {
-					writePacket(&buf, ts, buildTCPFrame(localIP, remoteIP, localPort, remotePort, serverSeq, clientSeq, 0x18, part))
+					writePacket(&buf, ts, buildTCPFrame(serverMAC, clientMAC, localIP, remoteIP, localPort, remotePort, nextID(), serverSeq, clientSeq, 0x18, part))
 					serverSeq += uint32(len(part))
+					writePacket(&buf, nextTS(ts.Add(time.Microsecond*200)), buildTCPFrame(clientMAC, serverMAC, remoteIP, localIP, remotePort, localPort, nextID(), clientSeq, serverSeq, 0x10, nil))
 				} else {
-					writePacket(&buf, ts, buildTCPFrame(remoteIP, localIP, remotePort, localPort, clientSeq, serverSeq, 0x18, part))
+					writePacket(&buf, ts, buildTCPFrame(clientMAC, serverMAC, remoteIP, localIP, remotePort, localPort, nextID(), clientSeq, serverSeq, 0x18, part))
 					clientSeq += uint32(len(part))
+					writePacket(&buf, nextTS(ts.Add(time.Microsecond*200)), buildTCPFrame(serverMAC, clientMAC, localIP, remoteIP, localPort, remotePort, nextID(), serverSeq, clientSeq, 0x10, nil))
 				}
 			}
 		}
+	}
+
+	// Emit clean TCP FIN/ACK teardown so Wireshark/Zeek/Suricata finalize stream reassembly.
+	if !isUDP {
+		endTS := nextTS(sess.EndedAt)
+		writePacket(&buf, endTS, buildTCPFrame(clientMAC, serverMAC, remoteIP, localIP, remotePort, localPort, nextID(), clientSeq, serverSeq, 0x11, nil)) // FIN+ACK
+		clientSeq++
+		writePacket(&buf, nextTS(endTS.Add(time.Millisecond)), buildTCPFrame(serverMAC, clientMAC, localIP, remoteIP, localPort, remotePort, nextID(), serverSeq, clientSeq, 0x11, nil)) // FIN+ACK
+		serverSeq++
+		writePacket(&buf, nextTS(endTS.Add(2*time.Millisecond)), buildTCPFrame(clientMAC, serverMAC, remoteIP, localIP, remotePort, localPort, nextID(), clientSeq, serverSeq, 0x10, nil)) // ACK
 	}
 
 	return buf.Bytes()
@@ -91,10 +118,10 @@ func BuildSessionPCAP(sess Session, chunks []PayloadChunk) []byte {
 
 func parseIPv4OrDefault(s string, fallback net.IP) net.IP {
 	ip := net.ParseIP(strings.TrimSpace(s))
-	if ip == nil {
+	if ip == nil || ip.IsUnspecified() {
 		return fallback.To4()
 	}
-	if v4 := ip.To4(); v4 != nil {
+	if v4 := ip.To4(); v4 != nil && !v4.IsUnspecified() {
 		return v4
 	}
 	return fallback.To4()
@@ -108,20 +135,21 @@ func writePacket(buf *bytes.Buffer, ts time.Time, frame []byte) {
 	buf.Write(frame)
 }
 
-func buildEthernetHeader() []byte {
-	return []byte{
-		0x00, 0x11, 0x22, 0x33, 0x44, 0x55, // dst MAC
-		0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, // src MAC
-		0x08, 0x00, // EtherType IPv4
-	}
+func buildEthernetHeader(srcMAC, dstMAC []byte) []byte {
+	eth := make([]byte, 14)
+	copy(eth[0:6], dstMAC)
+	copy(eth[6:12], srcMAC)
+	eth[12] = 0x08
+	eth[13] = 0x00 // EtherType IPv4
+	return eth
 }
 
-func buildIPv4Header(srcIP, dstIP net.IP, proto byte, l4Len int) []byte {
+func buildIPv4Header(srcIP, dstIP net.IP, proto byte, ipID uint16, l4Len int) []byte {
 	hdr := make([]byte, 20)
 	hdr[0] = 0x45 // Version 4, IHL 5
 	hdr[1] = 0x00
 	binary.BigEndian.PutUint16(hdr[2:4], uint16(20+l4Len))
-	binary.BigEndian.PutUint16(hdr[4:6], 0x1234)
+	binary.BigEndian.PutUint16(hdr[4:6], ipID)
 	binary.BigEndian.PutUint16(hdr[6:8], 0x4000) // DF
 	hdr[8] = 64                                  // TTL
 	hdr[9] = proto
@@ -132,7 +160,7 @@ func buildIPv4Header(srcIP, dstIP net.IP, proto byte, l4Len int) []byte {
 	return hdr
 }
 
-func buildTCPFrame(srcIP, dstIP net.IP, srcPort, dstPort uint16, seq, ack uint32, flags byte, payload []byte) []byte {
+func buildTCPFrame(srcMAC, dstMAC []byte, srcIP, dstIP net.IP, srcPort, dstPort, ipID uint16, seq, ack uint32, flags byte, payload []byte) []byte {
 	tcp := make([]byte, 20+len(payload))
 	binary.BigEndian.PutUint16(tcp[0:2], srcPort)
 	binary.BigEndian.PutUint16(tcp[2:4], dstPort)
@@ -146,8 +174,8 @@ func buildTCPFrame(srcIP, dstIP net.IP, srcPort, dstPort uint16, seq, ack uint32
 	csum := l4Checksum(srcIP, dstIP, 6, tcp)
 	binary.BigEndian.PutUint16(tcp[16:18], csum)
 
-	ip := buildIPv4Header(srcIP, dstIP, 6, len(tcp))
-	eth := buildEthernetHeader()
+	ip := buildIPv4Header(srcIP, dstIP, 6, ipID, len(tcp))
+	eth := buildEthernetHeader(srcMAC, dstMAC)
 	frame := make([]byte, 0, len(eth)+len(ip)+len(tcp))
 	frame = append(frame, eth...)
 	frame = append(frame, ip...)
@@ -155,7 +183,7 @@ func buildTCPFrame(srcIP, dstIP net.IP, srcPort, dstPort uint16, seq, ack uint32
 	return frame
 }
 
-func buildUDPFrame(srcIP, dstIP net.IP, srcPort, dstPort uint16, payload []byte) []byte {
+func buildUDPFrame(srcMAC, dstMAC []byte, srcIP, dstIP net.IP, srcPort, dstPort, ipID uint16, payload []byte) []byte {
 	udp := make([]byte, 8+len(payload))
 	binary.BigEndian.PutUint16(udp[0:2], srcPort)
 	binary.BigEndian.PutUint16(udp[2:4], dstPort)
@@ -165,8 +193,8 @@ func buildUDPFrame(srcIP, dstIP net.IP, srcPort, dstPort uint16, payload []byte)
 	csum := l4Checksum(srcIP, dstIP, 17, udp)
 	binary.BigEndian.PutUint16(udp[6:8], csum)
 
-	ip := buildIPv4Header(srcIP, dstIP, 17, len(udp))
-	eth := buildEthernetHeader()
+	ip := buildIPv4Header(srcIP, dstIP, 17, ipID, len(udp))
+	eth := buildEthernetHeader(srcMAC, dstMAC)
 	frame := make([]byte, 0, len(eth)+len(ip)+len(udp))
 	frame = append(frame, eth...)
 	frame = append(frame, ip...)

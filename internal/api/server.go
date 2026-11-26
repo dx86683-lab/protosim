@@ -210,6 +210,7 @@ func (s *Server) handleSessions(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleSessionDetail(w http.ResponseWriter, r *http.Request) {
+	s.bus.Flush()
 	id := mux.Vars(r)["id"]
 	detail, err := s.store.GetSessionDetail(id)
 	if err != nil {
@@ -220,6 +221,7 @@ func (s *Server) handleSessionDetail(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleSessionPCAP(w http.ResponseWriter, r *http.Request) {
+	s.bus.Flush()
 	id := mux.Vars(r)["id"]
 	detail, err := s.store.GetSessionDetail(id)
 	if err != nil {

@@ -96,16 +96,14 @@ type TelemetryConn struct {
 
 func NewTelemetryConn(conn net.Conn, bus *telemetry.Bus, tracker *SessionTracker, protocol string, localIP string, localPort uint16) *TelemetryConn {
 	rIP, rPort := splitHostPort(conn.RemoteAddr())
+	addrIP, addrPort := splitHostPort(conn.LocalAddr())
 	lIP := localIP
+	if lIP == "" || lIP == "0.0.0.0" || lIP == "::" {
+		lIP = addrIP
+	}
 	lPort := localPort
-	if lIP == "" || lPort == 0 {
-		addrIP, addrPort := splitHostPort(conn.LocalAddr())
-		if lIP == "" {
-			lIP = addrIP
-		}
-		if lPort == 0 {
-			lPort = addrPort
-		}
+	if lPort == 0 {
+		lPort = addrPort
 	}
 	maxCap := 65536
 	if bus != nil {
