@@ -20,6 +20,34 @@
 
 ---
 
+## Screenshots
+
+### 1. Server-Side Login Gate (`/login`)
+![Login Gate](docs/screenshots/01-login.png)
+
+### 2. Dashboard (Trends, Protocol TopN & Scanner Attribution)
+![Dashboard](docs/screenshots/02-dashboard.png)
+
+### 3. Probe Library (Auto-Clustering, Hex/ASCII Viewer & Python/Go Export)
+![Probe Library](docs/screenshots/03-probe-library.png)
+
+### 4. Test Runs & 159-Protocol Coverage Matrix
+![Test Runs](docs/screenshots/04-test-runs.png)
+
+### 5. Session Replay & Wireshark `.pcap` Export
+![Sessions](docs/screenshots/05-sessions.png)
+
+### 6. Live Event Stream (SSE + Recent Preload)
+![Live Stream](docs/screenshots/06-live-stream.png)
+
+### 7. Scenarios, 159 Services & Catch-All Orchestration
+![Scenarios and Services](docs/screenshots/07-scenarios-services.png)
+
+### 8. Scanner Attribution Rules & Runtime Settings
+![Settings and Rules](docs/screenshots/08-settings-rules.png)
+
+---
+
 ## Architecture
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) ([简体中文](docs/ARCHITECTURE.zh-CN.md)) for module layout and database schema details.

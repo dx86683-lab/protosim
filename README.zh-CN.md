@@ -20,6 +20,34 @@
 
 ---
 
+## 功能截图
+
+### 1. 服务端强制登录门控（`/login`）
+![登录门控](docs/screenshots/01-login.png)
+
+### 2. 态势总览（探测趋势、协议 TopN 与扫描器身份分布）
+![态势总览](docs/screenshots/02-dashboard.png)
+
+### 3. 探针聚类库（自动去重、Hex/ASCII 视图与一键导出 Python/Go 复现脚本）
+![探针聚类库](docs/screenshots/03-probe-library.png)
+
+### 4. 测试批次与 159 协议覆盖率矩阵
+![测试批次与覆盖率](docs/screenshots/04-test-runs.png)
+
+### 5. 会话检索回放与 `.pcap` 下载
+![会话检索与回放](docs/screenshots/05-sessions.png)
+
+### 6. 实时事件流（SSE 推流 + 最近事件预加载）
+![实时事件流](docs/screenshots/06-live-stream.png)
+
+### 7. 场景模板、159 协议服务编排与 Catch-All 兜底
+![场景与服务编排](docs/screenshots/07-scenarios-services.png)
+
+### 8. 扫描器打标规则与系统设置
+![打标规则与设置](docs/screenshots/08-settings-rules.png)
+
+---
+
 ## 系统架构
 
 详细模块划分与表结构请参阅 [docs/ARCHITECTURE.zh-CN.md](docs/ARCHITECTURE.zh-CN.md)（[English](docs/ARCHITECTURE.md)）。
