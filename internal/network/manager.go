@@ -247,14 +247,23 @@ func (m *Manager) StartService(ip string, svc config.ServiceConfig) error {
 		return fmt.Errorf("protocol is required")
 	}
 
-	// Alias https -> http with ssl=true
+	// TLS aliases map to their underlying protocol handler with ssl=true
+	tlsAliases := map[string]string{
+		"https":  "http",
+		"smtps":  "smtp",
+		"ldaps":  "ldap",
+		"imaps":  "imap",
+		"pop3s":  "pop3",
+		"ftps":   "ftp",
+		"winrms": "winrm",
+	}
 	handlerName := protoName
 	params := make(map[string]interface{})
 	for k, v := range svc.Params {
 		params[k] = v
 	}
-	if protoName == "https" {
-		handlerName = "http"
+	if base, ok := tlsAliases[protoName]; ok {
+		handlerName = base
 		params["ssl"] = true
 	}
 
@@ -897,14 +906,25 @@ func ListRegisteredProtocols() []ProtocolDescriptor {
 			Params:      params,
 		})
 	}
-	if !hasHTTPS {
-		out = append(out, ProtocolDescriptor{
-			Name:        "https",
-			DefaultPort: 443,
-			Transport:   "tcp",
-			Params:      map[string]interface{}{"ssl": true},
-		})
+	tlsEntries := []ProtocolDescriptor{
+		{Name: "https", DefaultPort: 443, Transport: "tcp", Params: map[string]interface{}{"ssl": true}},
+		{Name: "smtps", DefaultPort: 465, Transport: "tcp", Params: map[string]interface{}{"ssl": true}},
+		{Name: "ldaps", DefaultPort: 636, Transport: "tcp", Params: map[string]interface{}{"ssl": true}},
+		{Name: "ftps", DefaultPort: 990, Transport: "tcp", Params: map[string]interface{}{"ssl": true}},
+		{Name: "imaps", DefaultPort: 993, Transport: "tcp", Params: map[string]interface{}{"ssl": true}},
+		{Name: "pop3s", DefaultPort: 995, Transport: "tcp", Params: map[string]interface{}{"ssl": true}},
+		{Name: "winrms", DefaultPort: 5986, Transport: "tcp", Params: map[string]interface{}{"ssl": true}},
 	}
+	existing := map[string]bool{}
+	for _, p := range out {
+		existing[p.Name] = true
+	}
+	for _, te := range tlsEntries {
+		if !existing[te.Name] {
+			out = append(out, te)
+		}
+	}
+	_ = hasHTTPS
 	sort.Slice(out, func(i, j int) bool { return out[i].Name < out[j].Name })
 	return out
 }

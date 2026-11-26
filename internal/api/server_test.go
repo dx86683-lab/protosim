@@ -128,8 +128,8 @@ func TestAPIv2EndToEnd(t *testing.T) {
 	var cov telemetry.TestRunCoverage
 	_ = json.NewDecoder(resp.Body).Decode(&cov)
 	resp.Body.Close()
-	if cov.TotalProtocols != 83 {
-		t.Fatalf("expected 83 protocols in coverage, got %d", cov.TotalProtocols)
+	if cov.TotalProtocols != 133 {
+		t.Fatalf("expected 133 protocols in coverage, got %d", cov.TotalProtocols)
 	}
 
 	// 5. Embedded SPA index
