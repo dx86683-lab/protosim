@@ -1,0 +1,1925 @@
+[
+  {
+    "name": "pop3-maildrop-pipeline-default",
+    "handler": "pop3",
+    "profile": "default",
+    "steps": [
+      {"command":"","response":"+OK Dovecot ready\r\n"},
+      {"command":"USER fixture\r\nCAPA\r\nPASS lab-only\r\n","response":"+OK \r\n+OK \r\nUSER\r\nUIDL\r\n.\r\n-ERR PASS can be executed only directly after USER command\r\n"},
+      {"command":"USER fixture\r\nPASS lab-only\r\nSTAT\r\n","response":"+OK \r\n+OK User Successfully Logged on\r\n+OK 5 50\r\n"},
+      {"command":"STAT\r\nLIST\r\nUIDL\r\n","response":"+OK 5 50\r\n+OK 5 messages\r\n0 10\r\n1 10\r\n2 10\r\n3 10\r\n4 10\r\n.\r\n+OK 5 messages\r\n0 1\r\n1 2\r\n2 3\r\n3 4\r\n4 5\r\n.\r\n"},
+      {"command":"DELE 0\r\nRETR 0\r\nRSET\r\nSTAT\r\n","response":"+OK Message 0 deleted\r\n+OK \r\nthis is dummy message\r\n.\r\n+OK \r\n+OK 5 50\r\n"},
+      {"command":"LIST\r\n","response":"+OK 5 messages\r\n0 10\r\n1 10\r\n2 10\r\n3 10\r\n4 10\r\n.\r\n"},
+      {"command":"UIDL\r\n","response":"+OK 5 messages\r\n0 1\r\n1 2\r\n2 3\r\n3 4\r\n4 5\r\n.\r\n"},
+      {"command":"DELE 0\r\n","response":"+OK Message 0 deleted\r\n"},
+      {"command":"DELE 0\r\n","response":"+OK Message 0 deleted\r\n"},
+      {"command":"STAT\r\n","response":"+OK 5 50\r\n"},
+      {"command":"LIST 0\r\n","response":"+OK 0 10\r\n"},
+      {"command":"UIDL 0\r\n","response":"+OK 0 1\r\n"},
+      {"command":"RETR 0\r\n","response":"+OK \r\nthis is dummy message\r\n.\r\n"},
+      {"command":"RSET\r\n","response":"+OK \r\n"},
+      {"command":"LIST\r\n","response":"+OK 5 messages\r\n0 10\r\n1 10\r\n2 10\r\n3 10\r\n4 10\r\n.\r\n"},
+      {"command":"UIDL\r\n","response":"+OK 5 messages\r\n0 1\r\n1 2\r\n2 3\r\n3 4\r\n4 5\r\n.\r\n"},
+      {"command":"DELE 1\r\n","response":"+OK Message 1 deleted\r\n"},
+      {"command":"STAT\r\nQUIT\r\nNOOP\r\n","response":"+OK 5 50\r\n+OK Goodbye\r\n"}
+    ]
+  },
+  {
+    "name": "pop3-maildrop-reconnect-default",
+    "handler": "pop3",
+    "profile": "default",
+    "steps": [
+      {"command":"","response":"+OK Dovecot ready\r\n"},
+      {"command":"USER fixture\r\nPASS lab-only\r\nSTAT\r\n","response":"+OK \r\n+OK User Successfully Logged on\r\n+OK 5 50\r\n"},
+      {"command":"LIST 0 extra\r\n","response":"+OK 0 10\r\n"},
+      {"command":"UIDL +0000\r\n","response":"+OK 0 1\r\n"},
+      {"command":"LIST -01\r\n","response":"+OK -1 10\r\n"},
+      {"command":"UIDL -9223372036854775808\r\n","response":"+OK -9223372036854775808 -9223372036854775807\r\n"},
+      {"command":"LIST 9223372036854775808\r\n","response":"-ERR Invalid argument: 9223372036854775808\r\n-ERR Error executing command LIST\r\n"},
+      {"command":"RETR -5\r\n","response":"+OK \r\nthis is dummy message\r\n.\r\n"},
+      {"command":"DELE 9223372036854775807\r\n","response":"+OK Message 9223372036854775807 deleted\r\n"},
+      {"command":"RETR\r\n","response":"-ERR Missing argument for RETR command\r\n-ERR Error executing command RETR\r\n"},
+      {"command":"STAT\r\n","response":"+OK 5 50\r\n"},
+      {"command":"LIST\r\n","response":"+OK 5 messages\r\n0 10\r\n1 10\r\n2 10\r\n3 10\r\n4 10\r\n.\r\n"},
+      {"command":"UIDL\r\n","response":"+OK 5 messages\r\n0 1\r\n1 2\r\n2 3\r\n3 4\r\n4 5\r\n.\r\n"},
+      {"command":"RETR 0\r\n","response":"+OK \r\nthis is dummy message\r\n.\r\n"},
+      {"command":"RETR 1\r\n","response":"+OK \r\nthis is dummy message\r\n.\r\n"},
+      {"command":"QUIT\r\n","response":"+OK Goodbye\r\n"}
+    ]
+  },
+  {
+    "name": "pop3-maildrop-pipeline-tls",
+    "handler": "pop3",
+    "profile": "tls",
+    "steps": [
+      {"command":"","response":"+OK Dovecot ready\r\n"},
+      {"command":"USER fixture\r\nCAPA\r\nPASS lab-only\r\n","response":"+OK \r\n+OK \r\nUSER\r\nUIDL\r\n.\r\n-ERR PASS can be executed only directly after USER command\r\n"},
+      {"command":"USER fixture\r\nPASS lab-only\r\nSTAT\r\n","response":"+OK \r\n+OK User Successfully Logged on\r\n+OK 5 50\r\n"},
+      {"command":"STAT\r\nLIST\r\nUIDL\r\n","response":"+OK 5 50\r\n+OK 5 messages\r\n0 10\r\n1 10\r\n2 10\r\n3 10\r\n4 10\r\n.\r\n+OK 5 messages\r\n0 1\r\n1 2\r\n2 3\r\n3 4\r\n4 5\r\n.\r\n"},
+      {"command":"DELE 0\r\nRETR 0\r\nRSET\r\nSTAT\r\n","response":"+OK Message 0 deleted\r\n+OK \r\nthis is dummy message\r\n.\r\n+OK \r\n+OK 5 50\r\n"},
+      {"command":"LIST\r\n","response":"+OK 5 messages\r\n0 10\r\n1 10\r\n2 10\r\n3 10\r\n4 10\r\n.\r\n"},
+      {"command":"UIDL\r\n","response":"+OK 5 messages\r\n0 1\r\n1 2\r\n2 3\r\n3 4\r\n4 5\r\n.\r\n"},
+      {"command":"DELE 0\r\n","response":"+OK Message 0 deleted\r\n"},
+      {"command":"DELE 0\r\n","response":"+OK Message 0 deleted\r\n"},
+      {"command":"STAT\r\n","response":"+OK 5 50\r\n"},
+      {"command":"LIST 0\r\n","response":"+OK 0 10\r\n"},
+      {"command":"UIDL 0\r\n","response":"+OK 0 1\r\n"},
+      {"command":"RETR 0\r\n","response":"+OK \r\nthis is dummy message\r\n.\r\n"},
+      {"command":"RSET\r\n","response":"+OK \r\n"},
+      {"command":"LIST\r\n","response":"+OK 5 messages\r\n0 10\r\n1 10\r\n2 10\r\n3 10\r\n4 10\r\n.\r\n"},
+      {"command":"UIDL\r\n","response":"+OK 5 messages\r\n0 1\r\n1 2\r\n2 3\r\n3 4\r\n4 5\r\n.\r\n"},
+      {"command":"DELE 1\r\n","response":"+OK Message 1 deleted\r\n"},
+      {"command":"STAT\r\nQUIT\r\nNOOP\r\n","response":"+OK 5 50\r\n+OK Goodbye\r\n"}
+    ]
+  },
+  {
+    "name": "pop3-maildrop-reconnect-tls",
+    "handler": "pop3",
+    "profile": "tls",
+    "steps": [
+      {"command":"","response":"+OK Dovecot ready\r\n"},
+      {"command":"USER fixture\r\nPASS lab-only\r\nSTAT\r\n","response":"+OK \r\n+OK User Successfully Logged on\r\n+OK 5 50\r\n"},
+      {"command":"LIST 0 extra\r\n","response":"+OK 0 10\r\n"},
+      {"command":"UIDL +0000\r\n","response":"+OK 0 1\r\n"},
+      {"command":"LIST -01\r\n","response":"+OK -1 10\r\n"},
+      {"command":"UIDL -9223372036854775808\r\n","response":"+OK -9223372036854775808 -9223372036854775807\r\n"},
+      {"command":"LIST 9223372036854775808\r\n","response":"-ERR Invalid argument: 9223372036854775808\r\n-ERR Error executing command LIST\r\n"},
+      {"command":"RETR -5\r\n","response":"+OK \r\nthis is dummy message\r\n.\r\n"},
+      {"command":"DELE 9223372036854775807\r\n","response":"+OK Message 9223372036854775807 deleted\r\n"},
+      {"command":"RETR\r\n","response":"-ERR Missing argument for RETR command\r\n-ERR Error executing command RETR\r\n"},
+      {"command":"STAT\r\n","response":"+OK 5 50\r\n"},
+      {"command":"LIST\r\n","response":"+OK 5 messages\r\n0 10\r\n1 10\r\n2 10\r\n3 10\r\n4 10\r\n.\r\n"},
+      {"command":"UIDL\r\n","response":"+OK 5 messages\r\n0 1\r\n1 2\r\n2 3\r\n3 4\r\n4 5\r\n.\r\n"},
+      {"command":"RETR 0\r\n","response":"+OK \r\nthis is dummy message\r\n.\r\n"},
+      {"command":"RETR 1\r\n","response":"+OK \r\nthis is dummy message\r\n.\r\n"},
+      {"command":"QUIT\r\n","response":"+OK Goodbye\r\n"}
+    ]
+  },
+  {
+    "name": "imap-status-and-list-arguments",
+    "handler": "imap",
+    "profile": "plain",
+    "steps": [
+      {"command":"","response":"* OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR CHILDREN UNSELECT MOVE APPENDLIMIT AUTH=PLAIN] Dovecot Ready\r\n"},
+      {"command":"v00 LOGIN fixture lab-only\r\n","response":"v00 OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR CHILDREN UNSELECT MOVE APPENDLIMIT] LOGIN completed\r\n"},
+      {"command":"v01 STATUS INBOX (MESSAGES MESSAGES RECENT)\r\n","response":"* STATUS INBOX (MESSAGES 1 RECENT 0)\r\nv01 OK STATUS completed\r\n"},
+      {"command":"v02 STATUS INBOX (UIDNEXT uidnext UIDVALIDITY)\r\n","response":"* STATUS INBOX (UIDNEXT 7 UIDVALIDITY 1)\r\nv02 OK STATUS completed\r\n"},
+      {"command":"v03 STATUS INBOX\r\n","response":"v03 BAD No enough arguments\r\n"},
+      {"command":"v04 STATUS INBOX MESSAGES\r\n","response":"v04 BAD STATUS command parameter is not a list\r\n"},
+      {"command":"v05 STATUS INBOX \"MESSAGES\"\r\n","response":"v05 BAD STATUS command parameter is not a list\r\n"},
+      {"command":"v06 STATUS INBOX (MESSAGES) extra\r\n","response":"* STATUS INBOX (MESSAGES 1)\r\nv06 OK STATUS completed\r\n"},
+      {"command":"v07 STATUS INBOX (MESSAGES (UIDNEXT))\r\n","response":"v07 BAD Got a non-string field in a STATUS command parameter\r\n"},
+      {"command":"v08 STATUS Missing\r\n","response":"v08 BAD No enough arguments\r\n"},
+      {"command":"v09 STATUS \"\" (UIDNEXT)\r\n","response":"v09 NO No such mailbox\r\n"},
+      {"command":"v10 STATUS (INBOX) (MESSAGES)\r\n","response":"v10 BAD expected a string\r\n"},
+      {"command":"v11 STATUS (INBOX)\r\n","response":"v11 BAD No enough arguments\r\n"},
+      {"command":"v12 STATUS Missing MESSAGES\r\n","response":"v12 BAD STATUS command parameter is not a list\r\n"},
+      {"command":"v13 STATUS Missing (X (UIDNEXT))\r\n","response":"v13 BAD Got a non-string field in a STATUS command parameter\r\n"},
+      {"command":"v14 STATUS INBOX (\"messages\" \"uidnext\")\r\n","response":"* STATUS INBOX (MESSAGES 1 UIDNEXT 7)\r\nv14 OK STATUS completed\r\n"},
+      {"command":"v15 STATUS INBOX (NIL MESSAGES)\r\n","response":"v15 BAD Got a non-string field in a STATUS command parameter\r\n"},
+      {"command":"v16 STATUS INBOX (nil MESSAGES)\r\n","response":"* STATUS INBOX (NIL NIL MESSAGES 1)\r\nv16 OK STATUS completed\r\n"},
+      {"command":"v17 STATUS INBOX (x-test X-TEST X-test)\r\n","response":"* STATUS INBOX (X-TEST NIL)\r\nv17 OK STATUS completed\r\n"},
+      {"command":"v18 STATUS INBOX (MESSAGES) (UNSEEN)\r\n","response":"* STATUS INBOX (MESSAGES 1)\r\nv18 OK STATUS completed\r\n"},
+      {"command":"v19 STATUS INBOX (MESSAGES UIDNEXT)(RECENT UNSEEN)\r\n","response":"* STATUS INBOX (MESSAGES 1 UIDNEXT 7)\r\nv19 OK STATUS completed\r\n"},
+      {"command":"v20 LIST \"\" (\"*\" \"%\")\r\n","response":"v20 BAD expected a string\r\n"},
+      {"command":"v21 LIST (\"\") \"*\"\r\n","response":"v21 BAD expected a string\r\n"},
+      {"command":"v22 LIST (\"\")\r\n","response":"v22 BAD No enough arguments\r\n"},
+      {"command":"v23 LSUB \"\" (\"*\" \"%\")\r\n","response":"v23 BAD expected a string\r\n"},
+      {"command":"v24 LIST \"\" NIL\r\n","response":"v24 BAD expected a string\r\n"},
+      {"command":"v25 NOOP\r\n","response":"v25 OK NOOP completed\r\n"},
+      {"command":"v26 LOGOUT\r\n","response":"* BYE Closing connection\r\nv26 OK LOGOUT completed\r\n"}
+    ]
+  },
+  {
+    "name": "pop3-user-sequence",
+    "handler": "pop3",
+    "profile": "default",
+    "steps": [
+      {
+        "command": "",
+        "response": "+OK Dovecot ready\r\n"
+      },
+      {
+        "command": "USER fixture extra\r\n",
+        "response": "-ERR Error executing command USER\r\n"
+      },
+      {
+        "command": "USER fixture\r\n",
+        "response": "+OK \r\n"
+      },
+      {
+        "command": "CAPA\r\n",
+        "response": "+OK \r\nUSER\r\nUIDL\r\n.\r\n"
+      },
+      {
+        "command": "PASS lab-only\r\n",
+        "response": "-ERR PASS can be executed only directly after USER command\r\n"
+      },
+      {
+        "command": "USER fixture\r\n",
+        "response": "+OK \r\n"
+      },
+      {
+        "command": "PASS\r\n",
+        "response": "-ERR Error executing command PASS\r\n"
+      },
+      {
+        "command": "PASS lab-only\r\n",
+        "response": "+OK User Successfully Logged on\r\n"
+      },
+      {
+        "command": "STAT\r\n",
+        "response": "+OK 5 50\r\n"
+      },
+      {
+        "command": "QUIT\r\n",
+        "response": "+OK Goodbye\r\n"
+      }
+    ]
+  },
+  {
+    "name": "pop3-message-arguments",
+    "handler": "pop3",
+    "profile": "default",
+    "steps": [
+      {
+        "command": "",
+        "response": "+OK Dovecot ready\r\n"
+      },
+      {
+        "command": "USER fixture\r\n",
+        "response": "+OK \r\n"
+      },
+      {
+        "command": "PASS lab-only\r\n",
+        "response": "+OK User Successfully Logged on\r\n"
+      },
+      {
+        "command": "LIST -1\r\n",
+        "response": "+OK -1 10\r\n"
+      },
+      {
+        "command": "UIDL -1\r\n",
+        "response": "+OK -1 0\r\n"
+      },
+      {
+        "command": "LIST  1\r\n",
+        "response": "-ERR Invalid argument: \r\n-ERR Error executing command LIST\r\n"
+      },
+      {
+        "command": "LIST 1 extra\r\n",
+        "response": "+OK 1 10\r\n"
+      },
+      {
+        "command": "UIDL 1 extra\r\n",
+        "response": "+OK 1 2\r\n"
+      },
+      {
+        "command": "RETR 0 extra\r\n",
+        "response": "+OK \r\nthis is dummy message\r\n.\r\n"
+      },
+      {
+        "command": "DELE invalid\r\n",
+        "response": "-ERR Invalid argument: invalid\r\n-ERR Error executing command DELE\r\n"
+      },
+      {
+        "command": "DELE\r\n",
+        "response": "-ERR Missing argument for DELE command\r\n-ERR Error executing command DELE\r\n"
+      },
+      {
+        "command": "DELE 0 extra\r\n",
+        "response": "+OK Message 0 deleted\r\n"
+      },
+      {
+        "command": "RSET\r\n",
+        "response": "+OK \r\n"
+      },
+      {
+        "command": "STAT\r\n",
+        "response": "+OK 5 50\r\n"
+      },
+      {
+        "command": "QUIT\r\n",
+        "response": "+OK Goodbye\r\n"
+      }
+    ]
+  },
+  {
+    "name": "imap-disabled",
+    "handler": "imap",
+    "profile": "default",
+    "steps": [
+      {
+        "command": "",
+        "response": "* OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR CHILDREN UNSELECT MOVE APPENDLIMIT LOGINDISABLED] Dovecot Ready\r\n"
+      },
+      {
+        "command": "a1 STARTTLS\r\n",
+        "response": "a1 NO TLS support not enabled\r\n"
+      },
+      {
+        "command": "a2 LOGIN fixture lab-only\r\n",
+        "response": "a2 NO Authentication disabled\r\n"
+      },
+      {
+        "command": "a3 LIST \"\" \"*\"\r\n",
+        "response": "a3 NO Not authenticated\r\n"
+      },
+      {
+        "command": "a4 SEARCH ALL\r\n",
+        "response": "a4 NO No mailbox selected\r\n"
+      }
+    ]
+  },
+  {
+    "name": "imap-plain",
+    "handler": "imap",
+    "profile": "plain",
+    "steps": [
+      {
+        "command": "",
+        "response": "* OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR CHILDREN UNSELECT MOVE APPENDLIMIT AUTH=PLAIN] Dovecot Ready\r\n"
+      },
+      {
+        "command": "a1 LOGIN fixture wrong\r\n",
+        "response": "a1 NO Bad username or password\r\n"
+      },
+      {
+        "command": "a2 AUTHENTICATE LOGIN\r\n",
+        "response": "a2 NO Unsupported mechanism\r\n"
+      },
+      {
+        "command": "a3 AUTHENTICATE PLAIN YQ==\r\n",
+        "response": "a3 NO Invalid response\r\n"
+      },
+      {
+        "command": "a4 AUTHENTICATE PLAIN\r\n",
+        "response": "+\r\n"
+      },
+      {
+        "command": "AGZpeHR1cmUAbGFiLW9ubHk=\r\n",
+        "response": "a4 OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR CHILDREN UNSELECT MOVE APPENDLIMIT] AUTHENTICATE completed\r\n"
+      },
+      {
+        "command": "a5 LOGIN fixture lab-only\r\n",
+        "response": "a5 NO Already authenticated\r\n"
+      },
+      {
+        "command": "a6 LIST \"\" missing\r\n",
+        "response": "a6 OK LIST completed\r\n"
+      },
+      {
+        "command": "a7 LSUB \"\" \"*\"\r\n",
+        "response": "a7 OK LSUB completed\r\n"
+      },
+      {
+        "command": "a8 STATUS Inbox (UNSEEN MESSAGES FOO)\r\n",
+        "response": "* STATUS INBOX (UNSEEN 0 MESSAGES 1 FOO NIL)\r\na8 OK STATUS completed\r\n"
+      },
+      {
+        "command": "a9 SELECT missing\r\n",
+        "response": "a9 NO No such mailbox\r\n"
+      },
+      {
+        "command": "a10 EXAMINE Inbox\r\n",
+        "response": "* FLAGS (\\Seen)\r\n* OK [PERMANENTFLAGS (\\*)] Flags permitted.\r\n* 1 EXISTS\r\n* 0 RECENT\r\n* OK [UIDNEXT 7] Predicted next UID\r\n* OK [UIDVALIDITY 1] UIDs valid\r\na10 OK [READ-ONLY] EXAMINE completed\r\n"
+      },
+      {
+        "command": "a11 SEARCH SEEN\r\n",
+        "response": "* SEARCH 1\r\na11 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a12 UID SEARCH ALL\r\n",
+        "response": "* SEARCH 6\r\na12 OK UID SEARCH completed\r\n"
+      },
+      {
+        "command": "a13 UID SEARCH UNSEEN\r\n",
+        "response": "* SEARCH\r\na13 OK UID SEARCH completed\r\n"
+      },
+      {
+        "command": "a14 FETCH 1 (UID FLAGS RFC822.SIZE)\r\n",
+        "response": "* 1 FETCH (UID 6 FLAGS (\\Seen) RFC822.SIZE 205)\r\na14 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a15 UID FETCH 1 FLAGS\r\n",
+        "response": "a15 OK UID FETCH completed\r\n"
+      },
+      {
+        "command": "x1 FETCH 1 BODY.PEEK[TEXT]\r\n",
+        "response": "* 1 FETCH (BODY[TEXT] {11}\r\nHi there :))\r\nx1 OK FETCH completed\r\n"
+      },
+      {
+        "command": "x2 FETCH 1 RFC822\r\n",
+        "response": "* 1 FETCH (RFC822 {205}\r\nFrom: contact@example.org\r\nTo: contact@example.org\r\nSubject: A little message, just for you\r\nDate: Wed, 11 May 2016 14:31:59 +0000\r\nMessage-ID: <0000000@localhost/>\r\nContent-Type: text/plain\r\n\r\nHi there :))\r\nx2 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a16 CHECK\r\n",
+        "response": "a16 NO Mailbox opened in read-only mode\r\n"
+      },
+      {
+        "command": "a17 CLOSE\r\n",
+        "response": "a17 OK CLOSE completed\r\n"
+      },
+      {
+        "command": "a18 UNSELECT\r\n",
+        "response": "a18 NO No mailbox selected\r\n"
+      },
+      {
+        "command": "a19 LOGOUT\r\n",
+        "response": "* BYE Closing connection\r\na19 OK LOGOUT completed\r\n"
+      }
+    ]
+  },
+  {
+    "name": "imap-tls-disabled",
+    "handler": "imap",
+    "profile": "tls",
+    "steps": [
+      {
+        "command": "",
+        "response": "* OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR CHILDREN UNSELECT MOVE APPENDLIMIT STARTTLS LOGINDISABLED] Dovecot Ready\r\n"
+      },
+      {
+        "command": "a1 AUTHENTICATE PLAIN AGZpeHR1cmUAbGFiLW9ubHk=\r\n",
+        "response": "a1 NO Authentication disabled\r\n"
+      },
+      {
+        "command": "a2 STARTTLS\r\n",
+        "response": "a2 OK Begin TLS negotiation now\r\n"
+      },
+      {
+        "upgrade": true
+      },
+      {
+        "command": "a3 CAPABILITY\r\n",
+        "response": "* CAPABILITY IMAP4rev1 LITERAL+ SASL-IR CHILDREN UNSELECT MOVE APPENDLIMIT AUTH=PLAIN\r\na3 OK CAPABILITY completed\r\n"
+      },
+      {
+        "command": "a4 LOGIN fixture lab-only\r\n",
+        "response": "a4 OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR CHILDREN UNSELECT MOVE APPENDLIMIT] LOGIN completed\r\n"
+      },
+      {
+        "command": "a5 LOGOUT\r\n",
+        "response": "* BYE Closing connection\r\na5 OK LOGOUT completed\r\n"
+      }
+    ]
+  },
+  {
+    "name": "imap-tls-login",
+    "handler": "imap",
+    "profile": "tls-auth",
+    "steps": [
+      {
+        "command": "",
+        "response": "* OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR CHILDREN UNSELECT MOVE APPENDLIMIT STARTTLS AUTH=PLAIN] Dovecot Ready\r\n"
+      },
+      {
+        "command": "a1 AUTHENTICATE PLAIN AGZpeHR1cmUAbGFiLW9ubHk=\r\n",
+        "response": "a1 OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR CHILDREN UNSELECT MOVE APPENDLIMIT] AUTHENTICATE completed\r\n"
+      },
+      {
+        "command": "a2 LOGOUT\r\n",
+        "response": "* BYE Closing connection\r\na2 OK LOGOUT completed\r\n"
+      }
+    ]
+  },
+  {
+    "name": "pop3-plain",
+    "handler": "pop3",
+    "profile": "default",
+    "steps": [
+      {
+        "command": "",
+        "response": "+OK Dovecot ready\r\n"
+      },
+      {
+        "command": "UIDL\r\n",
+        "response": "-ERR Error executing command UIDL\r\n"
+      },
+      {
+        "command": "STLS\r\n",
+        "response": "-ERR Invalid command STLS\r\n"
+      },
+      {
+        "command": "PASS lab-only\r\n",
+        "response": "-ERR PASS can be executed only directly after USER command\r\n"
+      },
+      {
+        "command": "USER fixture\r\n",
+        "response": "+OK \r\n"
+      },
+      {
+        "command": "PASS wrong\r\n",
+        "response": "-ERR Invalid username or password\r\n"
+      },
+      {
+        "command": "PASS lab-only\r\n",
+        "response": "-ERR PASS can be executed only directly after USER command\r\n"
+      },
+      {
+        "command": "USER fixture\r\n",
+        "response": "+OK \r\n"
+      },
+      {
+        "command": "PASS lab-only\r\n",
+        "response": "+OK User Successfully Logged on\r\n"
+      },
+      {
+        "command": "UIDL\r\n",
+        "response": "+OK 5 messages\r\n0 1\r\n1 2\r\n2 3\r\n3 4\r\n4 5\r\n.\r\n"
+      },
+      {
+        "command": "LIST 5\r\n",
+        "response": "-ERR no such message\r\n"
+      },
+      {
+        "command": "UIDL 1\r\n",
+        "response": "+OK 1 2\r\n"
+      },
+      {
+        "command": "RETR 5\r\n",
+        "response": "+OK \r\nthis is dummy message\r\n.\r\n"
+      },
+      {
+        "command": "DELE 1\r\n",
+        "response": "+OK Message 1 deleted\r\n"
+      },
+      {
+        "command": "UIDL 1\r\n",
+        "response": "+OK 1 2\r\n"
+      },
+      {
+        "command": "STAT\r\n",
+        "response": "+OK 5 50\r\n"
+      },
+      {
+        "command": "RSET\r\n",
+        "response": "+OK \r\n"
+      },
+      {
+        "command": "QUIT\r\n",
+        "response": "+OK Goodbye\r\n"
+      }
+    ]
+  },
+  {
+    "name": "pop3-tls",
+    "handler": "pop3",
+    "profile": "tls",
+    "steps": [
+      {
+        "command": "",
+        "response": "+OK Dovecot ready\r\n"
+      },
+      {
+        "command": "STLS\r\n",
+        "response": "-ERR Invalid command STLS\r\n"
+      },
+      {
+        "command": "USER fixture\r\n",
+        "response": "+OK \r\n"
+      },
+      {
+        "command": "PASS lab-only\r\n",
+        "response": "+OK User Successfully Logged on\r\n"
+      },
+      {
+        "command": "RETR 1\r\n",
+        "response": "+OK \r\nthis is dummy message\r\n.\r\n"
+      },
+      {
+        "command": "QUIT\r\n",
+        "response": "+OK Goodbye\r\n"
+      }
+    ]
+  },
+  {
+    "handler": "imap",
+    "name": "imap-extended-search",
+    "profile": "plain",
+    "steps": [
+      {
+        "command": "",
+        "response": "* OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR CHILDREN UNSELECT MOVE APPENDLIMIT AUTH=PLAIN] Dovecot Ready\r\n"
+      },
+      {
+        "command": "l LOGIN fixture lab-only\r\n",
+        "response": "l OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR CHILDREN UNSELECT MOVE APPENDLIMIT] LOGIN completed\r\n"
+      },
+      {
+        "command": "s SELECT INBOX\r\n",
+        "response": "* FLAGS (\\Seen)\r\n* OK [PERMANENTFLAGS (\\*)] Flags permitted.\r\n* 1 EXISTS\r\n* 0 RECENT\r\n* OK [UIDNEXT 7] Predicted next UID\r\n* OK [UIDVALIDITY 1] UIDs valid\r\ns OK [READ-WRITE] SELECT completed\r\n"
+      },
+      {
+        "command": "a00 SEARCH ALL\r\n",
+        "response": "* SEARCH 1\r\na00 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a01 SEARCH SEEN\r\n",
+        "response": "* SEARCH 1\r\na01 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a02 SEARCH UNSEEN\r\n",
+        "response": "* SEARCH\r\na02 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a03 SEARCH RECENT\r\n",
+        "response": "* SEARCH\r\na03 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a04 SEARCH NEW\r\n",
+        "response": "* SEARCH\r\na04 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a05 SEARCH OLD\r\n",
+        "response": "* SEARCH 1\r\na05 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a06 SEARCH ANSWERED\r\n",
+        "response": "* SEARCH\r\na06 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a07 SEARCH UNANSWERED\r\n",
+        "response": "* SEARCH 1\r\na07 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a08 SEARCH DELETED\r\n",
+        "response": "* SEARCH\r\na08 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a09 SEARCH UNDELETED\r\n",
+        "response": "* SEARCH 1\r\na09 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a10 SEARCH FLAGGED\r\n",
+        "response": "* SEARCH\r\na10 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a11 SEARCH UNFLAGGED\r\n",
+        "response": "* SEARCH 1\r\na11 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a12 SEARCH DRAFT\r\n",
+        "response": "* SEARCH\r\na12 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a13 SEARCH UNDRAFT\r\n",
+        "response": "* SEARCH 1\r\na13 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a14 SEARCH NOT SEEN\r\n",
+        "response": "* SEARCH\r\na14 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a15 SEARCH OR SEEN UNSEEN\r\n",
+        "response": "* SEARCH 1\r\na15 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a16 SEARCH OR UNSEEN DRAFT\r\n",
+        "response": "* SEARCH\r\na16 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a17 SEARCH (ALL SEEN)\r\n",
+        "response": "* SEARCH 1\r\na17 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a18 SEARCH ALL UNSEEN\r\n",
+        "response": "* SEARCH\r\na18 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a19 SEARCH 1\r\n",
+        "response": "* SEARCH 1\r\na19 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a20 SEARCH 2\r\n",
+        "response": "* SEARCH\r\na20 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a21 SEARCH 2:*\r\n",
+        "response": "* SEARCH\r\na21 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a22 SEARCH UID 6\r\n",
+        "response": "* SEARCH 1\r\na22 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a23 SEARCH UID 5:7\r\n",
+        "response": "* SEARCH 1\r\na23 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a24 SEARCH UID 7\r\n",
+        "response": "* SEARCH\r\na24 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a25 UID SEARCH ALL\r\n",
+        "response": "* SEARCH 6\r\na25 OK UID SEARCH completed\r\n"
+      },
+      {
+        "command": "a26 UID SEARCH UID 6\r\n",
+        "response": "* SEARCH 6\r\na26 OK UID SEARCH completed\r\n"
+      },
+      {
+        "command": "a27 UID SEARCH 1\r\n",
+        "response": "* SEARCH 6\r\na27 OK UID SEARCH completed\r\n"
+      },
+      {
+        "command": "a28 SEARCH SUBJECT \"A little message\"\r\n",
+        "response": "* SEARCH 1\r\na28 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a29 SEARCH SUBJECT \"completely missing\"\r\n",
+        "response": "* SEARCH\r\na29 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a30 SEARCH FROM \"contact@example.org\"\r\n",
+        "response": "* SEARCH 1\r\na30 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a31 SEARCH TO \"fixture.test\"\r\n",
+        "response": "* SEARCH\r\na31 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a32 SEARCH BODY \"there\"\r\n",
+        "response": "* SEARCH 1\r\na32 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a33 SEARCH TEXT \"just for you\"\r\n",
+        "response": "* SEARCH 1\r\na33 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a34 SEARCH TEXT \"missing text\"\r\n",
+        "response": "* SEARCH\r\na34 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a35 SEARCH HEADER MESSAGE-ID \"0000000\"\r\n",
+        "response": "* SEARCH 1\r\na35 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a36 SEARCH LARGER 10\r\n",
+        "response": "* SEARCH 1\r\na36 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a37 SEARCH SMALLER 10\r\n",
+        "response": "* SEARCH\r\na37 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a38 SEARCH LARGER 8192\r\n",
+        "response": "* SEARCH\r\na38 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a39 SEARCH SMALLER 8192\r\n",
+        "response": "* SEARCH 1\r\na39 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a40 SEARCH SENTON 11-May-2016\r\n",
+        "response": "* SEARCH 1\r\na40 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a41 SEARCH SENTSINCE 01-Jan-2030\r\n",
+        "response": "* SEARCH\r\na41 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a42 SEARCH BEFORE 1-Jan-2030\r\n",
+        "response": "* SEARCH 1\r\na42 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a43 SEARCH CHARSET UTF-8 ALL\r\n",
+        "response": "* SEARCH 1\r\na43 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a44 SEARCH CHARSET US-ASCII ALL\r\n",
+        "response": "* SEARCH 1\r\na44 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a45 SEARCH CHARSET X-FIXTURE ALL\r\n",
+        "response": "* SEARCH 1\r\na45 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a46 SEARCH UNKNOWN\r\n",
+        "response": "a46 BAD imap: bad sequence set value \"UNKNOWN\"\r\n"
+      },
+      {
+        "command": "a47 SEARCH\r\n",
+        "response": "a47 BAD Missing search criteria\r\n"
+      }
+    ]
+  },
+  {
+    "handler": "imap",
+    "name": "imap-extended-fetch",
+    "profile": "plain",
+    "shared_internal_date": true,
+    "steps": [
+      {
+        "command": "",
+        "response": "* OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR CHILDREN UNSELECT MOVE APPENDLIMIT AUTH=PLAIN] Dovecot Ready\r\n"
+      },
+      {
+        "command": "l LOGIN fixture lab-only\r\n",
+        "response": "l OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR CHILDREN UNSELECT MOVE APPENDLIMIT] LOGIN completed\r\n"
+      },
+      {
+        "command": "s SELECT INBOX\r\n",
+        "response": "* FLAGS (\\Seen)\r\n* OK [PERMANENTFLAGS (\\*)] Flags permitted.\r\n* 1 EXISTS\r\n* 0 RECENT\r\n* OK [UIDNEXT 7] Predicted next UID\r\n* OK [UIDVALIDITY 1] UIDs valid\r\ns OK [READ-WRITE] SELECT completed\r\n"
+      },
+      {
+        "command": "a00 FETCH 1 FAST\r\n",
+        "response": "* 1 FETCH (FLAGS (\\Seen) INTERNALDATE \"01-Jan-2000 00:00:00 +0000\" RFC822.SIZE 205)\r\na00 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a01 FETCH 1 ALL\r\n",
+        "response": "* 1 FETCH (FLAGS (\\Seen) INTERNALDATE \"01-Jan-2000 00:00:00 +0000\" RFC822.SIZE 205 ENVELOPE (\"Wed, 11 May 2016 14:31:59 +0000\" \"A little message, just for you\" ((NIL NIL \"contact\" \"example.org\")) ((NIL NIL \"contact\" \"example.org\")) ((NIL NIL \"contact\" \"example.org\")) ((NIL NIL \"contact\" \"example.org\")) NIL NIL NIL \"<0000000@localhost/>\"))\r\na01 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a02 FETCH 1 FULL\r\n",
+        "response": "* 1 FETCH (FLAGS (\\Seen) INTERNALDATE \"01-Jan-2000 00:00:00 +0000\" RFC822.SIZE 205 ENVELOPE (\"Wed, 11 May 2016 14:31:59 +0000\" \"A little message, just for you\" ((NIL NIL \"contact\" \"example.org\")) ((NIL NIL \"contact\" \"example.org\")) ((NIL NIL \"contact\" \"example.org\")) ((NIL NIL \"contact\" \"example.org\")) NIL NIL NIL \"<0000000@localhost/>\") BODY (\"text\" \"plain\" () NIL NIL NIL 11 1))\r\na02 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a03 FETCH 1 ENVELOPE\r\n",
+        "response": "* 1 FETCH (ENVELOPE (\"Wed, 11 May 2016 14:31:59 +0000\" \"A little message, just for you\" ((NIL NIL \"contact\" \"example.org\")) ((NIL NIL \"contact\" \"example.org\")) ((NIL NIL \"contact\" \"example.org\")) ((NIL NIL \"contact\" \"example.org\")) NIL NIL NIL \"<0000000@localhost/>\"))\r\na03 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a04 FETCH 1 BODY\r\n",
+        "response": "* 1 FETCH (BODY (\"text\" \"plain\" () NIL NIL NIL 11 1))\r\na04 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a05 FETCH 1 BODYSTRUCTURE\r\n",
+        "response": "* 1 FETCH (BODYSTRUCTURE (\"text\" \"plain\" () NIL NIL NIL 11 1 NIL NIL NIL NIL))\r\na05 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a06 FETCH 1 (UID FLAGS RFC822.SIZE INTERNALDATE)\r\n",
+        "response": "* 1 FETCH (UID 6 FLAGS (\\Seen) RFC822.SIZE 205 INTERNALDATE \"01-Jan-2000 00:00:00 +0000\")\r\na06 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a07 FETCH 1 (INTERNALDATE RFC822.SIZE FLAGS UID)\r\n",
+        "response": "* 1 FETCH (INTERNALDATE \"01-Jan-2000 00:00:00 +0000\" RFC822.SIZE 205 FLAGS (\\Seen) UID 6)\r\na07 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a08 FETCH 1 RFC822\r\n",
+        "response": "* 1 FETCH (RFC822 {205}\r\nFrom: contact@example.org\r\nTo: contact@example.org\r\nSubject: A little message, just for you\r\nDate: Wed, 11 May 2016 14:31:59 +0000\r\nMessage-ID: <0000000@localhost/>\r\nContent-Type: text/plain\r\n\r\nHi there :))\r\na08 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a09 FETCH 1 RFC822.HEADER\r\n",
+        "response": "* 1 FETCH (RFC822.HEADER {194}\r\nFrom: contact@example.org\r\nTo: contact@example.org\r\nSubject: A little message, just for you\r\nDate: Wed, 11 May 2016 14:31:59 +0000\r\nMessage-ID: <0000000@localhost/>\r\nContent-Type: text/plain\r\n\r\n)\r\na09 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a10 FETCH 1 RFC822.TEXT\r\n",
+        "response": "* 1 FETCH (RFC822.TEXT {11}\r\nHi there :))\r\na10 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a11 FETCH 1 BODY[1]\r\n",
+        "response": "* 1 FETCH (BODY[1] {11}\r\nHi there :))\r\na11 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a12 FETCH 1 BODY[2]\r\n",
+        "response": "* 1 FETCH (BODY[2] NIL)\r\na12 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a13 FETCH 1 BODY[1.MIME]\r\n",
+        "response": "* 1 FETCH (BODY[1.MIME] {194}\r\nFrom: contact@example.org\r\nTo: contact@example.org\r\nSubject: A little message, just for you\r\nDate: Wed, 11 May 2016 14:31:59 +0000\r\nMessage-ID: <0000000@localhost/>\r\nContent-Type: text/plain\r\n\r\n)\r\na13 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a14 FETCH 1 BODY.PEEK[HEADER.FIELDS (SUBJECT FROM)]\r\n",
+        "response": "* 1 FETCH (BODY[HEADER.FIELDS (SUBJECT FROM)] {70}\r\nFrom: contact@example.org\r\nSubject: A little message, just for you\r\n\r\n)\r\na14 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a15 FETCH 1 BODY.PEEK[HEADER.FIELDS (FROM SUBJECT)]\r\n",
+        "response": "* 1 FETCH (BODY[HEADER.FIELDS (FROM SUBJECT)] {70}\r\nFrom: contact@example.org\r\nSubject: A little message, just for you\r\n\r\n)\r\na15 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a16 FETCH 1 BODY[HEADER.FIELDS.NOT (FROM TO)]\r\n",
+        "response": "* 1 FETCH (BODY[HEADER.FIELDS.NOT (FROM TO)] {142}\r\nSubject: A little message, just for you\r\nDate: Wed, 11 May 2016 14:31:59 +0000\r\nMessage-ID: <0000000@localhost/>\r\nContent-Type: text/plain\r\n\r\n)\r\na16 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a17 FETCH 1 BODY.PEEK[HEADER.FIELDS ()]\r\n",
+        "response": "* 1 FETCH (BODY[HEADER] {194}\r\nFrom: contact@example.org\r\nTo: contact@example.org\r\nSubject: A little message, just for you\r\nDate: Wed, 11 May 2016 14:31:59 +0000\r\nMessage-ID: <0000000@localhost/>\r\nContent-Type: text/plain\r\n\r\n)\r\na17 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a18 FETCH 1 BODY[TEXT]<0.4>\r\n",
+        "response": "* 1 FETCH (BODY[TEXT]<0> {4}\r\nHi t)\r\na18 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a19 FETCH 1 BODY.PEEK[]<5.20>\r\n",
+        "response": "* 1 FETCH (BODY[]<5> {20}\r\n contact@example.org)\r\na19 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a20 FETCH 1 BODY[TEXT]<5.40>\r\n",
+        "response": "* 1 FETCH (BODY[TEXT]<5> {6}\r\nere :))\r\na20 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a21 FETCH 1 BODY[TEXT]<80.10>\r\n",
+        "response": "* 1 FETCH (BODY[TEXT]<80> {0}\r\n)\r\na21 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a22 FETCH 1 (UID BODY.PEEK[TEXT]<1.5> FLAGS)\r\n",
+        "response": "* 1 FETCH (UID 6 BODY[TEXT]<1> {5}\r\ni the FLAGS (\\Seen))\r\na22 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a23 FETCH 1 (X-FIXTURE UID FLAGS)\r\n",
+        "response": "* 1 FETCH (X-FIXTURE NIL UID 6 FLAGS (\\Seen))\r\na23 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a24 FETCH 1 X-FIXTURE\r\n",
+        "response": "* 1 FETCH (X-FIXTURE NIL)\r\na24 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a25 FETCH 1 (UID UID FLAGS)\r\n",
+        "response": "* 1 FETCH (UID 6 UID 6 FLAGS (\\Seen))\r\na25 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a26 FETCH 2 UID\r\n",
+        "response": "a26 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a27 FETCH 2:* UID\r\n",
+        "response": "a27 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a28 UID FETCH 6 FLAGS\r\n",
+        "response": "* 1 FETCH (FLAGS (\\Seen) UID 6)\r\na28 OK UID FETCH completed\r\n"
+      },
+      {
+        "command": "a29 UID FETCH 6 BODY.PEEK[TEXT]\r\n",
+        "response": "* 1 FETCH (BODY[TEXT] {11}\r\nHi there :) UID 6)\r\na29 OK UID FETCH completed\r\n"
+      },
+      {
+        "command": "a30 UID FETCH 6 X-FIXTURE\r\n",
+        "response": "* 1 FETCH (X-FIXTURE NIL UID 6)\r\na30 OK UID FETCH completed\r\n"
+      },
+      {
+        "command": "a31 UID FETCH 7 FLAGS\r\n",
+        "response": "a31 OK UID FETCH completed\r\n"
+      },
+      {
+        "command": "a32 FETCH\r\n",
+        "response": "a32 BAD No enough arguments\r\n"
+      },
+      {
+        "command": "a33 FETCH 1\r\n",
+        "response": "a33 BAD No enough arguments\r\n"
+      }
+    ]
+  },
+  {
+    "handler": "imap",
+    "name": "imap-edges-search",
+    "profile": "plain",
+    "steps": [
+      {
+        "command": "",
+        "response": "* OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR CHILDREN UNSELECT MOVE APPENDLIMIT AUTH=PLAIN] Dovecot Ready\r\n"
+      },
+      {
+        "command": "l LOGIN fixture lab-only\r\n",
+        "response": "l OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR CHILDREN UNSELECT MOVE APPENDLIMIT] LOGIN completed\r\n"
+      },
+      {
+        "command": "s SELECT INBOX\r\n",
+        "response": "* FLAGS (\\Seen)\r\n* OK [PERMANENTFLAGS (\\*)] Flags permitted.\r\n* 1 EXISTS\r\n* 0 RECENT\r\n* OK [UIDNEXT 7] Predicted next UID\r\n* OK [UIDVALIDITY 1] UIDs valid\r\ns OK [READ-WRITE] SELECT completed\r\n"
+      },
+      {
+        "command": "a00 SEARCH 2:1\r\n",
+        "response": "* SEARCH 1\r\na00 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a01 SEARCH *\r\n",
+        "response": "* SEARCH\r\na01 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a02 SEARCH UID 7:6\r\n",
+        "response": "* SEARCH 1\r\na02 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a03 SEARCH UID 7:*\r\n",
+        "response": "* SEARCH\r\na03 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a04 SEARCH UID *\r\n",
+        "response": "* SEARCH\r\na04 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a05 SEARCH UID 6:7\r\n",
+        "response": "* SEARCH 1\r\na05 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a06 SEARCH UID invalid\r\n",
+        "response": "a06 BAD imap: bad sequence set value \"invalid\"\r\n"
+      },
+      {
+        "command": "a07 SEARCH KEYWORD seen\r\n",
+        "response": "* SEARCH\r\na07 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a08 SEARCH UNKEYWORD seen\r\n",
+        "response": "* SEARCH 1\r\na08 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a09 SEARCH KEYWORD custom\r\n",
+        "response": "* SEARCH\r\na09 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a10 SEARCH UNKEYWORD custom\r\n",
+        "response": "* SEARCH 1\r\na10 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a11 SEARCH SUBJECT \"LITTLE MESSAGE\"\r\n",
+        "response": "* SEARCH 1\r\na11 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a12 SEARCH FROM \"CONTACT@EXAMPLE.ORG\"\r\n",
+        "response": "* SEARCH 1\r\na12 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a13 SEARCH HEADER X-FIXTURE \"\"\r\n",
+        "response": "* SEARCH\r\na13 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a14 SEARCH HEADER FROM \"\"\r\n",
+        "response": "* SEARCH 1\r\na14 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a15 SEARCH LARGER 204\r\n",
+        "response": "* SEARCH 1\r\na15 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a16 SEARCH LARGER 205\r\n",
+        "response": "* SEARCH\r\na16 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a17 SEARCH SMALLER 205\r\n",
+        "response": "* SEARCH\r\na17 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a18 SEARCH SMALLER 206\r\n",
+        "response": "* SEARCH 1\r\na18 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a19 SEARCH CHARSET UTF-8\r\n",
+        "response": "* SEARCH 1\r\na19 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a20 SEARCH ()\r\n",
+        "response": "* SEARCH 1\r\na20 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a21 SEARCH NOT\r\n",
+        "response": "* SEARCH\r\na21 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a22 SEARCH OR SEEN\r\n",
+        "response": "* SEARCH 1\r\na22 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a23 SEARCH BEFORE test\r\n",
+        "response": "a23 BAD parsing time \"test\" as \"_2-Jan-2006\": cannot parse \"test\" as \"_2\"\r\n"
+      },
+      {
+        "command": "a24 SEARCH LARGER no\r\n",
+        "response": "a24 BAD strconv.ParseUint: parsing \"no\": invalid syntax\r\n"
+      },
+      {
+        "command": "a25 SEARCH BODY\r\n",
+        "response": "a25 BAD imap: no enough fields for search key\r\n"
+      },
+      {
+        "command": "a26 SEARCH OR (SEEN) (UNSEEN)\r\n",
+        "response": "* SEARCH 1\r\na26 OK SEARCH completed\r\n"
+      }
+    ]
+  },
+  {
+    "handler": "imap",
+    "name": "imap-edges-fetch",
+    "profile": "plain",
+    "shared_internal_date": true,
+    "steps": [
+      {
+        "command": "",
+        "response": "* OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR CHILDREN UNSELECT MOVE APPENDLIMIT AUTH=PLAIN] Dovecot Ready\r\n"
+      },
+      {
+        "command": "l LOGIN fixture lab-only\r\n",
+        "response": "l OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR CHILDREN UNSELECT MOVE APPENDLIMIT] LOGIN completed\r\n"
+      },
+      {
+        "command": "s SELECT INBOX\r\n",
+        "response": "* FLAGS (\\Seen)\r\n* OK [PERMANENTFLAGS (\\*)] Flags permitted.\r\n* 1 EXISTS\r\n* 0 RECENT\r\n* OK [UIDNEXT 7] Predicted next UID\r\n* OK [UIDVALIDITY 1] UIDs valid\r\ns OK [READ-WRITE] SELECT completed\r\n"
+      },
+      {
+        "command": "a00 FETCH * FLAGS\r\n",
+        "response": "a00 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a01 FETCH 2:1 FLAGS\r\n",
+        "response": "* 1 FETCH (FLAGS (\\Seen))\r\na01 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a02 FETCH 1:2 FLAGS\r\n",
+        "response": "* 1 FETCH (FLAGS (\\Seen))\r\na02 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a03 UID FETCH * FLAGS\r\n",
+        "response": "a03 OK UID FETCH completed\r\n"
+      },
+      {
+        "command": "a04 UID FETCH 7:* FLAGS\r\n",
+        "response": "a04 OK UID FETCH completed\r\n"
+      },
+      {
+        "command": "a05 UID FETCH 7:6 FLAGS\r\n",
+        "response": "* 1 FETCH (FLAGS (\\Seen) UID 6)\r\na05 OK UID FETCH completed\r\n"
+      },
+      {
+        "command": "a06 FETCH 1 (\"FLAGS\")\r\n",
+        "response": "* 1 FETCH (FLAGS (\\Seen))\r\na06 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a07 FETCH x FLAGs\r\n",
+        "response": "a07 BAD imap: bad sequence set value \"x\"\r\n"
+      },
+      {
+        "command": "a08 FETCH 1 (FAST UID)\r\n",
+        "response": "* 1 FETCH (FLAGS (\\Seen) INTERNALDATE \"01-Jan-2000 00:00:00 +0000\" RFC822.SIZE 205 UID 6)\r\na08 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a09 FETCH 1 body.peek[header.fields (subject from)]\r\n",
+        "response": "* 1 FETCH (BODY[HEADER.FIELDS (SUBJECT FROM)] {70}\r\nFrom: contact@example.org\r\nSubject: A little message, just for you\r\n\r\n)\r\na09 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a10 FETCH 1 BODY[1.HEADER]\r\n",
+        "response": "* 1 FETCH (BODY[1.HEADER] {194}\r\nFrom: contact@example.org\r\nTo: contact@example.org\r\nSubject: A little message, just for you\r\nDate: Wed, 11 May 2016 14:31:59 +0000\r\nMessage-ID: <0000000@localhost/>\r\nContent-Type: text/plain\r\n\r\n)\r\na10 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a11 FETCH 1 BODY[1.TEXT]\r\n",
+        "response": "* 1 FETCH (BODY[1.TEXT] {11}\r\nHi there :))\r\na11 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a12 FETCH 1 BODY[1.1]\r\n",
+        "response": "* 1 FETCH (BODY[1.1] NIL)\r\na12 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a13 FETCH 1 BODY[foo]\r\n",
+        "response": "* 1 FETCH (BODY[FOO] NIL)\r\na13 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a14 FETCH 1 BODY[TEXT]<1.0>\r\n",
+        "response": "* 1 FETCH (BODY[TEXT]<1> {0}\r\n)\r\na14 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a15 FETCH 1 BODY[TEXT]<0>\r\n",
+        "response": "* 1 FETCH (BODY[TEXT]<0> {11}\r\nHi there :))\r\na15 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a16 FETCH 1 BODY[TEXT]<bad>\r\n",
+        "response": "* 1 FETCH (BODY[TEXT]<BAD> NIL)\r\na16 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a17 FETCH 1 INTERNALDATE\r\n",
+        "response": "* 1 FETCH (INTERNALDATE \"01-Jan-2000 00:00:00 +0000\")\r\na17 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a18 FETCH 1 INTERNALDATE\r\n",
+        "response": "* 1 FETCH (INTERNALDATE \"01-Jan-2000 00:00:00 +0000\")\r\na18 OK FETCH completed\r\n"
+      }
+    ]
+  },
+  {
+    "handler": "imap",
+    "name": "imap-tls-fetch",
+    "profile": "tls-auth",
+    "steps": [
+      {
+        "command": "",
+        "response": "* OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR CHILDREN UNSELECT MOVE APPENDLIMIT STARTTLS AUTH=PLAIN] Dovecot Ready\r\n"
+      },
+      {
+        "command": "a1 AUTHENTICATE PLAIN AGZpeHR1cmUAbGFiLW9ubHk=\r\n",
+        "response": "a1 OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR CHILDREN UNSELECT MOVE APPENDLIMIT] AUTHENTICATE completed\r\n"
+      },
+      {
+        "command": "s SELECT INBOX\r\n",
+        "response": "* FLAGS (\\Seen)\r\n* OK [PERMANENTFLAGS (\\*)] Flags permitted.\r\n* 1 EXISTS\r\n* 0 RECENT\r\n* OK [UIDNEXT 7] Predicted next UID\r\n* OK [UIDVALIDITY 1] UIDs valid\r\ns OK [READ-WRITE] SELECT completed\r\n"
+      },
+      {
+        "command": "a05 FETCH 1 BODYSTRUCTURE\r\n",
+        "response": "* 1 FETCH (BODYSTRUCTURE (\"text\" \"plain\" () NIL NIL NIL 11 1 NIL NIL NIL NIL))\r\na05 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a14 FETCH 1 BODY.PEEK[HEADER.FIELDS (SUBJECT FROM)]\r\n",
+        "response": "* 1 FETCH (BODY[HEADER.FIELDS (SUBJECT FROM)] {70}\r\nFrom: contact@example.org\r\nSubject: A little message, just for you\r\n\r\n)\r\na14 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a18 FETCH 1 BODY[TEXT]<0.4>\r\n",
+        "response": "* 1 FETCH (BODY[TEXT]<0> {4}\r\nHi t)\r\na18 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a28 UID FETCH 6 FLAGS\r\n",
+        "response": "* 1 FETCH (FLAGS (\\Seen) UID 6)\r\na28 OK UID FETCH completed\r\n"
+      },
+      {
+        "command": "a2 LOGOUT\r\n",
+        "response": "* BYE Closing connection\r\na2 OK LOGOUT completed\r\n"
+      }
+    ]
+  },
+  {
+    "handler": "imap",
+    "name": "imap-mutation-commands",
+    "profile": "plain",
+    "steps": [
+      {
+        "command": "",
+        "response": "* OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR CHILDREN UNSELECT MOVE APPENDLIMIT AUTH=PLAIN] Dovecot Ready\r\n"
+      },
+      {
+        "command": "l LOGIN fixture lab-only\r\n",
+        "response": "l OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR CHILDREN UNSELECT MOVE APPENDLIMIT] LOGIN completed\r\n"
+      },
+      {
+        "command": "s SELECT INBOX\r\n",
+        "response": "* FLAGS (\\Seen)\r\n* OK [PERMANENTFLAGS (\\*)] Flags permitted.\r\n* 0 RECENT\r\n* OK [UIDNEXT 7] Predicted next UID\r\n* OK [UIDVALIDITY 1] UIDs valid\r\n* 1 EXISTS\r\ns OK [READ-WRITE] SELECT completed\r\n"
+      },
+      {
+        "command": "a00 CREATE INBOX\r\n",
+        "response": "a00 NO Mailbox already exists\r\n"
+      },
+      {
+        "command": "a01 DELETE INBOX\r\n",
+        "response": "a01 NO Cannot delete INBOX\r\n"
+      },
+      {
+        "command": "a02 SUBSCRIBE missing\r\n",
+        "response": "a02 NO No such mailbox\r\n"
+      },
+      {
+        "command": "a03 UNSUBSCRIBE missing\r\n",
+        "response": "a03 NO No such mailbox\r\n"
+      },
+      {
+        "command": "a04 RENAME missing dest\r\n",
+        "response": "a04 NO No such mailbox\r\n"
+      },
+      {
+        "command": "a05 DELETE missing\r\n",
+        "response": "a05 NO No such mailbox\r\n"
+      },
+      {
+        "command": "a06 CREATE \"fixture folder\"\r\n",
+        "response": "a06 OK CREATE completed\r\n"
+      },
+      {
+        "command": "a07 CREATE \"fixture folder\"\r\n",
+        "response": "a07 NO Mailbox already exists\r\n"
+      },
+      {
+        "command": "a08 CREATE fixturebox/child\r\n",
+        "response": "a08 OK CREATE completed\r\n"
+      },
+      {
+        "command": "a09 CREATE fixturebox\r\n",
+        "response": "a09 OK CREATE completed\r\n"
+      },
+      {
+        "command": "a10 LIST \"\" \"%\"\r\n",
+        "response": "* LIST () \"/\" INBOX\r\n* LIST () \"/\" \"fixture folder\"\r\n* LIST () \"/\" \"fixturebox\"\r\na10 OK LIST completed\r\n"
+      },
+      {
+        "command": "a11 LIST \"\" \"*\"\r\n",
+        "response": "* LIST () \"/\" \"fixturebox/child\"\r\n* LIST () \"/\" \"fixturebox\"\r\n* LIST () \"/\" INBOX\r\n* LIST () \"/\" \"fixture folder\"\r\na11 OK LIST completed\r\n"
+      },
+      {
+        "command": "a12 STATUS fixturebox (MESSAGES RECENT UIDNEXT UIDVALIDITY UNSEEN)\r\n",
+        "response": "* STATUS \"fixturebox\" (MESSAGES 0 RECENT 0 UIDNEXT 1 UIDVALIDITY 1 UNSEEN 0)\r\na12 OK STATUS completed\r\n"
+      },
+      {
+        "command": "a13 SELECT fixturebox\r\n",
+        "response": "* OK [PERMANENTFLAGS (\\*)] Flags permitted.\r\n* 0 EXISTS\r\n* 0 RECENT\r\n* OK [UIDNEXT 1] Predicted next UID\r\n* OK [UIDVALIDITY 1] UIDs valid\r\na13 OK [READ-WRITE] SELECT completed\r\n"
+      },
+      {
+        "command": "a14 SELECT INBOX\r\n",
+        "response": "* FLAGS (\\Seen)\r\n* OK [PERMANENTFLAGS (\\*)] Flags permitted.\r\n* 1 EXISTS\r\n* 0 RECENT\r\n* OK [UIDNEXT 7] Predicted next UID\r\n* OK [UIDVALIDITY 1] UIDs valid\r\na14 OK [READ-WRITE] SELECT completed\r\n"
+      },
+      {
+        "command": "a15 COPY 1 fixturebox\r\n",
+        "response": "a15 OK COPY completed\r\n"
+      },
+      {
+        "command": "a16 COPY 1 fixturebox\r\n",
+        "response": "a16 OK COPY completed\r\n"
+      },
+      {
+        "command": "a17 STATUS fixturebox (MESSAGES RECENT UIDNEXT UIDVALIDITY UNSEEN)\r\n",
+        "response": "* STATUS \"fixturebox\" (MESSAGES 2 RECENT 0 UIDNEXT 3 UIDVALIDITY 1 UNSEEN 0)\r\na17 OK STATUS completed\r\n"
+      },
+      {
+        "command": "a18 SELECT fixturebox\r\n",
+        "response": "* FLAGS (\\Seen)\r\n* OK [PERMANENTFLAGS (\\*)] Flags permitted.\r\n* 2 EXISTS\r\n* 0 RECENT\r\n* OK [UIDNEXT 3] Predicted next UID\r\n* OK [UIDVALIDITY 1] UIDs valid\r\na18 OK [READ-WRITE] SELECT completed\r\n"
+      },
+      {
+        "command": "a19 UID FETCH 1:2 (UID FLAGS RFC822.SIZE)\r\n",
+        "response": "* 1 FETCH (UID 1 FLAGS (\\Seen) RFC822.SIZE 205)\r\n* 2 FETCH (UID 2 FLAGS (\\Seen) RFC822.SIZE 205)\r\na19 OK UID FETCH completed\r\n"
+      },
+      {
+        "command": "a20 STORE 1 FLAGS (\\Flagged Custom)\r\n",
+        "response": "* 1 FETCH (FLAGS (\\Flagged custom))\r\na20 OK STORE completed\r\n"
+      },
+      {
+        "command": "a21 UID STORE 2 +FLAGS (\\Deleted)\r\n",
+        "response": "* 2 FETCH (FLAGS (\\Flagged \\Deleted) UID 2)\r\na21 OK UID STORE completed\r\n"
+      },
+      {
+        "command": "a22 SEARCH UNSEEN\r\n",
+        "response": "* SEARCH 1 2\r\na22 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "a23 UID SEARCH DELETED\r\n",
+        "response": "* SEARCH 2\r\na23 OK UID SEARCH completed\r\n"
+      },
+      {
+        "command": "a24 STATUS fixturebox (MESSAGES RECENT UIDNEXT UIDVALIDITY UNSEEN)\r\n",
+        "response": "* STATUS \"fixturebox\" (MESSAGES 2 RECENT 0 UIDNEXT 3 UIDVALIDITY 1 UNSEEN 0)\r\na24 OK STATUS completed\r\n"
+      },
+      {
+        "command": "u1 UID CHECK\r\n",
+        "response": "u1 NO Command unsupported with UID\r\n"
+      },
+      {
+        "command": "u2 UID EXPUNGE 2\r\n",
+        "response": "u2 NO Command unsupported with UID\r\n"
+      },
+      {
+        "command": "u3 UID CLOSE\r\n",
+        "response": "u3 NO Command unsupported with UID\r\n"
+      },
+      {
+        "command": "u4 UID UNSELECT\r\n",
+        "response": "u4 NO Command unsupported with UID\r\n"
+      },
+      {
+        "command": "u5 UID UNKNOWN\r\n",
+        "response": "u5 NO Unknown command\r\n"
+      },
+      {
+        "command": "a25 CLOSE\r\n",
+        "response": "a25 OK CLOSE completed\r\n"
+      },
+      {
+        "command": "a26 SELECT fixturebox\r\n",
+        "response": "* FLAGS (\\Flagged custom)\r\n* OK [PERMANENTFLAGS (\\*)] Flags permitted.\r\n* OK [UNSEEN 1] Message 1 is first unseen\r\n* OK [UIDVALIDITY 1] UIDs valid\r\n* 1 EXISTS\r\n* 0 RECENT\r\n* OK [UIDNEXT 2] Predicted next UID\r\na26 OK [READ-WRITE] SELECT completed\r\n"
+      },
+      {
+        "command": "a27 FETCH 1:2 FLAGS\r\n",
+        "response": "* 1 FETCH (FLAGS (\\Flagged custom))\r\na27 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a28 STORE 1 +FLAGS.SILENT (\\Deleted)\r\n",
+        "response": "a28 OK STORE completed\r\n"
+      },
+      {
+        "command": "a29 UNSELECT\r\n",
+        "response": "a29 OK UNSELECT completed\r\n"
+      },
+      {
+        "command": "a30 SELECT fixturebox\r\n",
+        "response": "* FLAGS (\\Flagged custom \\Deleted)\r\n* OK [PERMANENTFLAGS (\\*)] Flags permitted.\r\n* OK [UNSEEN 1] Message 1 is first unseen\r\n* 0 RECENT\r\n* OK [UIDNEXT 2] Predicted next UID\r\n* OK [UIDVALIDITY 1] UIDs valid\r\n* 1 EXISTS\r\na30 OK [READ-WRITE] SELECT completed\r\n"
+      },
+      {
+        "command": "a31 FETCH 1:2 FLAGS\r\n",
+        "response": "* 1 FETCH (FLAGS (\\Flagged custom \\Deleted))\r\na31 OK FETCH completed\r\n"
+      },
+      {
+        "command": "a32 RENAME fixturebox renamed\r\n",
+        "response": "a32 OK RENAME completed\r\n"
+      },
+      {
+        "command": "a33 LIST \"\" \"*\"\r\n",
+        "response": "* LIST () \"/\" \"renamed\"\r\n* LIST () \"/\" INBOX\r\n* LIST () \"/\" \"fixture folder\"\r\n* LIST () \"/\" \"fixturebox/child\"\r\na33 OK LIST completed\r\n"
+      },
+      {
+        "command": "a34 STATUS renamed (MESSAGES UIDNEXT)\r\n",
+        "response": "* STATUS \"renamed\" (MESSAGES 1 UIDNEXT 2)\r\na34 OK STATUS completed\r\n"
+      },
+      {
+        "command": "a35 DELETE renamed\r\n",
+        "response": "a35 OK DELETE completed\r\n"
+      },
+      {
+        "command": "a36 LIST \"\" \"*\"\r\n",
+        "response": "* LIST () \"/\" INBOX\r\n* LIST () \"/\" \"fixture folder\"\r\n* LIST () \"/\" \"fixturebox/child\"\r\na36 OK LIST completed\r\n"
+      }
+    ]
+  },
+  {
+    "handler": "imap",
+    "name": "imap-state-write",
+    "profile": "state",
+    "steps": [
+      {
+        "command": "",
+        "response": "* OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR CHILDREN UNSELECT MOVE APPENDLIMIT AUTH=PLAIN] Dovecot Ready\r\n"
+      },
+      {
+        "command": "l LOGIN fixture lab-only\r\n",
+        "response": "l OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR CHILDREN UNSELECT MOVE APPENDLIMIT] LOGIN completed\r\n"
+      },
+      {
+        "command": "a1 SELECT INBOX\r\n",
+        "response": "* FLAGS (\\Seen)\r\n* OK [PERMANENTFLAGS (\\*)] Flags permitted.\r\n* 1 EXISTS\r\n* 0 RECENT\r\n* OK [UIDNEXT 7] Predicted next UID\r\n* OK [UIDVALIDITY 1] UIDs valid\r\na1 OK [READ-WRITE] SELECT completed\r\n"
+      },
+      {
+        "command": "a2 STORE 1 +FLAGS (\\Flagged)\r\n",
+        "response": "* 1 FETCH (FLAGS (\\Seen \\Flagged))\r\na2 OK STORE completed\r\n"
+      },
+      {
+        "command": "a3 CREATE fixturebox\r\n",
+        "response": "a3 OK CREATE completed\r\n"
+      },
+      {
+        "command": "a4 SUBSCRIBE fixturebox\r\n",
+        "response": "a4 OK SUBSCRIBE completed\r\n"
+      },
+      {
+        "command": "a5 COPY 1 fixturebox\r\n",
+        "response": "a5 OK COPY completed\r\n"
+      },
+      {
+        "command": "a6 STATUS fixturebox (MESSAGES UIDNEXT)\r\n",
+        "response": "* STATUS \"fixturebox\" (MESSAGES 1 UIDNEXT 2)\r\na6 OK STATUS completed\r\n"
+      },
+      {
+        "command": "a7 APPEND fixturebox {51}\r\n",
+        "response": "+ send literal\r\n"
+      },
+      {
+        "command": "Subject: Synthetic mailbox state\r\n\r\nfixture message\r\n",
+        "response": "a7 OK APPEND completed\r\n"
+      },
+      {
+        "command": "a8 STATUS fixturebox (MESSAGES UIDNEXT)\r\n",
+        "response": "* STATUS \"fixturebox\" (MESSAGES 2 UIDNEXT 3)\r\na8 OK STATUS completed\r\n"
+      },
+      {
+        "command": "a9 LOGOUT\r\n",
+        "response": "* BYE Closing connection\r\na9 OK LOGOUT completed\r\n"
+      }
+    ]
+  },
+  {
+    "handler": "imap",
+    "name": "imap-state-reconnect",
+    "profile": "state",
+    "steps": [
+      {
+        "command": "",
+        "response": "* OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR CHILDREN UNSELECT MOVE APPENDLIMIT AUTH=PLAIN] Dovecot Ready\r\n"
+      },
+      {
+        "command": "l LOGIN fixture lab-only\r\n",
+        "response": "l OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR CHILDREN UNSELECT MOVE APPENDLIMIT] LOGIN completed\r\n"
+      },
+      {
+        "command": "c1 SELECT INBOX\r\n",
+        "response": "* FLAGS (\\Seen \\Flagged)\r\n* OK [PERMANENTFLAGS (\\*)] Flags permitted.\r\n* OK [UIDNEXT 7] Predicted next UID\r\n* OK [UIDVALIDITY 1] UIDs valid\r\n* 1 EXISTS\r\n* 0 RECENT\r\nc1 OK [READ-WRITE] SELECT completed\r\n"
+      },
+      {
+        "command": "c2 FETCH 1 FLAGS\r\n",
+        "response": "* 1 FETCH (FLAGS (\\Seen \\Flagged))\r\nc2 OK FETCH completed\r\n"
+      },
+      {
+        "command": "c3 LIST \"\" \"*\"\r\n",
+        "response": "* LIST () \"/\" INBOX\r\n* LIST () \"/\" \"fixturebox\"\r\nc3 OK LIST completed\r\n"
+      },
+      {
+        "command": "c4 LSUB \"\" \"*\"\r\n",
+        "response": "* LSUB () \"/\" \"fixturebox\"\r\nc4 OK LSUB completed\r\n"
+      },
+      {
+        "command": "c5 EXAMINE fixturebox\r\n",
+        "response": "* FLAGS (\\Seen \\Flagged)\r\n* OK [PERMANENTFLAGS (\\*)] Flags permitted.\r\n* 2 EXISTS\r\n* 0 RECENT\r\n* OK [UNSEEN 2] Message 2 is first unseen\r\n* OK [UIDNEXT 3] Predicted next UID\r\n* OK [UIDVALIDITY 1] UIDs valid\r\nc5 OK [READ-ONLY] EXAMINE completed\r\n"
+      },
+      {
+        "command": "c6 UID FETCH 2 (FLAGS BODY.PEEK[])\r\n",
+        "response": "* 2 FETCH (FLAGS () BODY[] {51}\r\nSubject: Synthetic mailbox state\r\n\r\nfixture message UID 2)\r\nc6 OK UID FETCH completed\r\n"
+      },
+      {
+        "command": "c7 SEARCH SUBJECT \"Synthetic mailbox\"\r\n",
+        "response": "* SEARCH 2\r\nc7 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "c8 STORE 2 +FLAGS (\\Deleted)\r\n",
+        "response": "c8 NO Mailbox opened in read-only mode\r\n"
+      },
+      {
+        "command": "c9 EXPUNGE\r\n",
+        "response": "c9 NO Mailbox opened in read-only mode\r\n"
+      },
+      {
+        "command": "c10 COPY 2 INBOX\r\n",
+        "response": "c10 OK COPY completed\r\n"
+      },
+      {
+        "command": "c11 MOVE 2 INBOX\r\n",
+        "response": "c11 NO MOVE extension not supported\r\n"
+      }
+    ]
+  },
+  {
+    "handler": "imap",
+    "name": "imap-state-other-account",
+    "profile": "state",
+    "steps": [
+      {
+        "command": "",
+        "response": "* OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR CHILDREN UNSELECT MOVE APPENDLIMIT AUTH=PLAIN] Dovecot Ready\r\n"
+      },
+      {
+        "command": "l LOGIN other lab-only\r\n",
+        "response": "l OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR CHILDREN UNSELECT MOVE APPENDLIMIT] LOGIN completed\r\n"
+      },
+      {
+        "command": "i1 LIST \"\" \"*\"\r\n",
+        "response": "* LIST () \"/\" INBOX\r\ni1 OK LIST completed\r\n"
+      },
+      {
+        "command": "i2 LSUB \"\" \"*\"\r\n",
+        "response": "i2 OK LSUB completed\r\n"
+      },
+      {
+        "command": "s SELECT INBOX\r\n",
+        "response": "* FLAGS (\\Seen)\r\n* OK [PERMANENTFLAGS (\\*)] Flags permitted.\r\n* 0 RECENT\r\n* OK [UIDNEXT 7] Predicted next UID\r\n* OK [UIDVALIDITY 1] UIDs valid\r\n* 1 EXISTS\r\ns OK [READ-WRITE] SELECT completed\r\n"
+      },
+      {
+        "command": "i3 FETCH 1 FLAGS\r\n",
+        "response": "* 1 FETCH (FLAGS (\\Seen))\r\ni3 OK FETCH completed\r\n"
+      }
+    ]
+  },
+  {
+    "handler": "imap",
+    "name": "imap-state-other-listener",
+    "profile": "tls-auth",
+    "steps": [
+      {
+        "command": "",
+        "response": "* OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR CHILDREN UNSELECT MOVE APPENDLIMIT STARTTLS AUTH=PLAIN] Dovecot Ready\r\n"
+      },
+      {
+        "command": "a1 AUTHENTICATE PLAIN AGZpeHR1cmUAbGFiLW9ubHk=\r\n",
+        "response": "a1 OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR CHILDREN UNSELECT MOVE APPENDLIMIT] AUTHENTICATE completed\r\n"
+      },
+      {
+        "command": "i1 LIST \"\" \"*\"\r\n",
+        "response": "* LIST () \"/\" INBOX\r\ni1 OK LIST completed\r\n"
+      },
+      {
+        "command": "i2 LSUB \"\" \"*\"\r\n",
+        "response": "i2 OK LSUB completed\r\n"
+      },
+      {
+        "command": "s SELECT INBOX\r\n",
+        "response": "* FLAGS (\\Seen)\r\n* OK [PERMANENTFLAGS (\\*)] Flags permitted.\r\n* 0 RECENT\r\n* OK [UIDNEXT 7] Predicted next UID\r\n* OK [UIDVALIDITY 1] UIDs valid\r\n* 1 EXISTS\r\ns OK [READ-WRITE] SELECT completed\r\n"
+      },
+      {
+        "command": "i3 FETCH 1 FLAGS\r\n",
+        "response": "* 1 FETCH (FLAGS (\\Seen))\r\ni3 OK FETCH completed\r\n"
+      }
+    ]
+  },
+  {
+    "handler": "imap",
+    "name": "imap-mutation-append-literals",
+    "profile": "plain",
+    "steps": [
+      {
+        "command": "",
+        "response": "* OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR CHILDREN UNSELECT MOVE APPENDLIMIT AUTH=PLAIN] Dovecot Ready\r\n"
+      },
+      {
+        "command": "l LOGIN fixture lab-only\r\n",
+        "response": "l OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR CHILDREN UNSELECT MOVE APPENDLIMIT] LOGIN completed\r\n"
+      },
+      {
+        "command": "c CREATE fixturebox\r\n",
+        "response": "c OK CREATE completed\r\n"
+      },
+      {
+        "command": "a APPEND missing {48}\r\n",
+        "response": "+ send literal\r\n"
+      },
+      {
+        "command": "Subject: Test\r\nContent-Type: text/plain\r\n\r\nHello\r\n",
+        "response": "a NO No such mailbox\r\n"
+      },
+      {
+        "command": "b APPEND fixturebox {48}\r\n",
+        "response": "+ send literal\r\n"
+      },
+      {
+        "command": "Subject: Test\r\nContent-Type: text/plain\r\n\r\nHello\r\n",
+        "response": "b OK APPEND completed\r\n"
+      },
+      {
+        "command": "d APPEND fixturebox (\\Flagged) \"10-Nov-2020 09:30:10 +0000\" {48+}\r\nSubject: Test\r\nContent-Type: text/plain\r\n\r\nHello\r\n",
+        "response": "d OK APPEND completed\r\n"
+      },
+      {
+        "command": "s SELECT fixturebox\r\n",
+        "response": "* FLAGS (\\Flagged)\r\n* OK [PERMANENTFLAGS (\\*)] Flags permitted.\r\n* OK [UNSEEN 1] Message 1 is first unseen\r\n* 2 EXISTS\r\n* 0 RECENT\r\n* OK [UIDNEXT 3] Predicted next UID\r\n* OK [UIDVALIDITY 1] UIDs valid\r\ns OK [READ-WRITE] SELECT completed\r\n"
+      },
+      {
+        "command": "f0 FETCH 1:2 FLAGS\r\n",
+        "response": "* 1 FETCH (FLAGS ())\r\n* 2 FETCH (FLAGS (\\Flagged))\r\nf0 OK FETCH completed\r\n"
+      },
+      {
+        "command": "f1 FETCH 1 BODY[TEXT]\r\n",
+        "response": "* 1 FETCH (BODY[TEXT] {5}\r\nHello)\r\nf1 OK FETCH completed\r\n"
+      },
+      {
+        "command": "f2 FETCH 1:2 FLAGS\r\n",
+        "response": "* 1 FETCH (FLAGS ())\r\n* 2 FETCH (FLAGS (\\Flagged))\r\nf2 OK FETCH completed\r\n"
+      },
+      {
+        "command": "f3 SEARCH SEEN\r\n",
+        "response": "* SEARCH\r\nf3 OK SEARCH completed\r\n"
+      },
+      {
+        "command": "f4 FETCH 1 ENVELOPE\r\n",
+        "response": "* 1 FETCH (ENVELOPE (NIL \"Test\" NIL NIL NIL NIL NIL NIL NIL NIL))\r\nf4 OK FETCH completed\r\n"
+      },
+      {
+        "command": "f5 FETCH 1 BODYSTRUCTURE\r\n",
+        "response": "* 1 FETCH (BODYSTRUCTURE (\"text\" \"plain\" () NIL NIL NIL 5 1 NIL NIL NIL NIL))\r\nf5 OK FETCH completed\r\n"
+      },
+      {
+        "command": "f6 FETCH 2 INTERNALDATE\r\n",
+        "response": "* 2 FETCH (INTERNALDATE \"10-Nov-2020 09:30:10 +0000\")\r\nf6 OK FETCH completed\r\n"
+      }
+    ]
+  },
+  {
+    "handler": "imap",
+    "name": "imap-mime-sections",
+    "profile": "plain",
+    "steps": [
+      {
+        "command": "",
+        "response": "* OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR CHILDREN UNSELECT MOVE APPENDLIMIT AUTH=PLAIN] Dovecot Ready\r\n"
+      },
+      {
+        "command": "p IDLE\r\n",
+        "response": "+ idling\r\n"
+      },
+      {
+        "command": "DONE\r\n",
+        "response": "p OK IDLE completed\r\n"
+      },
+      {
+        "command": "l LOGIN fixture lab-only\r\n",
+        "response": "l OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR CHILDREN UNSELECT MOVE APPENDLIMIT] LOGIN completed\r\n"
+      },
+      {
+        "command": "c CREATE mimebox\r\n",
+        "response": "c OK CREATE completed\r\n"
+      },
+      {
+        "command": "m APPEND mimebox {759+}\r\nFrom: Fixture Sender <sender@example.test>\r\nTo: recipient@example.test\r\nSubject: Multipart fixture\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary=\"outer\"\r\n\r\npreamble\r\n--outer\r\nContent-Type: multipart/alternative; boundary=\"inner\"\r\n\r\n--inner\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: quoted-printable\r\nContent-Language: en\r\nX-Fixture: folded\r\n continuation\r\n\r\nalpha=20plain\r\nsecond\r\n--inner\r\nContent-Type: text/html; charset=utf-8\r\n\r\n<b>alpha</b>\r\n--inner--\r\n--outer\r\nContent-Type: application/octet-stream; name=fixture.bin\r\nContent-Disposition: attachment; filename=\"fixture.bin\"\r\nContent-Transfer-Encoding: base64\r\nContent-ID: <attachment@example.test>\r\nContent-Description: Test data\r\n\r\nAAECAw==\r\n--outer--\r\nepilogue\r\n",
+        "response": "m OK APPEND completed\r\n"
+      },
+      {
+        "command": "e APPEND mimebox {253+}\r\nSubject: Outer\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary=b\r\n\r\n--b\r\nContent-Type: message/rfc822\r\n\r\nDate: Wed, 11 May 2016 14:31:59 +0000\r\nFrom: inner@example.test\r\nSubject: Inner mail\r\nContent-Type: text/plain\r\n\r\nembedded body\r\n--b--\r\n\r\n",
+        "response": "e OK APPEND completed\r\n"
+      },
+      {
+        "command": "s SELECT mimebox\r\n",
+        "response": "* OK [PERMANENTFLAGS (\\*)] Flags permitted.\r\n* OK [UNSEEN 1] Message 1 is first unseen\r\n* 2 EXISTS\r\n* 0 RECENT\r\n* OK [UIDNEXT 3] Predicted next UID\r\n* OK [UIDVALIDITY 1] UIDs valid\r\ns OK [READ-WRITE] SELECT completed\r\n"
+      },
+      {
+        "command": "f00 FETCH 1 BODY\r\n",
+        "response": "* 1 FETCH (BODY (((\"text\" \"plain\" (\"charset\" \"UTF-8\") NIL NIL \"quoted-printable\" 21 2) (\"text\" \"html\" (\"charset\" \"utf-8\") NIL NIL NIL 12 1) \"alternative\") (\"application\" \"octet-stream\" (\"name\" \"fixture.bin\") \"<attachment@example.test>\" \"Test data\" \"base64\" 8) \"mixed\"))\r\nf00 OK FETCH completed\r\n"
+      },
+      {
+        "command": "f01 FETCH 1 BODYSTRUCTURE\r\n",
+        "response": "* 1 FETCH (BODYSTRUCTURE (((\"text\" \"plain\" (\"charset\" \"UTF-8\") NIL NIL \"quoted-printable\" 21 2 NIL NIL NIL NIL) (\"text\" \"html\" (\"charset\" \"utf-8\") NIL NIL NIL 12 1 NIL NIL NIL NIL) \"alternative\" (\"boundary\" \"inner\") NIL NIL NIL) (\"application\" \"octet-stream\" (\"name\" \"fixture.bin\") \"<attachment@example.test>\" \"Test data\" \"base64\" 8 NIL (\"attachment\" (\"filename\" \"fixture.bin\")) NIL NIL) \"mixed\" (\"boundary\" \"outer\") NIL NIL NIL))\r\nf01 OK FETCH completed\r\n"
+      },
+      {
+        "command": "f02 FETCH 1 ENVELOPE\r\n",
+        "response": "* 1 FETCH (ENVELOPE (NIL \"Multipart fixture\" ((\"Fixture Sender\" NIL \"sender\" \"example.test\")) ((\"Fixture Sender\" NIL \"sender\" \"example.test\")) ((\"Fixture Sender\" NIL \"sender\" \"example.test\")) ((NIL NIL \"recipient\" \"example.test\")) NIL NIL NIL NIL))\r\nf02 OK FETCH completed\r\n"
+      },
+      {
+        "command": "f03 FETCH 1 BODY[1]\r\n",
+        "response": "* 1 FETCH (BODY[1] {250}\r\n--inner\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: quoted-printable\r\nContent-Language: en\r\nX-Fixture: folded\r\n continuation\r\n\r\nalpha=20plain\r\nsecond\r\n--inner\r\nContent-Type: text/html; charset=utf-8\r\n\r\n<b>alpha</b>\r\n--inner--)\r\nf03 OK FETCH completed\r\n"
+      },
+      {
+        "command": "f04 FETCH 1 BODY[1.MIME]\r\n",
+        "response": "* 1 FETCH (BODY[1.MIME] {57}\r\nContent-Type: multipart/alternative; boundary=\"inner\"\r\n\r\n)\r\nf04 OK FETCH completed\r\n"
+      },
+      {
+        "command": "f05 FETCH 1 BODY[1.1]\r\n",
+        "response": "* 1 FETCH (BODY[1.1] {21}\r\nalpha=20plain\r\nsecond)\r\nf05 OK FETCH completed\r\n"
+      },
+      {
+        "command": "f06 FETCH 1 BODY[1.1.MIME]\r\n",
+        "response": "* 1 FETCH (BODY[1.1.MIME] {144}\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: quoted-printable\r\nContent-Language: en\r\nX-Fixture: folded\r\n continuation\r\n\r\n)\r\nf06 OK FETCH completed\r\n"
+      },
+      {
+        "command": "f07 FETCH 1 BODY[1.1.HEADER]\r\n",
+        "response": "* 1 FETCH (BODY[1.1.HEADER] {144}\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: quoted-printable\r\nContent-Language: en\r\nX-Fixture: folded\r\n continuation\r\n\r\n)\r\nf07 OK FETCH completed\r\n"
+      },
+      {
+        "command": "f08 FETCH 1 BODY[1.1.TEXT]\r\n",
+        "response": "* 1 FETCH (BODY[1.1.TEXT] {21}\r\nalpha=20plain\r\nsecond)\r\nf08 OK FETCH completed\r\n"
+      },
+      {
+        "command": "f09 FETCH 1 BODY[1.2]\r\n",
+        "response": "* 1 FETCH (BODY[1.2] {12}\r\n<b>alpha</b>)\r\nf09 OK FETCH completed\r\n"
+      },
+      {
+        "command": "f10 FETCH 1 BODY[2]\r\n",
+        "response": "* 1 FETCH (BODY[2] {8}\r\nAAECAw==)\r\nf10 OK FETCH completed\r\n"
+      },
+      {
+        "command": "f11 FETCH 1 BODY[2.MIME]\r\n",
+        "response": "* 1 FETCH (BODY[2.MIME] {223}\r\nContent-Type: application/octet-stream; name=fixture.bin\r\nContent-Disposition: attachment; filename=\"fixture.bin\"\r\nContent-Transfer-Encoding: base64\r\nContent-ID: <attachment@example.test>\r\nContent-Description: Test data\r\n\r\n)\r\nf11 OK FETCH completed\r\n"
+      },
+      {
+        "command": "f12 FETCH 1 BODY[2]<1.4>\r\n",
+        "response": "* 1 FETCH (BODY[2]<1> {4}\r\nAECA)\r\nf12 OK FETCH completed\r\n"
+      },
+      {
+        "command": "f13 FETCH 1 BODY[2.HEADER]\r\n",
+        "response": "* 1 FETCH (BODY[2.HEADER] {223}\r\nContent-Type: application/octet-stream; name=fixture.bin\r\nContent-Disposition: attachment; filename=\"fixture.bin\"\r\nContent-Transfer-Encoding: base64\r\nContent-ID: <attachment@example.test>\r\nContent-Description: Test data\r\n\r\n)\r\nf13 OK FETCH completed\r\n"
+      },
+      {
+        "command": "f14 FETCH 1 BODY[2.TEXT]\r\n",
+        "response": "* 1 FETCH (BODY[2.TEXT] {8}\r\nAAECAw==)\r\nf14 OK FETCH completed\r\n"
+      },
+      {
+        "command": "f15 FETCH 1 BODY[3]\r\n",
+        "response": "* 1 FETCH (BODY[3] NIL)\r\nf15 OK FETCH completed\r\n"
+      },
+      {
+        "command": "f16 FETCH 1 BODY[1.1.HEADER.FIELDS (X-FIXTURE CONTENT-TYPE)]\r\n",
+        "response": "* 1 FETCH (BODY[1.1.HEADER.FIELDS (X-FIXTURE CONTENT-TYPE)] {77}\r\nContent-Type: text/plain; charset=UTF-8\r\nX-Fixture: folded\r\n continuation\r\n\r\n)\r\nf16 OK FETCH completed\r\n"
+      },
+      {
+        "command": "f17 FETCH 1 BODY[HEADER.FIELDS (SUBJECT MIME-VERSION)]\r\n",
+        "response": "* 1 FETCH (BODY[HEADER.FIELDS (SUBJECT MIME-VERSION)] {49}\r\nSubject: Multipart fixture\r\nMIME-Version: 1.0\r\n\r\n)\r\nf17 OK FETCH completed\r\n"
+      },
+      {
+        "command": "f18 FETCH 2 BODY\r\n",
+        "response": "* 2 FETCH (BODY ((\"message\" \"rfc822\" () NIL NIL NIL 127 (\"Wed, 11 May 2016 14:31:59 +0000\" \"Inner mail\" ((NIL NIL \"inner\" \"example.test\")) ((NIL NIL \"inner\" \"example.test\")) ((NIL NIL \"inner\" \"example.test\")) NIL NIL NIL NIL NIL) (\"text\" \"plain\" () NIL NIL NIL 13 1) 7) \"mixed\"))\r\nf18 OK FETCH completed\r\n"
+      },
+      {
+        "command": "f19 FETCH 2 BODYSTRUCTURE\r\n",
+        "response": "* 2 FETCH (BODYSTRUCTURE ((\"message\" \"rfc822\" () NIL NIL NIL 127 (\"Wed, 11 May 2016 14:31:59 +0000\" \"Inner mail\" ((NIL NIL \"inner\" \"example.test\")) ((NIL NIL \"inner\" \"example.test\")) ((NIL NIL \"inner\" \"example.test\")) NIL NIL NIL NIL NIL) (\"text\" \"plain\" () NIL NIL NIL 13 1 NIL NIL NIL NIL) 7 NIL NIL NIL NIL) \"mixed\" (\"boundary\" \"b\") NIL NIL NIL))\r\nf19 OK FETCH completed\r\n"
+      },
+      {
+        "command": "f20 FETCH 2 BODY[1]\r\n",
+        "response": "* 2 FETCH (BODY[1] {127}\r\nDate: Wed, 11 May 2016 14:31:59 +0000\r\nFrom: inner@example.test\r\nSubject: Inner mail\r\nContent-Type: text/plain\r\n\r\nembedded body)\r\nf20 OK FETCH completed\r\n"
+      },
+      {
+        "command": "f21 FETCH 2 BODY[1.MIME]\r\n",
+        "response": "* 2 FETCH (BODY[1.MIME] {32}\r\nContent-Type: message/rfc822\r\n\r\n)\r\nf21 OK FETCH completed\r\n"
+      },
+      {
+        "command": "f22 FETCH 2 BODY[1.HEADER]\r\n",
+        "response": "* 2 FETCH (BODY[1.HEADER] {32}\r\nContent-Type: message/rfc822\r\n\r\n)\r\nf22 OK FETCH completed\r\n"
+      },
+      {
+        "command": "f23 FETCH 2 BODY[1.TEXT]\r\n",
+        "response": "* 2 FETCH (BODY[1.TEXT] {127}\r\nDate: Wed, 11 May 2016 14:31:59 +0000\r\nFrom: inner@example.test\r\nSubject: Inner mail\r\nContent-Type: text/plain\r\n\r\nembedded body)\r\nf23 OK FETCH completed\r\n"
+      },
+      {
+        "command": "f24 FETCH 2 BODY[1.1]\r\n",
+        "response": "* 2 FETCH (BODY[1.1] NIL)\r\nf24 OK FETCH completed\r\n"
+      },
+      {
+        "command": "f25 FETCH 2 BODY[1.1.MIME]\r\n",
+        "response": "* 2 FETCH (BODY[1.1.MIME] NIL)\r\nf25 OK FETCH completed\r\n"
+      },
+      {
+        "command": "f26 FETCH 2 BODY[1.HEADER.FIELDS (SUBJECT)]\r\n",
+        "response": "* 2 FETCH (BODY[1.HEADER.FIELDS (SUBJECT)] {2}\r\n\r\n)\r\nf26 OK FETCH completed\r\n"
+      },
+      {
+        "command": "i IDLE\r\n",
+        "response": "+ idling\r\n"
+      },
+      {
+        "command": "DONE\r\n",
+        "response": "i OK IDLE completed\r\n"
+      },
+      {
+        "command": "n NOOP\r\n",
+        "response": "n OK NOOP completed\r\n"
+      },
+      {
+        "command": "u UNSELECT\r\n",
+        "response": "u OK UNSELECT completed\r\n"
+      },
+      {
+        "command": "x IDLE\r\n",
+        "response": "+ idling\r\n"
+      },
+      {
+        "command": "DONE\r\n",
+        "response": "x OK IDLE completed\r\n"
+      },
+      {
+        "command": "y IDLE extra\r\n",
+        "response": "+ idling\r\n"
+      },
+      {
+        "command": "done\r\n",
+        "response": "y OK IDLE completed\r\n"
+      },
+      {
+        "command": "q IDLE\r\n",
+        "response": "+ idling\r\n"
+      },
+      {
+        "command": "NOOP\r\n",
+        "response": "q NO Expected DONE\r\n"
+      },
+      {
+        "command": "r NOOP\r\n",
+        "response": "r OK NOOP completed\r\n"
+      }
+    ]
+  },
+  {
+    "name": "imap-modified-utf7",
+    "handler": "imap",
+    "profile": "plain",
+    "steps": [
+      {
+        "command": "",
+        "response": "* OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR CHILDREN UNSELECT MOVE APPENDLIMIT AUTH=PLAIN] Dovecot Ready\r\n"
+      },
+      {
+        "command": "u00 LOGIN fixture lab-only\r\n",
+        "response": "u00 OK [CAPABILITY IMAP4rev1 LITERAL+ SASL-IR CHILDREN UNSELECT MOVE APPENDLIMIT] LOGIN completed\r\n"
+      },
+      {
+        "command": "u01 CREATE \"&ZcWITFkHX9g-\"\r\n",
+        "response": "u01 OK CREATE completed\r\n"
+      },
+      {
+        "command": "u02 CREATE \"&ZcWITFkHX9g-/&UxdOrA-\"\r\n",
+        "response": "u02 OK CREATE completed\r\n"
+      },
+      {
+        "command": "u03 CREATE \"&ZcWITIuhUhI-\"\r\n",
+        "response": "u03 OK CREATE completed\r\n"
+      },
+      {
+        "command": "u04 CREATE \"&mHl27tg93gA-\"\r\n",
+        "response": "u04 OK CREATE completed\r\n"
+      },
+      {
+        "command": "u05 CREATE \"Team &- Ops\"\r\n",
+        "response": "u05 OK CREATE completed\r\n"
+      },
+      {
+        "command": "u06 CREATE \"Ren&AOk- &- &AMk-t&AOk-\"\r\n",
+        "response": "u06 OK CREATE completed\r\n"
+      },
+      {
+        "command": "u07 LIST \"\" \"&ZcWITA-*\"\r\n",
+        "response": "* LIST () \"/\" \"&ZcWITFkHX9g-\"\r\n* LIST () \"/\" \"&ZcWITFkHX9g-/&UxdOrA-\"\r\n* LIST () \"/\" \"&ZcWITIuhUhI-\"\r\nu07 OK LIST completed\r\n"
+      },
+      {
+        "command": "u08 LIST \"\" \"&ZcWITA-%\"\r\n",
+        "response": "* LIST () \"/\" \"&ZcWITFkHX9g-\"\r\n* LIST () \"/\" \"&ZcWITIuhUhI-\"\r\nu08 OK LIST completed\r\n"
+      },
+      {
+        "command": "u09 LIST \"&ZcWITFkHX9g-\" \"%\"\r\n",
+        "response": "* LIST () \"/\" \"&ZcWITFkHX9g-/&UxdOrA-\"\r\nu09 OK LIST completed\r\n"
+      },
+      {
+        "command": "u10 LIST \"\" \"*&WQdf2A-*\"\r\n",
+        "response": "* LIST () \"/\" \"&ZcWITFkHX9g-\"\r\n* LIST () \"/\" \"&ZcWITFkHX9g-/&UxdOrA-\"\r\nu10 OK LIST completed\r\n"
+      },
+      {
+        "command": "u11 LIST \"\" \"&mHl27g-%\"\r\n",
+        "response": "* LIST () \"/\" \"&mHl27tg93gA-\"\r\nu11 OK LIST completed\r\n"
+      },
+      {
+        "command": "u12 LIST \"\" \"*&2D3eAA-\"\r\n",
+        "response": "* LIST () \"/\" \"&mHl27tg93gA-\"\r\nu12 OK LIST completed\r\n"
+      },
+      {
+        "command": "u13 SUBSCRIBE \"&ZcWITFkHX9g-\"\r\n",
+        "response": "u13 OK SUBSCRIBE completed\r\n"
+      },
+      {
+        "command": "u14 LSUB \"\" \"&ZcU-*\"\r\n",
+        "response": "* LSUB () \"/\" \"&ZcWITFkHX9g-\"\r\nu14 OK LSUB completed\r\n"
+      },
+      {
+        "command": "u15 APPEND \"&ZcWITFkHX9g-\" {27+}\r\nSubject: fixture\r\n\r\nhello\r\n\r\n",
+        "response": "u15 OK APPEND completed\r\n"
+      },
+      {
+        "command": "u16 STATUS \"&ZcWITFkHX9g-\" (MESSAGES)\r\n",
+        "response": "* STATUS \"&ZcWITFkHX9g-\" (MESSAGES 1)\r\nu16 OK STATUS completed\r\n"
+      },
+      {
+        "command": "u17 SELECT \"&ZcWITFkHX9g-\"\r\n",
+        "response": "* 0 RECENT\r\n* 1 EXISTS\r\n* OK [PERMANENTFLAGS (\\*)] Flags permitted.\r\n* OK [UIDNEXT 2] Predicted next UID\r\n* OK [UIDVALIDITY 1] UIDs valid\r\n* OK [UNSEEN 1] Message 1 is first unseen\r\nu17 OK [READ-WRITE] SELECT completed\r\n"
+      },
+      {
+        "command": "u18 COPY 1 \"&mHl27tg93gA-\"\r\n",
+        "response": "u18 OK COPY completed\r\n"
+      },
+      {
+        "command": "u19 STATUS \"&mHl27tg93gA-\" (MESSAGES)\r\n",
+        "response": "* STATUS \"&mHl27tg93gA-\" (MESSAGES 1)\r\nu19 OK STATUS completed\r\n"
+      },
+      {
+        "command": "u20 RENAME \"&ZcWITFkHX9g-\" \"&j8F5+3ux-\"\r\n",
+        "response": "u20 OK RENAME completed\r\n"
+      },
+      {
+        "command": "u21 LIST \"\" \"&j8F5+w-*\"\r\n",
+        "response": "* LIST () \"/\" \"&j8F5+3ux-\"\r\nu21 OK LIST completed\r\n"
+      },
+      {
+        "command": "u22 STATUS \"&j8F5+3ux-\" (MESSAGES)\r\n",
+        "response": "* STATUS \"&j8F5+3ux-\" (MESSAGES 1)\r\nu22 OK STATUS completed\r\n"
+      },
+      {
+        "command": "u23 DELETE \"&j8F5+3ux-\"\r\n",
+        "response": "u23 OK DELETE completed\r\n"
+      },
+      {
+        "command": "u24 CREATE \"broken&\"\r\n",
+        "response": "u24 BAD utf7: invalid UTF-7\r\n"
+      },
+      {
+        "command": "u25 CREATE \"&A-\"\r\n",
+        "response": "u25 BAD utf7: invalid UTF-7\r\n"
+      },
+      {
+        "command": "u26 CREATE \"&AGE-\"\r\n",
+        "response": "u26 BAD utf7: invalid UTF-7\r\n"
+      },
+      {
+        "command": "u27 LIST \"\" \"&A-\"\r\n",
+        "response": "u27 BAD utf7: invalid UTF-7\r\n"
+      },
+      {
+        "command": "u28 CREATE \"caf\u00e9\"\r\n",
+        "response": "u28 BAD utf7: invalid UTF-7\r\n"
+      },
+      {
+        "command": "u29 NOOP\r\n",
+        "response": "u29 OK NOOP completed\r\n"
+      },
+      {
+        "command": "u30 LOGOUT\r\n",
+        "response": "* BYE Closing connection\r\nu30 OK LOGOUT completed\r\n"
+      }
+    ]
+  }
+]

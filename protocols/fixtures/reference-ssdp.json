@@ -1,0 +1,261 @@
+{
+  "listeners": {
+    "default": {
+      "params": {},
+      "response": "HTTP/1.1 200 OK\r\nCACHE-CONTROL: max-age=1800\r\nST: upnp:rootdevice\r\nUSN: uuid:00000000-0000-0000-0000-000000000000::upnp:rootdevice\r\nEXT: \r\nSERVER: OS 1.0 UPnP/1.0 Realtek/V1.3\r\nLOCATION: http://192.168.0.1:54383/rootDesc.xml\r\n\r\n"
+    },
+    "custom": {
+      "params": {
+        "server_version": "Fixture/2.0 UPnP/1.1",
+        "max_age": 30,
+        "dev_type": "urn:fixture.invalid:device:Demo:1",
+        "dev_usn": "uuid:f276a12b-5187-41d8-82b7-297a6c4c8881::urn:fixture.invalid:device:Demo:1",
+        "dev_location": "http://127.0.0.1:25500/rootDesc.xml?asset=demo&version=1",
+        "headers": [
+          "X-Fixture: alpha",
+          "x-fixture: beta",
+          "X-Value: left:right",
+          "X-No-Space:omitted",
+          "X-Empty: ",
+          "CACHE-CONTROL: max-age=31"
+        ]
+      },
+      "response": "HTTP/1.1 200 OK\r\nCACHE-CONTROL: max-age=30\r\nST: urn:fixture.invalid:device:Demo:1\r\nUSN: uuid:f276a12b-5187-41d8-82b7-297a6c4c8881::urn:fixture.invalid:device:Demo:1\r\nEXT: \r\nSERVER: Fixture/2.0 UPnP/1.1\r\nX-Fixture: alpha\r\nx-fixture: beta\r\nX-Value: left:right\r\nX-Empty: \r\nCACHE-CONTROL: max-age=31\r\nLOCATION: http://127.0.0.1:25500/rootDesc.xml?asset=demo&version=1\r\n\r\n"
+    },
+    "empty": {
+      "params": {
+        "server_version": "",
+        "dev_type": "",
+        "dev_usn": "",
+        "dev_location": "",
+        "max_age": 0,
+        "headers": []
+      },
+      "response": "HTTP/1.1 200 OK\r\nCACHE-CONTROL: max-age=0\r\nST: upnp:rootdevice\r\nUSN: uuid:00000000-0000-0000-0000-000000000000::upnp:rootdevice\r\nEXT: \r\nSERVER: OS 1.0 UPnP/1.0 Realtek/V1.3\r\nLOCATION: http://192.168.0.1:54383/rootDesc.xml\r\n\r\n"
+    }
+  },
+  "cases": [
+    {
+      "name": "root",
+      "listener": "default",
+      "send": "M-SEARCH * HTTP/1.1\r\nHOST: {host}\r\nMAN: \"ssdp:discover\"\r\nMX: 1\r\nST: upnp:rootdevice\r\n\r\n",
+      "replies": true,
+      "events": [
+        {
+          "msg": "request",
+          "method": "M-SEARCH"
+        }
+      ]
+    },
+    {
+      "name": "all",
+      "listener": "default",
+      "send": "M-SEARCH * HTTP/1.1\r\nHOST: {host}\r\nMAN: \"ssdp:discover\"\r\nMX: 1\r\nST: ssdp:all\r\n\r\n",
+      "replies": true,
+      "events": [
+        {
+          "msg": "request",
+          "method": "M-SEARCH"
+        }
+      ]
+    },
+    {
+      "name": "unicast-no-mx",
+      "listener": "default",
+      "send": "M-SEARCH * HTTP/1.1\r\nHOST: {host}\r\nMAN: \"ssdp:discover\"\r\nST: upnp:rootdevice\r\n\r\n",
+      "replies": true,
+      "events": [
+        {
+          "msg": "request",
+          "method": "M-SEARCH"
+        }
+      ]
+    },
+    {
+      "name": "unknown-target",
+      "sim_reply": null,
+      "listener": "default",
+      "send": "M-SEARCH * HTTP/1.1\r\nHOST: {host}\r\nMAN: \"ssdp:discover\"\r\nMX: 1\r\nST: urn:fixture.invalid:device:Other:1\r\n\r\n",
+      "replies": true,
+      "events": [
+        {
+          "msg": "request",
+          "method": "M-SEARCH"
+        }
+      ]
+    },
+    {
+      "name": "target-omitted",
+      "sim_reply": null,
+      "listener": "default",
+      "send": "M-SEARCH * HTTP/1.1\r\nHOST: {host}\r\nMAN: \"ssdp:discover\"\r\nMX: 1\r\n\r\n",
+      "replies": true,
+      "events": [
+        {
+          "msg": "request",
+          "method": "M-SEARCH"
+        }
+      ]
+    },
+    {
+      "name": "no-discovery-headers",
+      "sim_reply": null,
+      "listener": "default",
+      "send": "M-SEARCH * HTTP/1.1\r\n\r\n",
+      "replies": true,
+      "events": [
+        {
+          "msg": "request",
+          "method": "M-SEARCH"
+        }
+      ]
+    },
+    {
+      "name": "repeated-target",
+      "sim_reply": null,
+      "listener": "default",
+      "send": "M-SEARCH * HTTP/1.1\r\nHOST: {host}\r\nMAN: \"ssdp:discover\"\r\nMX: 1\r\nST: upnp:rootdevice\r\nST: ssdp:all\r\n\r\n",
+      "replies": true,
+      "events": [
+        {
+          "msg": "request",
+          "method": "M-SEARCH"
+        }
+      ]
+    },
+    {
+      "name": "discovery-fields-lowercase",
+      "listener": "default",
+      "send": "M-SEARCH * HTTP/1.1\r\nhost: {host}\r\nman: \"ssdp:discover\"\r\nmx: 1\r\nst: upnp:rootdevice\r\n\r\n",
+      "replies": true,
+      "events": [
+        {
+          "msg": "request",
+          "method": "M-SEARCH"
+        }
+      ]
+    },
+    {
+      "name": "http10",
+      "sim_reply": null,
+      "listener": "default",
+      "send": "M-SEARCH * HTTP/1.0\r\nHOST: {host}\r\nMAN: \"ssdp:discover\"\r\nMX: 1\r\nST: upnp:rootdevice\r\n\r\n",
+      "replies": true,
+      "events": [
+        {
+          "msg": "request",
+          "method": "M-SEARCH"
+        }
+      ]
+    },
+    {
+      "name": "lf",
+      "listener": "default",
+      "send": "M-SEARCH * HTTP/1.1\nHOST: {host}\nMAN: \"ssdp:discover\"\nMX: 1\nST: upnp:rootdevice\n\n",
+      "replies": true,
+      "events": [
+        {
+          "msg": "request",
+          "method": "M-SEARCH"
+        }
+      ]
+    },
+    {
+      "name": "notify",
+      "listener": "default",
+      "send": "NOTIFY * HTTP/1.1\r\nHOST: {host}\r\nNT: upnp:rootdevice\r\nNTS: ssdp:alive\r\n\r\n",
+      "replies": false,
+      "events": [
+        {
+          "msg": "request",
+          "method": "NOTIFY"
+        }
+      ]
+    },
+    {
+      "name": "lowercase-method",
+      "listener": "default",
+      "send": "m-search * HTTP/1.1\r\nHOST: {host}\r\nMAN: \"ssdp:discover\"\r\nMX: 1\r\nST: upnp:rootdevice\r\n\r\n",
+      "replies": false,
+      "events": [
+        {
+          "msg": "request",
+          "method": "m-search"
+        }
+      ]
+    },
+    {
+      "name": "nonstar",
+      "listener": "default",
+      "send": "M-SEARCH /rootDesc.xml HTTP/1.1\r\nHOST: {host}\r\nMAN: \"ssdp:discover\"\r\nMX: 1\r\nST: upnp:rootdevice\r\n\r\n",
+      "replies": false,
+      "events": [
+        {
+          "msg": "handler error:[SSDP] unknown path"
+        }
+      ],
+      "virtual_events": []
+    },
+    {
+      "name": "incomplete",
+      "listener": "default",
+      "send": "M-SEARCH * HTTP/1.1\r\nST: ssdp:all\r\n",
+      "replies": false,
+      "events": [
+        {
+          "msg": "handler error:unexpected EOF"
+        }
+      ],
+      "virtual_events": []
+    },
+    {
+      "name": "configured-target",
+      "listener": "custom",
+      "send": "M-SEARCH * HTTP/1.1\r\nHOST: {host}\r\nMAN: \"ssdp:discover\"\r\nMX: 1\r\nST: urn:fixture.invalid:device:Demo:1\r\n\r\n",
+      "replies": true,
+      "events": [
+        {
+          "msg": "request",
+          "method": "M-SEARCH"
+        }
+      ]
+    },
+    {
+      "name": "uuid-target",
+      "sim_reply": "HTTP/1.1 200 OK\r\nCACHE-CONTROL: max-age=30\r\nST: uuid:f276a12b-5187-41d8-82b7-297a6c4c8881\r\nUSN: uuid:f276a12b-5187-41d8-82b7-297a6c4c8881\r\nEXT: \r\nSERVER: Fixture/2.0 UPnP/1.1\r\nX-Fixture: alpha\r\nx-fixture: beta\r\nX-Value: left:right\r\nX-Empty: \r\nCACHE-CONTROL: max-age=31\r\nLOCATION: http://127.0.0.1:25500/rootDesc.xml?asset=demo&version=1\r\n\r\n",
+      "listener": "custom",
+      "send": "M-SEARCH * HTTP/1.1\r\nHOST: {host}\r\nMAN: \"ssdp:discover\"\r\nMX: 1\r\nST: uuid:f276a12b-5187-41d8-82b7-297a6c4c8881\r\n\r\n",
+      "replies": true,
+      "events": [
+        {
+          "msg": "request",
+          "method": "M-SEARCH"
+        }
+      ]
+    },
+    {
+      "name": "search-all",
+      "listener": "custom",
+      "send": "M-SEARCH * HTTP/1.1\r\nHOST: {host}\r\nMAN: \"ssdp:discover\"\r\nMX: 1\r\nST: ssdp:all\r\n\r\n",
+      "replies": true,
+      "events": [
+        {
+          "msg": "request",
+          "method": "M-SEARCH"
+        }
+      ]
+    },
+    {
+      "name": "empty-configuration",
+      "listener": "empty",
+      "send": "M-SEARCH * HTTP/1.1\r\nHOST: {host}\r\nMAN: \"ssdp:discover\"\r\nMX: 1\r\nST: upnp:rootdevice\r\n\r\n",
+      "replies": true,
+      "events": [
+        {
+          "msg": "request",
+          "method": "M-SEARCH"
+        }
+      ]
+    }
+  ]
+}

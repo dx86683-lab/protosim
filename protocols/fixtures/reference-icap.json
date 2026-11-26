@@ -1,0 +1,1328 @@
+{
+  "listeners": {
+    "default": {},
+    "options-capabilities": {
+      "server": "Fixture/2.0",
+      "headers": [
+        "Allow: 204",
+        "Preview: 4",
+        "Transfer-Preview: txt, html",
+        "Transfer-Ignore: jpg",
+        "Options-TTL: 60",
+        "X-Comment: synthetic"
+      ]
+    },
+    "custom": {
+      "server": "Fixture/1.2",
+      "headers": [
+        "X-Custom: z",
+        "ISTag: lab",
+        "x-custom: lower",
+        "X-Value: left:right"
+      ]
+    },
+    "conflict": {
+      "server": "override",
+      "headers": [
+        "Service: set-header",
+        "Max-Connections: 9",
+        "Methods: RESPmod",
+        "X-Dup: one",
+        "X-Dup: two"
+      ]
+    },
+    "empty": {
+      "server": "",
+      "headers": []
+    }
+  },
+  "cases": [
+    {
+      "name": "options-matrix-preview-split-ieof",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "REQMOD icap://fixture.invalid/service ICAP/1.0\r\nEncapsulated: req-hdr=0, req-body=77\r\nPreview: 4\r\nAllow: 204\r\n\r\nPOST /fixture HTTP/1.1\r\nHost: fixture.invalid\r\nTransfer-Encoding: chunked\r\n\r\n2\r\nhi\r\n2\r\n!!\r\n0; ieof\r\n\r\n",
+          "receive": ["ICAP/1.0 200 OK\r\nConnection: close\r\nEncapsulated: req-hdr=0, req-body=77\r\nHost: 0.0.0.0:{port}\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\n\r\nPOST /fixture HTTP/1.1\r\nHost: fixture.invalid\r\nUser-Agent: Go-http-client/1.1\r\nTransfer-Encoding: chunked\r\n\r\n4\r\nhi!!\r\n0\r\n\r\n"],
+          "closed": true
+        }
+      ],
+      "events": [{"msg":"new message","method":"REQMOD","url":"icap://fixture.invalid/service","proto":"ICAP/1.0","headers":{"Encapsulated":["req-hdr=0, req-body=77"],"Preview":["4"],"Allow":["204"]}}]
+    },
+    {
+      "name": "options-matrix-preview-split",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "REQMOD icap://fixture.invalid/service ICAP/1.0\r\nEncapsulated: req-hdr=0, req-body=77\r\nPreview: 4\r\nAllow: 204\r\n\r\nPOST /fixture HTTP/1.1\r\nHost: fixture.invalid\r\nTransfer-Encoding: chunked\r\n\r\n2\r\nhi\r\n2\r\n!!\r\n0\r\n\r\n",
+          "receive": ["ICAP/1.0 200 OK\r\nConnection: close\r\nEncapsulated: req-hdr=0, req-body=77\r\nHost: 0.0.0.0:{port}\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\n\r\nPOST /fixture HTTP/1.1\r\nHost: fixture.invalid\r\nUser-Agent: Go-http-client/1.1\r\nTransfer-Encoding: chunked\r\n\r\n4\r\nhi!!\r\n0\r\n\r\n"],
+          "closed": true
+        }
+      ],
+      "events": [{"msg":"new message","method":"REQMOD","url":"icap://fixture.invalid/service","proto":"ICAP/1.0","headers":{"Encapsulated":["req-hdr=0, req-body=77"],"Preview":["4"],"Allow":["204"]}}]
+    },
+    {
+      "name": "options-matrix-get-chunked",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "REQMOD icap://fixture.invalid/service ICAP/1.0\r\nEncapsulated: req-hdr=0, req-body=76\r\n\r\nGET /fixture HTTP/1.1\r\nHost: fixture.invalid\r\nTransfer-Encoding: chunked\r\n\r\n2\r\nhi\r\n2\r\n!!\r\n0\r\n\r\n",
+          "receive": ["ICAP/1.0 200 OK\r\nConnection: close\r\nEncapsulated: req-hdr=0, req-body=76\r\nHost: 0.0.0.0:{port}\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\n\r\nGET /fixture HTTP/1.1\r\nHost: fixture.invalid\r\nUser-Agent: Go-http-client/1.1\r\nTransfer-Encoding: chunked\r\n\r\n2\r\nhi\r\n2\r\n!!\r\n0\r\n\r\n"],
+          "closed": true
+        }
+      ],
+      "events": [{"msg":"new message","method":"REQMOD","url":"icap://fixture.invalid/service","proto":"ICAP/1.0","headers":{"Encapsulated":["req-hdr=0, req-body=76"]}}]
+    },
+    {
+      "name": "options-matrix-get-inferred-chunked",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "REQMOD icap://fixture.invalid/service ICAP/1.0\r\nEncapsulated: req-hdr=0, req-body=48\r\n\r\nGET /fixture HTTP/1.1\r\nHost: fixture.invalid\r\n\r\n2\r\nhi\r\n2\r\n!!\r\n0\r\n\r\n",
+          "receive": ["ICAP/1.0 200 OK\r\nConnection: close\r\nEncapsulated: req-hdr=0, req-body=48\r\nHost: 0.0.0.0:{port}\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\n\r\nGET /fixture HTTP/1.1\r\nHost: fixture.invalid\r\nUser-Agent: Go-http-client/1.1\r\nTransfer-Encoding: chunked\r\n\r\n1\r\nh\r\n1\r\ni\r\n2\r\n!!\r\n0\r\n\r\n"],
+          "closed": true
+        }
+      ],
+      "events": [{"msg":"new message","method":"REQMOD","url":"icap://fixture.invalid/service","proto":"ICAP/1.0","headers":{"Encapsulated":["req-hdr=0, req-body=48"]}}]
+    },
+    {
+      "name": "options-matrix-post-inferred-chunked",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "REQMOD icap://fixture.invalid/service ICAP/1.0\r\nEncapsulated: req-hdr=0, req-body=49\r\n\r\nPOST /fixture HTTP/1.1\r\nHost: fixture.invalid\r\n\r\n2\r\nhi\r\n2\r\n!!\r\n0\r\n\r\n",
+          "receive": ["ICAP/1.0 200 OK\r\nConnection: close\r\nEncapsulated: req-hdr=0, req-body=49\r\nHost: 0.0.0.0:{port}\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\n\r\nPOST /fixture HTTP/1.1\r\nHost: fixture.invalid\r\nUser-Agent: Go-http-client/1.1\r\nTransfer-Encoding: chunked\r\n\r\n2\r\nhi\r\n2\r\n!!\r\n0\r\n\r\n"],
+          "closed": true
+        }
+      ],
+      "events": [{"msg":"new message","method":"REQMOD","url":"icap://fixture.invalid/service","proto":"ICAP/1.0","headers":{"Encapsulated":["req-hdr=0, req-body=49"]}}]
+    },
+    {
+      "name": "options-matrix-get-many-chunks",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "REQMOD icap://fixture.invalid/service ICAP/1.0\r\nEncapsulated: req-hdr=0, req-body=48\r\n\r\nGET /fixture HTTP/1.1\r\nHost: fixture.invalid\r\n\r\n1\r\nh\r\n2\r\ney\r\n3\r\nyou\r\n0\r\n\r\n",
+          "receive": ["ICAP/1.0 200 OK\r\nConnection: close\r\nEncapsulated: req-hdr=0, req-body=48\r\nHost: 0.0.0.0:{port}\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\n\r\nGET /fixture HTTP/1.1\r\nHost: fixture.invalid\r\nUser-Agent: Go-http-client/1.1\r\nTransfer-Encoding: chunked\r\n\r\n1\r\nh\r\n2\r\ney\r\n3\r\nyou\r\n0\r\n\r\n"],
+          "closed": true
+        }
+      ],
+      "events": [{"msg":"new message","method":"REQMOD","url":"icap://fixture.invalid/service","proto":"ICAP/1.0","headers":{"Encapsulated":["req-hdr=0, req-body=48"]}}]
+    },
+    {
+      "name": "options-matrix-options-default",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "OPTIONS icap://fixture.invalid/service ICAP/1.0\r\nHost: fixture.invalid\r\n\r\n",
+          "receive": ["ICAP/1.0 200 OK\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\nMax-Connections: 50\r\nMethods: REQMOD, RESPMOD\r\nService: GreasySpoon service version 1.0.8-01\r\n\r\n"],
+          "closed": true
+        }
+      ],
+      "events": [{"msg":"new message","method":"OPTIONS","url":"icap://fixture.invalid/service","proto":"ICAP/1.0","headers":{"Host":["fixture.invalid"]}}]
+    },
+    {
+      "name": "options-matrix-options-configured",
+      "listener": "options-capabilities",
+      "steps": [
+        {
+          "send": "OPTIONS icap://fixture.invalid/service ICAP/1.0\r\nHost: fixture.invalid\r\nUser-Agent: fixture/1.0\r\n\r\n",
+          "receive": ["ICAP/1.0 200 OK\r\nAllow: 204\r\nMax-Connections: 50\r\nMethods: REQMOD, RESPMOD\r\nOptions-Ttl: 60\r\nPreview: 4\r\nService: Fixture/2.0\r\nTransfer-Ignore: jpg\r\nTransfer-Preview: txt, html\r\nX-Comment: synthetic\r\n\r\n"],
+          "closed": true
+        }
+      ],
+      "events": [{"msg":"new message","method":"OPTIONS","url":"icap://fixture.invalid/service","proto":"ICAP/1.0","headers":{"Host":["fixture.invalid"],"User-Agent":["fixture/1.0"]}}]
+    },
+    {
+      "name": "options-matrix-options-preview",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "OPTIONS icap://fixture.invalid/service ICAP/1.0\r\nEncapsulated: opt-body=0\r\nPreview: 4\r\nAllow: 204\r\n\r\n4\r\nokay\r\n0; ieof\r\n\r\n",
+          "receive": ["ICAP/1.0 200 OK\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\nMax-Connections: 50\r\nMethods: REQMOD, RESPMOD\r\nService: GreasySpoon service version 1.0.8-01\r\n\r\n"],
+          "closed": true
+        }
+      ],
+      "events": [{"msg":"new message","method":"OPTIONS","url":"icap://fixture.invalid/service","proto":"ICAP/1.0","headers":{"Encapsulated":["opt-body=0"],"Preview":["4"],"Allow":["204"]}}]
+    },
+    {
+      "name": "options-matrix-content-length-split-chunks",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "REQMOD icap://fixture.invalid/service ICAP/1.0\r\nEncapsulated: req-hdr=0, req-body=94\r\n\r\nPOST /fixture HTTP/1.1\r\nHost: fixture.invalid\r\nContent-Length: 4\r\nContent-Type: text/plain\r\n\r\n2\r\nhi\r\n2\r\n!!\r\n0\r\n\r\n",
+          "receive": ["ICAP/1.0 200 OK\r\nConnection: close\r\nEncapsulated: req-hdr=0, req-body=94\r\nHost: 0.0.0.0:{port}\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\n\r\nPOST /fixture HTTP/1.1\r\nHost: fixture.invalid\r\nUser-Agent: Go-http-client/1.1\r\nContent-Length: 4\r\nContent-Type: text/plain\r\n\r\nhi!!"],
+          "closed": true
+        }
+      ],
+      "events": [{"msg":"new message","method":"REQMOD","url":"icap://fixture.invalid/service","proto":"ICAP/1.0","headers":{"Encapsulated":["req-hdr=0, req-body=94"]}}]
+    },
+    {
+      "name": "options-matrix-content-length-trailing-field",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "REQMOD icap://fixture.invalid/service ICAP/1.0\r\nEncapsulated: req-hdr=0, req-body=94\r\n\r\nPOST /fixture HTTP/1.1\r\nHost: fixture.invalid\r\nContent-Length: 4\r\nContent-Type: text/plain\r\n\r\n2\r\nhi\r\n2\r\n!!\r\n0\r\nX-Checksum: checked\r\n\r\n",
+          "receive": ["ICAP/1.0 200 OK\r\nConnection: close\r\nEncapsulated: req-hdr=0, req-body=94\r\nHost: 0.0.0.0:{port}\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\n\r\nPOST /fixture HTTP/1.1\r\nHost: fixture.invalid\r\nUser-Agent: Go-http-client/1.1\r\nContent-Length: 4\r\nContent-Type: text/plain\r\n\r\nhi!!"],
+          "closed": true
+        }
+      ],
+      "events": [{"msg":"new message","method":"REQMOD","url":"icap://fixture.invalid/service","proto":"ICAP/1.0","headers":{"Encapsulated":["req-hdr=0, req-body=94"]}}]
+    },
+    {
+      "name": "options-matrix-chunked-split-chunks",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "REQMOD icap://fixture.invalid/service ICAP/1.0\r\nEncapsulated: req-hdr=0, req-body=77\r\n\r\nPOST /fixture HTTP/1.1\r\nHost: fixture.invalid\r\nTransfer-Encoding: chunked\r\n\r\n2\r\nhi\r\n2\r\n!!\r\n0\r\n\r\n",
+          "receive": ["ICAP/1.0 200 OK\r\nConnection: close\r\nEncapsulated: req-hdr=0, req-body=77\r\nHost: 0.0.0.0:{port}\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\n\r\nPOST /fixture HTTP/1.1\r\nHost: fixture.invalid\r\nUser-Agent: Go-http-client/1.1\r\nTransfer-Encoding: chunked\r\n\r\n2\r\nhi\r\n2\r\n!!\r\n0\r\n\r\n"],
+          "closed": true
+        }
+      ],
+      "events": [{"msg":"new message","method":"REQMOD","url":"icap://fixture.invalid/service","proto":"ICAP/1.0","headers":{"Encapsulated":["req-hdr=0, req-body=77"]}}]
+    },
+    {
+      "name": "options-matrix-chunked-declared-trailer",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "REQMOD icap://fixture.invalid/service ICAP/1.0\r\nEncapsulated: req-hdr=0, req-body=98\r\n\r\nPOST /fixture HTTP/1.1\r\nHost: fixture.invalid\r\nTransfer-Encoding: chunked\r\nTrailer: X-Checksum\r\n\r\n2\r\nhi\r\n2\r\n!!\r\n0\r\nX-Checksum: checked\r\n\r\n",
+          "receive": ["ICAP/1.0 200 OK\r\nConnection: close\r\nEncapsulated: req-hdr=0, req-body=98\r\nHost: 0.0.0.0:{port}\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\n\r\nPOST /fixture HTTP/1.1\r\nHost: fixture.invalid\r\nUser-Agent: Go-http-client/1.1\r\nTransfer-Encoding: chunked\r\nTrailer: X-Checksum\r\n\r\n2\r\nhi\r\n2\r\n!!\r\n0\r\n\r\n"],
+          "closed": true
+        }
+      ],
+      "events": [{"msg":"new message","method":"REQMOD","url":"icap://fixture.invalid/service","proto":"ICAP/1.0","headers":{"Encapsulated":["req-hdr=0, req-body=98"]}}]
+    },
+    {
+      "name": "options-matrix-chunked-no-trailer-values",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "REQMOD icap://fixture.invalid/service ICAP/1.0\r\nEncapsulated: req-hdr=0, req-body=98\r\n\r\nPOST /fixture HTTP/1.1\r\nHost: fixture.invalid\r\nTransfer-Encoding: chunked\r\nTrailer: X-Checksum\r\n\r\n2\r\nhi\r\n2\r\n!!\r\n0\r\n\r\n",
+          "receive": ["ICAP/1.0 200 OK\r\nConnection: close\r\nEncapsulated: req-hdr=0, req-body=98\r\nHost: 0.0.0.0:{port}\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\n\r\nPOST /fixture HTTP/1.1\r\nHost: fixture.invalid\r\nUser-Agent: Go-http-client/1.1\r\nTransfer-Encoding: chunked\r\nTrailer: X-Checksum\r\n\r\n2\r\nhi\r\n2\r\n!!\r\n0\r\n\r\n"],
+          "closed": true
+        }
+      ],
+      "events": [{"msg":"new message","method":"REQMOD","url":"icap://fixture.invalid/service","proto":"ICAP/1.0","headers":{"Encapsulated":["req-hdr=0, req-body=98"]}}]
+    },
+    {
+      "name": "options-matrix-chunked-empty",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "REQMOD icap://fixture.invalid/service ICAP/1.0\r\nEncapsulated: req-hdr=0, req-body=77\r\n\r\nPOST /fixture HTTP/1.1\r\nHost: fixture.invalid\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n",
+          "receive": ["ICAP/1.0 200 OK\r\nConnection: close\r\nEncapsulated: req-hdr=0, req-body=77\r\nHost: 0.0.0.0:{port}\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\n\r\nPOST /fixture HTTP/1.1\r\nHost: fixture.invalid\r\nUser-Agent: Go-http-client/1.1\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n"],
+          "closed": true
+        }
+      ],
+      "events": [{"msg":"new message","method":"REQMOD","url":"icap://fixture.invalid/service","proto":"ICAP/1.0","headers":{"Encapsulated":["req-hdr=0, req-body=77"]}}]
+    },
+    {
+      "name": "options-matrix-chunked-preview",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "REQMOD icap://fixture.invalid/service ICAP/1.0\r\nEncapsulated: req-hdr=0, req-body=77\r\nPreview: 4\r\nAllow: 204\r\n\r\nPOST /fixture HTTP/1.1\r\nHost: fixture.invalid\r\nTransfer-Encoding: chunked\r\n\r\n4\r\nokay\r\n0; ieof\r\n\r\n",
+          "receive": ["ICAP/1.0 200 OK\r\nConnection: close\r\nEncapsulated: req-hdr=0, req-body=77\r\nHost: 0.0.0.0:{port}\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\n\r\nPOST /fixture HTTP/1.1\r\nHost: fixture.invalid\r\nUser-Agent: Go-http-client/1.1\r\nTransfer-Encoding: chunked\r\n\r\n4\r\nokay\r\n0\r\n\r\n"],
+          "closed": true
+        }
+      ],
+      "events": [{"msg":"new message","method":"REQMOD","url":"icap://fixture.invalid/service","proto":"ICAP/1.0","headers":{"Encapsulated":["req-hdr=0, req-body=77"],"Preview":["4"],"Allow":["204"]}}]
+    },
+    {
+      "name": "options-matrix-put-chunked",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "REQMOD icap://fixture.invalid/service ICAP/1.0\r\nEncapsulated: req-hdr=0, req-body=76\r\n\r\nPUT /fixture HTTP/1.1\r\nHost: fixture.invalid\r\nTransfer-Encoding: chunked\r\n\r\n2\r\nhi\r\n2\r\n!!\r\n0\r\n\r\n",
+          "receive": ["ICAP/1.0 200 OK\r\nConnection: close\r\nEncapsulated: req-hdr=0, req-body=76\r\nHost: 0.0.0.0:{port}\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\n\r\nPUT /fixture HTTP/1.1\r\nHost: fixture.invalid\r\nUser-Agent: Go-http-client/1.1\r\nTransfer-Encoding: chunked\r\n\r\n2\r\nhi\r\n2\r\n!!\r\n0\r\n\r\n"],
+          "closed": true
+        }
+      ],
+      "events": [{"msg":"new message","method":"REQMOD","url":"icap://fixture.invalid/service","proto":"ICAP/1.0","headers":{"Encapsulated":["req-hdr=0, req-body=76"]}}]
+    },
+    {
+      "name": "options-matrix-patch-chunked",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "REQMOD icap://fixture.invalid/service ICAP/1.0\r\nEncapsulated: req-hdr=0, req-body=78\r\n\r\nPATCH /fixture HTTP/1.1\r\nHost: fixture.invalid\r\nTransfer-Encoding: chunked\r\n\r\n2\r\nhi\r\n2\r\n!!\r\n0\r\n\r\n",
+          "receive": ["ICAP/1.0 200 OK\r\nConnection: close\r\nEncapsulated: req-hdr=0, req-body=78\r\nHost: 0.0.0.0:{port}\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\n\r\nPATCH /fixture HTTP/1.1\r\nHost: fixture.invalid\r\nUser-Agent: Go-http-client/1.1\r\nTransfer-Encoding: chunked\r\n\r\n2\r\nhi\r\n2\r\n!!\r\n0\r\n\r\n"],
+          "closed": true
+        }
+      ],
+      "events": [{"msg":"new message","method":"REQMOD","url":"icap://fixture.invalid/service","proto":"ICAP/1.0","headers":{"Encapsulated":["req-hdr=0, req-body=78"]}}]
+    },
+    {
+      "name": "options-matrix-head-null-body",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "REQMOD icap://fixture.invalid/service ICAP/1.0\r\nEncapsulated: req-hdr=0, null-body=49\r\n\r\nHEAD /fixture HTTP/1.1\r\nHost: fixture.invalid\r\n\r\n",
+          "receive": ["ICAP/1.0 200 OK\r\nConnection: close\r\nEncapsulated: req-hdr=0, null-body=49\r\nHost: 0.0.0.0:{port}\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\n\r\nHEAD /fixture HTTP/1.1\r\nHost: fixture.invalid\r\nUser-Agent: Go-http-client/1.1\r\n\r\n"],
+          "closed": true
+        }
+      ],
+      "events": [{"msg":"new message","method":"REQMOD","url":"icap://fixture.invalid/service","proto":"ICAP/1.0","headers":{"Encapsulated":["req-hdr=0, null-body=49"]}}]
+    },
+    {
+      "name": "options-matrix-delete-null-body",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "REQMOD icap://fixture.invalid/service ICAP/1.0\r\nEncapsulated: req-hdr=0, null-body=51\r\n\r\nDELETE /fixture HTTP/1.1\r\nHost: fixture.invalid\r\n\r\n",
+          "receive": ["ICAP/1.0 200 OK\r\nConnection: close\r\nEncapsulated: req-hdr=0, null-body=51\r\nHost: 0.0.0.0:{port}\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\n\r\nDELETE /fixture HTTP/1.1\r\nHost: fixture.invalid\r\nUser-Agent: Go-http-client/1.1\r\n\r\n"],
+          "closed": true
+        }
+      ],
+      "events": [{"msg":"new message","method":"REQMOD","url":"icap://fixture.invalid/service","proto":"ICAP/1.0","headers":{"Encapsulated":["req-hdr=0, null-body=51"]}}]
+    },
+    {
+      "name": "options-matrix-options-null-body",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "REQMOD icap://fixture.invalid/service ICAP/1.0\r\nEncapsulated: req-hdr=0, null-body=52\r\n\r\nOPTIONS /fixture HTTP/1.1\r\nHost: fixture.invalid\r\n\r\n",
+          "receive": ["ICAP/1.0 200 OK\r\nConnection: close\r\nEncapsulated: req-hdr=0, null-body=52\r\nHost: 0.0.0.0:{port}\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\n\r\nOPTIONS /fixture HTTP/1.1\r\nHost: fixture.invalid\r\nUser-Agent: Go-http-client/1.1\r\n\r\n"],
+          "closed": true
+        }
+      ],
+      "events": [{"msg":"new message","method":"REQMOD","url":"icap://fixture.invalid/service","proto":"ICAP/1.0","headers":{"Encapsulated":["req-hdr=0, null-body=52"]}}]
+    },
+    {
+      "name": "reqmod-with-response-body",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "REQMOD icap://fixture.invalid/service ICAP/1.0\r\nEncapsulated: req-hdr=0, res-hdr=48, res-body=86\r\n\r\nGET /fixture HTTP/1.1\r\nHost: fixture.invalid\r\n\r\nHTTP/1.1 200 OK\r\nContent-Length: 4\r\n\r\n",
+          "receive": []
+        },
+        {
+          "send": "4\r\nokay\r\n0\r\n\r\n",
+          "receive": ["ICAP/1.0 200 OK\r\nConnection: close\r\nEncapsulated: req-hdr=0, res-hdr=48, res-body=86\r\nHost: 0.0.0.0:{port}\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\n\r\nGET /fixture HTTP/1.1\r\nHost: fixture.invalid\r\nUser-Agent: Go-http-client/1.1\r\nTransfer-Encoding: chunked\r\n\r\n1\r\no\r\n3\r\nkay\r\n0\r\n\r\n"],
+          "closed": true
+        }
+      ],
+      "events": [{"msg": "new message", "method": "REQMOD", "url": "icap://fixture.invalid/service", "proto": "ICAP/1.0", "headers": {"Encapsulated": ["req-hdr=0, res-hdr=48, res-body=86"]}}]
+    },
+    {
+      "name": "options-before-opt-body",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "OPTIONS icap://fixture.invalid/service ICAP/1.0\r\nEncapsulated: opt-body=0\r\n\r\n",
+          "receive": [
+            "ICAP/1.0 200 OK\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\nMax-Connections: 50\r\nMethods: REQMOD, RESPMOD\r\nService: GreasySpoon service version 1.0.8-01\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "new message",
+          "method": "OPTIONS",
+          "url": "icap://fixture.invalid/service",
+          "proto": "ICAP/1.0",
+          "headers": {
+            "Encapsulated": [
+              "opt-body=0"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "resmod-before-response-body",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "RESPMOD icap://fixture.invalid/service ICAP/1.0\r\nEncapsulated: req-hdr=0, res-hdr=48, res-body=86\r\n\r\nGET /fixture HTTP/1.1\r\nHost: fixture.invalid\r\n\r\nHTTP/1.1 200 OK\r\nContent-Length: 4\r\n\r\n",
+          "receive": [
+            "ICAP/1.0 200 OK\r\nConnection: close\r\nEncapsulated: req-hdr=0, res-hdr=48, res-body=86\r\nHost: 0.0.0.0:{port}\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\n\r\nGET /fixture HTTP/1.1\r\nHost: fixture.invalid\r\nUser-Agent: Go-http-client/1.1\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "new message",
+          "method": "RESPMOD",
+          "url": "icap://fixture.invalid/service",
+          "proto": "ICAP/1.0",
+          "headers": {
+            "Encapsulated": [
+              "req-hdr=0, res-hdr=48, res-body=86"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "resmod-preview-waits-for-response-body",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "RESPMOD icap://fixture.invalid/service ICAP/1.0\r\nEncapsulated: req-hdr=0, res-hdr=48, res-body=86\r\nPreview: 4\r\n\r\nGET /fixture HTTP/1.1\r\nHost: fixture.invalid\r\n\r\nHTTP/1.1 200 OK\r\nContent-Length: 4\r\n\r\n",
+          "receive": []
+        },
+        {
+          "send": "4\r\nokay\r\n0\r\n\r\n",
+          "receive": [
+            "ICAP/1.0 200 OK\r\nConnection: close\r\nEncapsulated: req-hdr=0, res-hdr=48, res-body=86\r\nHost: 0.0.0.0:{port}\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\n\r\nGET /fixture HTTP/1.1\r\nHost: fixture.invalid\r\nUser-Agent: Go-http-client/1.1\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "new message",
+          "method": "RESPMOD",
+          "url": "icap://fixture.invalid/service",
+          "proto": "ICAP/1.0",
+          "headers": {
+            "Encapsulated": [
+              "req-hdr=0, res-hdr=48, res-body=86"
+            ],
+            "Preview": [
+              "4"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "resmod-preview-omits-request-body",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "RESPMOD icap://fixture.invalid/service ICAP/1.0\r\nEncapsulated: req-hdr=0, req-body=68\r\nPreview: 4\r\n\r\nPOST /fixture HTTP/1.1\r\nHost: fixture.invalid\r\nContent-Length: 4\r\n\r\n",
+          "receive": []
+        },
+        {
+          "send": "4\r\nokay\r\n0\r\n\r\n",
+          "receive": [
+            "ICAP/1.0 200 OK\r\nConnection: close\r\nEncapsulated: req-hdr=0, req-body=68\r\nHost: 0.0.0.0:{port}\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\n\r\nPOST /fixture HTTP/1.1\r\nHost: fixture.invalid\r\nUser-Agent: Go-http-client/1.1\r\nContent-Length: 4\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "new message",
+          "method": "RESPMOD",
+          "url": "icap://fixture.invalid/service",
+          "proto": "ICAP/1.0",
+          "headers": {
+            "Encapsulated": [
+              "req-hdr=0, req-body=68"
+            ],
+            "Preview": [
+              "4"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "reqmod-empty-post-null",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "REQMOD icap://fixture.invalid/media ICAP/1.0\r\nEncapsulated: req-hdr=0, null-body=71\r\n\r\nPOST /zero HTTP/1.1\r\nHost: media.fixture.invalid\r\nContent-Length: 0\r\n\r\n",
+          "receive": [
+            "ICAP/1.0 200 OK\r\nConnection: close\r\nEncapsulated: req-hdr=0, null-body=71\r\nHost: 0.0.0.0:{port}\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\n\r\nPOST /zero HTTP/1.1\r\nHost: media.fixture.invalid\r\nUser-Agent: Go-http-client/1.1\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "new message",
+          "method": "REQMOD",
+          "url": "icap://fixture.invalid/media",
+          "proto": "ICAP/1.0",
+          "headers": {
+            "Encapsulated": [
+              "req-hdr=0, null-body=71"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "reqmod-preview-nonzero-extension",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "REQMOD icap://fixture.invalid/media ICAP/1.0\r\nEncapsulated: req-hdr=0, req-body=101\r\nPreview: 12\r\n\r\nPOST /fixture HTTP/1.1\r\nHost: media.fixture.invalid\r\nContent-Length: 12\r\nContent-Type: text/plain\r\n\r\nC;tag=\"bin\"\r\nsample body!\r\n0; ieof\r\n\r\n",
+          "receive": [],
+          "closed": true
+        }
+      ],
+      "events": []
+    },
+    {
+      "name": "reqmod-extension-after-chunk",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "REQMOD icap://fixture.invalid/media ICAP/1.0\r\nEncapsulated: req-hdr=0, req-body=101\r\n\r\nPOST /fixture HTTP/1.1\r\nHost: media.fixture.invalid\r\nContent-Length: 12\r\nContent-Type: text/plain\r\n\r\n4\r\nsamp\r\n8;tag=bin\r\nle body!\r\n0\r\n\r\n",
+          "receive": [
+            "ICAP/1.0 200 OK\r\nConnection: close\r\nEncapsulated: req-hdr=0, req-body=101\r\nHost: 0.0.0.0:{port}\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\n\r\nPOST /fixture HTTP/1.1\r\nHost: media.fixture.invalid\r\nUser-Agent: Go-http-client/1.1\r\nContent-Length: 12\r\nContent-Type: text/plain\r\n\r\nsamp"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "new message",
+          "method": "REQMOD",
+          "url": "icap://fixture.invalid/media",
+          "proto": "ICAP/1.0",
+          "headers": {
+            "Encapsulated": [
+              "req-hdr=0, req-body=101"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "reqmod-nonpreview-ieof",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "REQMOD icap://fixture.invalid/media ICAP/1.0\r\nEncapsulated: req-hdr=0, req-body=71\r\n\r\nPOST /zero HTTP/1.1\r\nHost: media.fixture.invalid\r\nContent-Length: 0\r\n\r\n0; ieof\r\n\r\n",
+          "receive": [
+            "ICAP/1.0 200 OK\r\nConnection: close\r\nEncapsulated: req-hdr=0, req-body=71\r\nHost: 0.0.0.0:{port}\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\n\r\nPOST /zero HTTP/1.1\r\nHost: media.fixture.invalid\r\nUser-Agent: Go-http-client/1.1\r\nTransfer-Encoding: chunked\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "new message",
+          "method": "REQMOD",
+          "url": "icap://fixture.invalid/media",
+          "proto": "ICAP/1.0",
+          "headers": {
+            "Encapsulated": [
+              "req-hdr=0, req-body=71"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "options",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "OPTIONS icap://fixture.invalid/service ICAP/1.0\r\nHost: fixture.invalid\r\nEncapsulated: null-body=0\r\n\r\n",
+          "receive": [
+            "ICAP/1.0 200 OK\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\nMax-Connections: 50\r\nMethods: REQMOD, RESPMOD\r\nService: GreasySpoon service version 1.0.8-01\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "new message",
+          "method": "OPTIONS",
+          "url": "icap://fixture.invalid/service",
+          "proto": "ICAP/1.0",
+          "headers": {
+            "Host": [
+              "fixture.invalid"
+            ],
+            "Encapsulated": [
+              "null-body=0"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "pipelined-options",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "OPTIONS icap://fixture.invalid/service ICAP/1.0\r\nHost: fixture.invalid\r\nEncapsulated: null-body=0\r\n\r\nOPTIONS icap://fixture.invalid/service ICAP/1.0\r\nHost: fixture.invalid\r\nEncapsulated: null-body=0\r\n\r\n",
+          "receive": [
+            "ICAP/1.0 200 OK\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\nMax-Connections: 50\r\nMethods: REQMOD, RESPMOD\r\nService: GreasySpoon service version 1.0.8-01\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "new message",
+          "method": "OPTIONS",
+          "url": "icap://fixture.invalid/service",
+          "proto": "ICAP/1.0",
+          "headers": {
+            "Host": [
+              "fixture.invalid"
+            ],
+            "Encapsulated": [
+              "null-body=0"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "options-bare",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "OPTIONS icap://fixture.invalid/service ICAP/1.0\r\n\r\n",
+          "receive": [
+            "ICAP/1.0 200 OK\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\nMax-Connections: 50\r\nMethods: REQMOD, RESPMOD\r\nService: GreasySpoon service version 1.0.8-01\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "new message",
+          "method": "OPTIONS",
+          "url": "icap://fixture.invalid/service",
+          "proto": "ICAP/1.0",
+          "headers": {}
+        }
+      ]
+    },
+    {
+      "name": "custom-headers",
+      "listener": "custom",
+      "steps": [
+        {
+          "send": "OPTIONS icap://fixture.invalid/service ICAP/1.0\r\nHost: fixture.invalid\r\nEncapsulated: null-body=0\r\n\r\n",
+          "receive": [
+            "ICAP/1.0 200 OK\r\nIstag: lab\r\nMax-Connections: 50\r\nMethods: REQMOD, RESPMOD\r\nService: Fixture/1.2\r\nX-Custom: z\r\nX-Custom: lower\r\nX-Value: left:right\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "new message",
+          "method": "OPTIONS",
+          "url": "icap://fixture.invalid/service",
+          "proto": "ICAP/1.0",
+          "headers": {
+            "Host": [
+              "fixture.invalid"
+            ],
+            "Encapsulated": [
+              "null-body=0"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "conflicting-headers",
+      "listener": "conflict",
+      "steps": [
+        {
+          "send": "OPTIONS icap://fixture.invalid/service ICAP/1.0\r\nHost: fixture.invalid\r\nEncapsulated: null-body=0\r\n\r\n",
+          "receive": [
+            "ICAP/1.0 200 OK\r\nMax-Connections: 50\r\nMethods: REQMOD, RESPMOD\r\nService: override\r\nX-Dup: one\r\nX-Dup: two\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "new message",
+          "method": "OPTIONS",
+          "url": "icap://fixture.invalid/service",
+          "proto": "ICAP/1.0",
+          "headers": {
+            "Host": [
+              "fixture.invalid"
+            ],
+            "Encapsulated": [
+              "null-body=0"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "empty-config",
+      "listener": "empty",
+      "steps": [
+        {
+          "send": "OPTIONS icap://fixture.invalid/service ICAP/1.0\r\nHost: fixture.invalid\r\nEncapsulated: null-body=0\r\n\r\n",
+          "receive": [
+            "ICAP/1.0 200 OK\r\nMax-Connections: 50\r\nMethods: REQMOD, RESPMOD\r\nService: GreasySpoon service version 1.0.8-01\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "new message",
+          "method": "OPTIONS",
+          "url": "icap://fixture.invalid/service",
+          "proto": "ICAP/1.0",
+          "headers": {
+            "Host": [
+              "fixture.invalid"
+            ],
+            "Encapsulated": [
+              "null-body=0"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "other-version",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "OPTIONS icap://fixture.invalid/service ICAP/2.0\r\n\r\n",
+          "receive": [
+            "ICAP/1.0 200 OK\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\nMax-Connections: 50\r\nMethods: REQMOD, RESPMOD\r\nService: GreasySpoon service version 1.0.8-01\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "new message",
+          "method": "OPTIONS",
+          "url": "icap://fixture.invalid/service",
+          "proto": "ICAP/2.0",
+          "headers": {}
+        }
+      ]
+    },
+    {
+      "name": "extra-proto-text",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "OPTIONS icap://fixture.invalid/service ICAP/1.0 extra\r\n\r\n",
+          "receive": [
+            "ICAP/1.0 200 OK\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\nMax-Connections: 50\r\nMethods: REQMOD, RESPMOD\r\nService: GreasySpoon service version 1.0.8-01\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "new message",
+          "method": "OPTIONS",
+          "url": "icap://fixture.invalid/service",
+          "proto": "ICAP/1.0 extra",
+          "headers": {}
+        }
+      ]
+    },
+    {
+      "name": "relative-target",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "OPTIONS /service ICAP/1.0\r\n\r\n",
+          "receive": [
+            "ICAP/1.0 200 OK\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\nMax-Connections: 50\r\nMethods: REQMOD, RESPMOD\r\nService: GreasySpoon service version 1.0.8-01\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "new message",
+          "method": "OPTIONS",
+          "url": "/service",
+          "proto": "ICAP/1.0",
+          "headers": {}
+        }
+      ]
+    },
+    {
+      "name": "wildcard-target",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "OPTIONS * ICAP/1.0\r\n\r\n",
+          "receive": [
+            "ICAP/1.0 200 OK\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\nMax-Connections: 50\r\nMethods: REQMOD, RESPMOD\r\nService: GreasySpoon service version 1.0.8-01\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "new message",
+          "method": "OPTIONS",
+          "url": "*",
+          "proto": "ICAP/1.0",
+          "headers": {}
+        }
+      ]
+    },
+    {
+      "name": "alternate-target",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "OPTIONS http://fixture.invalid/other?q=1 ICAP/1.0\r\n\r\n",
+          "receive": [
+            "ICAP/1.0 200 OK\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\nMax-Connections: 50\r\nMethods: REQMOD, RESPMOD\r\nService: GreasySpoon service version 1.0.8-01\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "new message",
+          "method": "OPTIONS",
+          "url": "http://fixture.invalid/other?q=1",
+          "proto": "ICAP/1.0",
+          "headers": {}
+        }
+      ]
+    },
+    {
+      "name": "unknown-method",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "GET icap://fixture.invalid/service ICAP/1.0\r\n\r\n",
+          "receive": [
+            "ICAP/1.0 400 Bad Request\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "new message",
+          "method": "GET",
+          "url": "icap://fixture.invalid/service",
+          "proto": "ICAP/1.0",
+          "headers": {}
+        }
+      ]
+    },
+    {
+      "name": "lowercase-method",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "options icap://fixture.invalid/service ICAP/1.0\r\n\r\n",
+          "receive": [
+            "ICAP/1.0 400 Bad Request\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "new message",
+          "method": "options",
+          "url": "icap://fixture.invalid/service",
+          "proto": "ICAP/1.0",
+          "headers": {}
+        }
+      ]
+    },
+    {
+      "name": "missing-header-colon",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "OPTIONS icap://fixture.invalid/service ICAP/1.0\r\nSynthetic\r\n\r\n",
+          "receive": [],
+          "closed": true
+        }
+      ],
+      "events": []
+    },
+    {
+      "name": "incomplete-request-line",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "OPTIONS ICAP/1.0\r\n\r\n",
+          "receive": [],
+          "closed": true
+        }
+      ],
+      "events": []
+    },
+    {
+      "name": "lf-only",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "OPTIONS icap://fixture.invalid/service ICAP/1.0\nHost: fixture.invalid\nEncapsulated: null-body=0\n\n",
+          "receive": [
+            "ICAP/1.0 200 OK\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\nMax-Connections: 50\r\nMethods: REQMOD, RESPMOD\r\nService: GreasySpoon service version 1.0.8-01\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "new message",
+          "method": "OPTIONS",
+          "url": "icap://fixture.invalid/service",
+          "proto": "ICAP/1.0",
+          "headers": {
+            "Host": [
+              "fixture.invalid"
+            ],
+            "Encapsulated": [
+              "null-body=0"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "reqmod-no-encapsulated",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "REQMOD icap://fixture.invalid/service ICAP/1.0\r\n\r\n",
+          "receive": [
+            "ICAP/1.0 400 Bad Request\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "new message",
+          "method": "REQMOD",
+          "url": "icap://fixture.invalid/service",
+          "proto": "ICAP/1.0",
+          "headers": {}
+        }
+      ]
+    },
+    {
+      "name": "reqmod-get",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "REQMOD icap://fixture.invalid/service ICAP/1.0\r\nEncapsulated: req-hdr=0, null-body=55\r\n\r\nGET /fixture HTTP/1.1\r\nHost: target.fixture.invalid\r\n\r\n",
+          "receive": [
+            "ICAP/1.0 200 OK\r\nConnection: close\r\nEncapsulated: req-hdr=0, null-body=55\r\nHost: 0.0.0.0:{port}\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\n\r\nGET /fixture HTTP/1.1\r\nHost: target.fixture.invalid\r\nUser-Agent: Go-http-client/1.1\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "new message",
+          "method": "REQMOD",
+          "url": "icap://fixture.invalid/service",
+          "proto": "ICAP/1.0",
+          "headers": {
+            "Encapsulated": [
+              "req-hdr=0, null-body=55"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "reqmod-custom",
+      "listener": "custom",
+      "steps": [
+        {
+          "send": "REQMOD icap://fixture.invalid/service ICAP/1.0\r\nEncapsulated: req-hdr=0, null-body=55\r\n\r\nGET /fixture HTTP/1.1\r\nHost: target.fixture.invalid\r\n\r\n",
+          "receive": [
+            "ICAP/1.0 200 OK\r\nConnection: close\r\nEncapsulated: req-hdr=0, null-body=55\r\nHost: 0.0.0.0:{port}\r\nIstag: lab\r\nX-Custom: z\r\nX-Custom: lower\r\nX-Value: left:right\r\n\r\nGET /fixture HTTP/1.1\r\nHost: target.fixture.invalid\r\nUser-Agent: Go-http-client/1.1\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "new message",
+          "method": "REQMOD",
+          "url": "icap://fixture.invalid/service",
+          "proto": "ICAP/1.0",
+          "headers": {
+            "Encapsulated": [
+              "req-hdr=0, null-body=55"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "reqmod-conflict",
+      "listener": "conflict",
+      "steps": [
+        {
+          "send": "REQMOD icap://fixture.invalid/service ICAP/1.0\r\nEncapsulated: req-hdr=0, null-body=55\r\n\r\nGET /fixture HTTP/1.1\r\nHost: target.fixture.invalid\r\n\r\n",
+          "receive": [
+            "ICAP/1.0 200 OK\r\nConnection: close\r\nEncapsulated: req-hdr=0, null-body=55\r\nHost: 0.0.0.0:{port}\r\nMax-Connections: 9\r\nMethods: RESPmod\r\nService: set-header\r\nX-Dup: one\r\nX-Dup: two\r\n\r\nGET /fixture HTTP/1.1\r\nHost: target.fixture.invalid\r\nUser-Agent: Go-http-client/1.1\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "new message",
+          "method": "REQMOD",
+          "url": "icap://fixture.invalid/service",
+          "proto": "ICAP/1.0",
+          "headers": {
+            "Encapsulated": [
+              "req-hdr=0, null-body=55"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "reqmod-allow204",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "REQMOD icap://fixture.invalid/service ICAP/1.0\r\nEncapsulated: req-hdr=0, null-body=55\r\nAllow: 204\r\n\r\nGET /fixture HTTP/1.1\r\nHost: target.fixture.invalid\r\n\r\n",
+          "receive": [
+            "ICAP/1.0 200 OK\r\nConnection: close\r\nEncapsulated: req-hdr=0, null-body=55\r\nHost: 0.0.0.0:{port}\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\n\r\nGET /fixture HTTP/1.1\r\nHost: target.fixture.invalid\r\nUser-Agent: Go-http-client/1.1\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "new message",
+          "method": "REQMOD",
+          "url": "icap://fixture.invalid/service",
+          "proto": "ICAP/1.0",
+          "headers": {
+            "Encapsulated": [
+              "req-hdr=0, null-body=55"
+            ],
+            "Allow": [
+              "204"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "reqmod-body",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "REQMOD icap://fixture.invalid/service ICAP/1.0\r\nEncapsulated: req-hdr=0, req-body=89\r\n\r\nPOST /fixture HTTP/1.1\r\nHost: target.fixture.invalid\r\nContent-Length: 4\r\nX-Lab: value\r\n\r\n4\r\nokay\r\n0\r\n\r\n",
+          "receive": [
+            "ICAP/1.0 200 OK\r\nConnection: close\r\nEncapsulated: req-hdr=0, req-body=89\r\nHost: 0.0.0.0:{port}\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\n\r\nPOST /fixture HTTP/1.1\r\nHost: target.fixture.invalid\r\nUser-Agent: Go-http-client/1.1\r\nContent-Length: 4\r\nX-Lab: value\r\n\r\nokay"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "new message",
+          "method": "REQMOD",
+          "url": "icap://fixture.invalid/service",
+          "proto": "ICAP/1.0",
+          "headers": {
+            "Encapsulated": [
+              "req-hdr=0, req-body=89"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "reqmod-chunked",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "REQMOD icap://fixture.invalid/service ICAP/1.0\r\nEncapsulated: req-hdr=0, req-body=98\r\n\r\nPOST /fixture HTTP/1.1\r\nHost: target.fixture.invalid\r\nTransfer-Encoding: chunked\r\nX-Lab: value\r\n\r\n4\r\nokay\r\n0\r\n\r\n",
+          "receive": [
+            "ICAP/1.0 200 OK\r\nConnection: close\r\nEncapsulated: req-hdr=0, req-body=98\r\nHost: 0.0.0.0:{port}\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\n\r\nPOST /fixture HTTP/1.1\r\nHost: target.fixture.invalid\r\nUser-Agent: Go-http-client/1.1\r\nTransfer-Encoding: chunked\r\nX-Lab: value\r\n\r\n4\r\nokay\r\n0\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "new message",
+          "method": "REQMOD",
+          "url": "icap://fixture.invalid/service",
+          "proto": "ICAP/1.0",
+          "headers": {
+            "Encapsulated": [
+              "req-hdr=0, req-body=98"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "reqmod-no-length",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "REQMOD icap://fixture.invalid/service ICAP/1.0\r\nEncapsulated: req-hdr=0, req-body=70\r\n\r\nPOST /fixture HTTP/1.1\r\nHost: target.fixture.invalid\r\nX-Lab: value\r\n\r\n4\r\nokay\r\n0\r\n\r\n",
+          "receive": [
+            "ICAP/1.0 200 OK\r\nConnection: close\r\nEncapsulated: req-hdr=0, req-body=70\r\nHost: 0.0.0.0:{port}\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\n\r\nPOST /fixture HTTP/1.1\r\nHost: target.fixture.invalid\r\nUser-Agent: Go-http-client/1.1\r\nTransfer-Encoding: chunked\r\nX-Lab: value\r\n\r\n4\r\nokay\r\n0\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "new message",
+          "method": "REQMOD",
+          "url": "icap://fixture.invalid/service",
+          "proto": "ICAP/1.0",
+          "headers": {
+            "Encapsulated": [
+              "req-hdr=0, req-body=70"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "reqmod-preview-ieof",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "REQMOD icap://fixture.invalid/service ICAP/1.0\r\nEncapsulated: req-hdr=0, req-body=89\r\nPreview: 4\r\nAllow: 204\r\n\r\nPOST /fixture HTTP/1.1\r\nHost: target.fixture.invalid\r\nContent-Length: 4\r\nX-Lab: value\r\n\r\n4\r\nokay\r\n0; ieof\r\n\r\n",
+          "receive": [
+            "ICAP/1.0 200 OK\r\nConnection: close\r\nEncapsulated: req-hdr=0, req-body=89\r\nHost: 0.0.0.0:{port}\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\n\r\nPOST /fixture HTTP/1.1\r\nHost: target.fixture.invalid\r\nUser-Agent: Go-http-client/1.1\r\nContent-Length: 4\r\nX-Lab: value\r\n\r\nokay"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "new message",
+          "method": "REQMOD",
+          "url": "icap://fixture.invalid/service",
+          "proto": "ICAP/1.0",
+          "headers": {
+            "Encapsulated": [
+              "req-hdr=0, req-body=89"
+            ],
+            "Preview": [
+              "4"
+            ],
+            "Allow": [
+              "204"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "reqmod-preview-empty",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "REQMOD icap://fixture.invalid/service ICAP/1.0\r\nEncapsulated: req-hdr=0, req-body=89\r\nPreview: 0\r\nAllow: 204\r\n\r\nPOST /fixture HTTP/1.1\r\nHost: target.fixture.invalid\r\nContent-Length: 4\r\nX-Lab: value\r\n\r\n0\r\n\r\n",
+          "receive": [
+            "ICAP/1.0 200 OK\r\nConnection: close\r\nEncapsulated: req-hdr=0, req-body=89\r\nHost: 0.0.0.0:{port}\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\n\r\nPOST /fixture HTTP/1.1\r\nHost: target.fixture.invalid\r\nUser-Agent: Go-http-client/1.1\r\nContent-Length: 4\r\nX-Lab: value\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "new message",
+          "method": "REQMOD",
+          "url": "icap://fixture.invalid/service",
+          "proto": "ICAP/1.0",
+          "headers": {
+            "Encapsulated": [
+              "req-hdr=0, req-body=89"
+            ],
+            "Preview": [
+              "0"
+            ],
+            "Allow": [
+              "204"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "reqmod-post-null",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "REQMOD icap://fixture.invalid/service ICAP/1.0\r\nEncapsulated: req-hdr=0, null-body=89\r\n\r\nPOST /fixture HTTP/1.1\r\nHost: target.fixture.invalid\r\nContent-Length: 4\r\nX-Lab: value\r\n\r\n",
+          "receive": [
+            "ICAP/1.0 200 OK\r\nConnection: close\r\nEncapsulated: req-hdr=0, null-body=89\r\nHost: 0.0.0.0:{port}\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\n\r\nPOST /fixture HTTP/1.1\r\nHost: target.fixture.invalid\r\nUser-Agent: Go-http-client/1.1\r\nContent-Length: 4\r\nX-Lab: value\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "new message",
+          "method": "REQMOD",
+          "url": "icap://fixture.invalid/service",
+          "proto": "ICAP/1.0",
+          "headers": {
+            "Encapsulated": [
+              "req-hdr=0, null-body=89"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "resmod-response-only",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "RESPMOD icap://fixture.invalid/service ICAP/1.0\r\nEncapsulated: res-hdr=0, res-body=45\r\n\r\nHTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n4\r\nokay\r\n0\r\n\r\n",
+          "receive": [
+            "ICAP/1.0 400 Bad Request\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "new message",
+          "method": "RESPMOD",
+          "url": "icap://fixture.invalid/service",
+          "proto": "ICAP/1.0",
+          "headers": {
+            "Encapsulated": [
+              "res-hdr=0, res-body=45"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "resmod-request-response",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "RESPMOD icap://fixture.invalid/service ICAP/1.0\r\nEncapsulated: req-hdr=0, res-hdr=55, res-body=100\r\n\r\nGET /fixture HTTP/1.1\r\nHost: target.fixture.invalid\r\n\r\nHTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n4\r\nokay\r\n0\r\n\r\n",
+          "receive": [
+            "ICAP/1.0 200 OK\r\nConnection: close\r\nEncapsulated: req-hdr=0, res-hdr=55, res-body=100\r\nHost: 0.0.0.0:{port}\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\n\r\nGET /fixture HTTP/1.1\r\nHost: target.fixture.invalid\r\nUser-Agent: Go-http-client/1.1\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "new message",
+          "method": "RESPMOD",
+          "url": "icap://fixture.invalid/service",
+          "proto": "ICAP/1.0",
+          "headers": {
+            "Encapsulated": [
+              "req-hdr=0, res-hdr=55, res-body=100"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "resmod-request-null",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "RESPMOD icap://fixture.invalid/service ICAP/1.0\r\nEncapsulated: req-hdr=0, res-hdr=55, null-body=100\r\n\r\nGET /fixture HTTP/1.1\r\nHost: target.fixture.invalid\r\n\r\nHTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n",
+          "receive": [
+            "ICAP/1.0 200 OK\r\nConnection: close\r\nEncapsulated: req-hdr=0, res-hdr=55, null-body=100\r\nHost: 0.0.0.0:{port}\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\n\r\nGET /fixture HTTP/1.1\r\nHost: target.fixture.invalid\r\nUser-Agent: Go-http-client/1.1\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "new message",
+          "method": "RESPMOD",
+          "url": "icap://fixture.invalid/service",
+          "proto": "ICAP/1.0",
+          "headers": {
+            "Encapsulated": [
+              "req-hdr=0, res-hdr=55, null-body=100"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "resmod-request-only",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "RESPMOD icap://fixture.invalid/service ICAP/1.0\r\nEncapsulated: req-hdr=0, null-body=55\r\n\r\nGET /fixture HTTP/1.1\r\nHost: target.fixture.invalid\r\n\r\n",
+          "receive": [
+            "ICAP/1.0 200 OK\r\nConnection: close\r\nEncapsulated: req-hdr=0, null-body=55\r\nHost: 0.0.0.0:{port}\r\nIstag: \"GreasySpoon-1.0.8-01\"\r\n\r\nGET /fixture HTTP/1.1\r\nHost: target.fixture.invalid\r\nUser-Agent: Go-http-client/1.1\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "new message",
+          "method": "RESPMOD",
+          "url": "icap://fixture.invalid/service",
+          "proto": "ICAP/1.0",
+          "headers": {
+            "Encapsulated": [
+              "req-hdr=0, null-body=55"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "invalid-encapsulated-order",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "REQMOD icap://fixture.invalid/service ICAP/1.0\r\nEncapsulated: null-body=55, req-hdr=0\r\n\r\nGET /fixture HTTP/1.1\r\nHost: target.fixture.invalid\r\n\r\n",
+          "receive": [],
+          "closed": true
+        }
+      ],
+      "events": []
+    },
+    {
+      "name": "invalid-encapsulated-offset",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "REQMOD icap://fixture.invalid/service ICAP/1.0\r\nEncapsulated: req-hdr=0, null-body=1\r\n\r\nGET /fixture HTTP/1.1\r\nHost: target.fixture.invalid\r\n\r\n",
+          "receive": [],
+          "closed": true
+        }
+      ],
+      "events": []
+    },
+    {
+      "name": "invalid-encapsulated-separator",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "REQMOD icap://fixture.invalid/service ICAP/1.0\r\nEncapsulated: req-hdr=0,null-body=55\r\n\r\nGET /fixture HTTP/1.1\r\nHost: target.fixture.invalid\r\n\r\n",
+          "receive": [],
+          "closed": true
+        }
+      ],
+      "events": []
+    }
+  ]
+}

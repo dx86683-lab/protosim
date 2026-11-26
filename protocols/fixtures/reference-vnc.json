@@ -1,0 +1,16 @@
+{
+  "server_init": "032002582018000100ff00ff00ff10080000000000000000",
+  "frame_header": "00000001000000000320025800000000",
+  "frame_sha256": [
+    "278c33582ebff42b0e2fb9ecb37b2b904e7a68fdd6b192a6c9b460fc61b01886",
+    "d8ff859d6d0d35c1b54dde505d49006ca21ec3a09430ed2b741cdcbfd9808fff"
+  ],
+  "cases": [
+    {"name":"default","version":8,"challenge":"0123456789abcdef","answer":"8c235a59b1253a8dc55d984d0c95a437"},
+    {"name":"legacy-3","version":3,"challenge":"0123456789abcdef","answer":"8c235a59b1253a8dc55d984d0c95a437"},
+    {"name":"legacy-7","version":7,"challenge":"0123456789abcdef","answer":"8c235a59b1253a8dc55d984d0c95a437"},
+    {"name":"custom","version":8,"challenge":"1234567890abcdef","password":"fixture","answer":"e2b01248a3e9e178c3e021cac055f2be"},
+    {"name":"wrong-modern","version":8,"challenge":"0123456789abcdef","answer":"00000000000000000000000000000000","failure":"000000010000001070617373776f726420696e76616c6964"},
+    {"name":"wrong-legacy","version":3,"challenge":"0123456789abcdef","answer":"00000000000000000000000000000000","failure":"closed"}
+  ]
+}

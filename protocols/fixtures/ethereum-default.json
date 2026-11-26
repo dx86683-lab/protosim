@@ -1,0 +1,27 @@
+{
+    "net_version": "1",
+    "eth_mining": false,
+    "eth_accounts": [
+        "0xf7020248e3a33a92cc1d3eeb038935d8ede86ea3",
+        "0xab259c71e4f70422516a8f9953aaba2ca5a585ae",
+        "0x2aae25cf6dbdd3d34facea7053d04495b6e58fb0",
+        "0x1ff1a72a9b3b7491f1a5d70723648b06e2a2b4a7",
+        "0x878cf3bcb50c4663e866ff6ccf722a6932b84952",
+        "0xd3065b7a474603363e83088fbd7645b86cea194f",
+        "0x9db3a51b11746e638754991f5dc173209335378b",
+        "0x596751ccd13c0623b31c7ee83260984bece53d22",
+        "0xaacddfc75080af5b642f5c8e0a4ae2a23e509d96",
+        "0xe9ef6c0fe7cad308ca51828e409a4010414eb6d3",
+        "0x354bbff49ac17c97deb392acf1ba5a5026799bdc",
+        "0xb6d6e1bb9bb13a15da079f4355d8cfe847d21a92"
+    ],
+    "eth_blockNumber": "0x6f1596",
+    "rpc_modules": {
+        "eth": "1.0",
+        "net": "1.0",
+        "personal": "1.0",
+        "rpc": "1.0",
+        "web3": "1.0"
+    }
+}
+

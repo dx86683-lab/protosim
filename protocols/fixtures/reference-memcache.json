@@ -1,0 +1,431 @@
+[
+  {
+    "name": "data",
+    "steps": [
+      {
+        "command": "get absent\r\n",
+        "response": "END\r\n"
+      },
+      {
+        "command": "set alpha 7 0 3\r\n",
+        "body": "123\r\n",
+        "response": "STORED\r\n"
+      },
+      {
+        "command": "get alpha\r\n",
+        "response": "VALUE alpha 0 3\r\n123\r\nEND\r\n"
+      },
+      {
+        "command": "gets alpha\r\n",
+        "response": "ERROR\r\n"
+      },
+      {
+        "command": "add alpha 0 0 1\r\n",
+        "body": "2\r\n",
+        "response": "NOT_STORED\r\n"
+      },
+      {
+        "command": "add beta 5 0 5\r\n",
+        "body": "a\r\nbc\r\n",
+        "response": "STORED\r\n"
+      },
+      {
+        "command": "get alpha beta\r\n",
+        "response": "VALUE alpha 0 3\r\n123\r\nEND\r\n"
+      },
+      {
+        "command": "get absent beta\r\n",
+        "response": "END\r\n"
+      },
+      {
+        "command": "get beta\r\n",
+        "response": "VALUE beta 0 5\r\na\r\nbc\r\nEND\r\n"
+      },
+      {
+        "command": "delete alpha\r\n",
+        "response": "DELETED\r\n"
+      },
+      {
+        "command": "delete alpha\r\n",
+        "response": "NOT_FOUND\r\n"
+      },
+      {
+        "command": "get alpha\r\n",
+        "response": "END\r\n"
+      }
+    ]
+  },
+  {
+    "name": "new-connection",
+    "steps": [
+      {
+        "command": "get beta\r\n",
+        "response": "END\r\n"
+      },
+      {
+        "command": "stats items\r\n",
+        "response": "END\r\n"
+      },
+      {
+        "command": "stats slabs\r\n",
+        "response": "STAT active_slabs 0\r\nSTAT total_malloced 0\r\nEND\r\n"
+      },
+      {
+        "command": "stats sizes\r\n",
+        "response": "STAT sizes_status disabled\r\nEND\r\n"
+      },
+      {
+        "command": "stats other\r\n",
+        "response": "ERROR\r\n"
+      }
+    ]
+  },
+  {
+    "name": "command-grammar",
+    "steps": [
+      {
+        "command": "VeRsIoN\r\n",
+        "response": "VERSION 1.5.16\r\n"
+      },
+      {
+        "command": "version 5\r\n",
+        "response": "ERROR\r\n"
+      },
+      {
+        "command": "STATS items\r\n",
+        "response": "END\r\n"
+      },
+      {
+        "command": "stats ITEMS\r\n",
+        "response": "ERROR\r\n"
+      },
+      {
+        "command": "SeT Key 0 0 1\r\n",
+        "body": "6\r\n",
+        "response": "STORED\r\n"
+      },
+      {
+        "command": "gEt Key\r\n",
+        "response": "VALUE Key 0 1\r\n6\r\nEND\r\n"
+      },
+      {
+        "command": "get key\r\n",
+        "response": "END\r\n"
+      },
+      {
+        "command": "ADD Other 0 0 1\r\n",
+        "body": "9\r\n",
+        "response": "STORED\r\n"
+      },
+      {
+        "command": "DeLeTe Key 0\r\n",
+        "response": "DELETED\r\n"
+      },
+      {
+        "command": "delete Other noreply\r\n",
+        "response": "DELETED\r\n"
+      },
+      {
+        "command": "delete Missing extra two\r\n",
+        "response": "NOT_FOUND\r\n"
+      },
+      {
+        "command": "get Key Other\r\n",
+        "response": "END\r\n"
+      }
+    ]
+  },
+  {
+    "name": "command-events",
+    "steps": [
+      {
+        "command": "version\r\n",
+        "response": "VERSION 1.5.16\r\n"
+      },
+      {
+        "command": "unknown event\r\n",
+        "response": "ERROR\r\n"
+      },
+      {
+        "command": "set bad\r\n",
+        "response": "SERVER_ERROR bad command line format\r\n",
+        "log_event": false
+      },
+      {
+        "command": "set empty 0 0 0\r\n",
+        "response": "ERROR\r\n"
+      },
+      {
+        "command": "SeT Name 4 0 5\r\n",
+        "body": "a\r\nbc\r\n",
+        "response": "STORED\r\n"
+      },
+      {
+        "command": "gEt Name\r\n",
+        "response": "VALUE Name 0 5\r\na\r\nbc\r\nEND\r\n"
+      },
+      {
+        "command": "quit\r\n",
+        "response": "",
+        "closed": true
+      }
+    ]
+  },
+  {
+    "name": "acknowledges-before-value-terminator",
+    "steps": [
+      {
+        "command": "set sample 0 0 3\r\n",
+        "body": "one\r\n",
+        "terminator_after_response": true,
+        "response": "STORED\r\n"
+      },
+      {
+        "command": "get sample\r\n",
+        "response": "VALUE sample 0 3\r\none\r\nEND\r\n"
+      },
+      {
+        "command": "add sample 0 0 3\r\n",
+        "body": "two\r\n",
+        "terminator_after_response": true,
+        "response": "NOT_STORED\r\n"
+      },
+      {
+        "command": "get sample\r\n",
+        "response": "VALUE sample 0 3\r\none\r\nEND\r\n"
+      },
+      {
+        "command": "add other 0 0 3\r\n",
+        "body": "two\r\n",
+        "terminator_after_response": true,
+        "response": "STORED\r\n"
+      },
+      {
+        "command": "get other\r\n",
+        "response": "VALUE other 0 3\r\ntwo\r\nEND\r\n"
+      },
+      {
+        "command": "quit\r\n",
+        "response": "",
+        "closed": true
+      }
+    ]
+  },
+  {
+    "name": "statistics-controls",
+    "steps": [
+      {
+        "command": "set alpha 7 2 1\r\n",
+        "body": "7\r\n",
+        "response": "STORED\r\n",
+        "terminator_after_response": true
+      },
+      {
+        "command": "stats reset\r\n",
+        "response": "RESET\r\n"
+      },
+      {
+        "command": "get alpha\r\n",
+        "response": "VALUE alpha 0 1\r\n7\r\nEND\r\n"
+      },
+      {
+        "command": "STATS reset\r\n",
+        "response": "RESET\r\n"
+      },
+      {
+        "command": "stats RESET\r\n",
+        "response": "ERROR\r\n"
+      },
+      {
+        "command": "stats reset extra\r\n",
+        "response": "RESET\r\n"
+      },
+      {
+        "command": "stats\treset \r\n",
+        "response": "RESET\r\n"
+      },
+      {
+        "command": "stats items extra\r\n",
+        "response": "END\r\n"
+      },
+      {
+        "command": "stats slabs extra\r\n",
+        "response": "STAT active_slabs 0\r\nSTAT total_malloced 0\r\nEND\r\n"
+      },
+      {
+        "command": "stats sizes extra\r\n",
+        "response": "STAT sizes_status disabled\r\nEND\r\n"
+      },
+      {
+        "command": "stats SLABS\r\n",
+        "response": "ERROR\r\n"
+      },
+      {
+        "command": "stats detail\r\n",
+        "response": "OK\r\n"
+      },
+      {
+        "command": "stats detail on\r\n",
+        "response": "OK\r\n"
+      },
+      {
+        "command": "stats detail off\r\n",
+        "response": "OK\r\n"
+      },
+      {
+        "command": "stats detail dump\r\n",
+        "response": "OK\r\n"
+      },
+      {
+        "command": "stats malloc\r\n",
+        "response": "ERROR\r\n"
+      },
+      {
+        "command": "version extra\r\n",
+        "response": "ERROR\r\n"
+      },
+      {
+        "command": "version\r\n",
+        "response": "VERSION 1.5.16\r\n"
+      },
+      {
+        "command": "quit\r\n",
+        "response": "",
+        "closed": true
+      }
+    ]
+  },
+  {
+    "name": "expiration-options",
+    "steps": [
+      {
+        "command": "set short 0 1 2\r\n",
+        "body": "hi\r\n",
+        "response": "STORED\r\n"
+      },
+      {
+        "command": "get short\r\n",
+        "response": "VALUE short 0 2\r\nhi\r\nEND\r\n"
+      },
+      {
+        "command": "set epoch 0 1000000000 2\r\n",
+        "body": "ab\r\n",
+        "response": "STORED\r\n"
+      },
+      {
+        "command": "add negative 0 -1 2\r\n",
+        "body": "cd\r\n",
+        "response": "STORED\r\n"
+      },
+      {
+        "command": "touch short 0\r\n",
+        "response": "ERROR\r\n"
+      },
+      {
+        "command": "touch absent 20\r\n",
+        "response": "ERROR\r\n"
+      },
+      {
+        "command": "gat 30 short\r\n",
+        "response": "ERROR\r\n"
+      },
+      {
+        "command": "gats 30 short\r\n",
+        "response": "ERROR\r\n"
+      },
+      {
+        "command": "get epoch\r\n",
+        "response": "VALUE epoch 0 2\r\nab\r\nEND\r\n"
+      },
+      {
+        "command": "get negative\r\n",
+        "response": "VALUE negative 0 2\r\ncd\r\nEND\r\n"
+      },
+      {
+        "command": "flush_all\r\n",
+        "response": "ERROR\r\n"
+      },
+      {
+        "command": "get short\r\n",
+        "response": "VALUE short 0 2\r\nhi\r\nEND\r\n"
+      },
+      {
+        "command": "delete short 10\r\n",
+        "response": "DELETED\r\n"
+      },
+      {
+        "command": "get short\r\n",
+        "response": "END\r\n"
+      }
+    ]
+  },
+  {
+    "name": "control-arguments",
+    "steps": [
+      {
+        "command": "set key 0 0 2\r\n",
+        "body": "ok\r\n",
+        "response": "STORED\r\n"
+      },
+      {
+        "command": "get\tkey\r\n",
+        "response": "VALUE key 0 2\r\nok\r\nEND\r\n"
+      },
+      {
+        "command": "  Get key\r\n",
+        "response": "VALUE key 0 2\r\nok\r\nEND\r\n"
+      },
+      {
+        "command": "get  key  absent\r\n",
+        "response": "VALUE key 0 2\r\nok\r\nEND\r\n"
+      },
+      {
+        "command": "stats settings\r\n",
+        "response": "ERROR\r\n"
+      },
+      {
+        "command": "stats cachedump 1 0\r\n",
+        "response": "ERROR\r\n"
+      },
+      {
+        "command": "stats detail dump\r\n",
+        "response": "OK\r\n"
+      },
+      {
+        "command": "stats reset extras\r\n",
+        "response": "RESET\r\n"
+      },
+      {
+        "command": "get key\r\n",
+        "response": "VALUE key 0 2\r\nok\r\nEND\r\n"
+      },
+      {
+        "command": "version\tnow\r\n",
+        "response": "ERROR\r\n"
+      },
+      {
+        "command": "set odd alpha 0 2\r\n",
+        "body": "ab\r\n",
+        "response": "STORED\r\n"
+      },
+      {
+        "command": "set odd 0 infinity 2\r\n",
+        "body": "cd\r\n",
+        "response": "STORED\r\n"
+      },
+      {
+        "command": "get odd\r\n",
+        "response": "VALUE odd 0 2\r\ncd\r\nEND\r\n"
+      },
+      {
+        "command": "set signed 0 0 +2\r\n",
+        "body": "ef\r\n",
+        "response": "STORED\r\n"
+      },
+      {
+        "command": "get signed\r\n",
+        "response": "VALUE signed 0 2\r\nef\r\nEND\r\n"
+      }
+    ]
+  }
+]

@@ -1,0 +1,1738 @@
+{
+  "listeners": {
+    "default": {},
+    "optional-separator-spacing": {"headers":["X-Demo:zero","X-Demo: one","X-Demo  :   left:right  ","X-Tab\t:\tTabbed\t","X-Empty:","X-Spaces:    "]},
+    "optional-slash-punctuation": {"headers":["X-Uri: sip:lab@fixture.invalid;transport=udp","X-Formula: a=b:c,d","X.T~v+dash_name%percent!: sample"]},
+    "optional-repeated-mixed": {"headers":["X-Note :  first","x-note:\tsecond","X-NOTE:third","x-note :  fourth  "]},
+    "optional-optional-compact": {"headers":["o:presence","s:\tTitle","k :   timer, path","c: text/plain"]},
+    "optional-spacing-order": {"headers":["X-Demo : first","X-Other: middle","X-Demo: second","x-demo : third","X-Demo: fourth"]},
+    "optional-tabs-before": {"headers":["X-One\t: value","x-one\t: next","X-One: final","X-Two: \tvalue\t","X-Three: "]},
+    "optional-literal-first-colon": {"headers":["X-Demo: value: more","X-Other: next: with: several","X-Third : left: right"]},
+    "optional-response-config-compact": {"headers":["o: presence","s: Fixture title","k: timer, path","x: 1800;refresher=uas","X-Demo  :   left:right  "]},
+    "optional-response-config-body": {"body":"样本 café\r\n","headers":["c: text/plain","X-Note: synthetic"]},
+    "custom": {
+      "body": "hello é",
+      "headers": [
+        "X-Lab: first",
+        "X-Lab: second",
+        "X-Other: left:right",
+        "Content-Type: text/plain"
+      ]
+    },
+    "conflict": {
+      "body": "ok",
+      "headers": [
+        "Via: custom",
+        "CSeq: 8 UPDATE",
+        "Max-Forwards: 4",
+        "To: synthetic"
+      ]
+    },
+    "malformed-config": {
+      "headers": [
+        "invalid-without-colon",
+        "X-Good: ok"
+      ]
+    },
+    "header-order": {
+      "body": "hello é",
+      "headers": [
+        "x-lab: first",
+        "X-Q: mid",
+        "X-Lab: second",
+        "v: test",
+        "X-Other: left:right",
+        "Content-Type: text/plain"
+      ]
+    },
+    "configured-body-1025": {
+      "body": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    },
+    "configured-body-1200": {
+      "body": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    }
+  },
+  "cases": [
+    {
+      "name": "optional-separator-spacing",
+      "listener": "optional-separator-spacing",
+      "send": "OPTIONS sip:bob@fixture.invalid SIP/2.0\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\nX-Demo: one\r\nX-Demo  :   left:right  \r\nX-Spaces:    \r\n\r\n",
+      "events": [{"msg":"new message","header":{"CSeq":"1 OPTIONS","Call-ID":"packet@fixture.invalid","Content-Length":"0","From":"<sip:alice@fixture.invalid>;tag=from01","Max-Forwards":"70","To":"<sip:bob@fixture.invalid>","Via":"SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture"}}]
+    },
+    {
+      "name": "optional-slash-punctuation",
+      "listener": "optional-slash-punctuation",
+      "send": "OPTIONS sip:bob@fixture.invalid SIP/2.0\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\nX-Uri: sip:lab@fixture.invalid;transport=udp\r\nX-Formula: a=b:c,d\r\nX.T~v+dash_name%percent!: sample\r\n\r\n",
+      "events": [{"msg":"new message","header":{"CSeq":"1 OPTIONS","Call-ID":"packet@fixture.invalid","Content-Length":"0","From":"<sip:alice@fixture.invalid>;tag=from01","Max-Forwards":"70","To":"<sip:bob@fixture.invalid>","Via":"SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture"}}]
+    },
+    {
+      "name": "optional-repeated-mixed",
+      "listener": "optional-repeated-mixed",
+      "send": "OPTIONS sip:bob@fixture.invalid SIP/2.0\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\nX-Note :  first\r\nx-note :  fourth  \r\n\r\n",
+      "events": [{"msg":"new message","header":{"CSeq":"1 OPTIONS","Call-ID":"packet@fixture.invalid","Content-Length":"0","From":"<sip:alice@fixture.invalid>;tag=from01","Max-Forwards":"70","To":"<sip:bob@fixture.invalid>","Via":"SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture"}}]
+    },
+    {
+      "name": "optional-optional-compact",
+      "listener": "optional-optional-compact",
+      "send": "OPTIONS sip:bob@fixture.invalid SIP/2.0\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\nk :   timer, path\r\nc: text/plain\r\n\r\n",
+      "events": [{"msg":"new message","header":{"CSeq":"1 OPTIONS","Call-ID":"packet@fixture.invalid","Content-Length":"0","From":"<sip:alice@fixture.invalid>;tag=from01","Max-Forwards":"70","To":"<sip:bob@fixture.invalid>","Via":"SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture"}}]
+    },
+    {
+      "name": "optional-spacing-order",
+      "listener": "optional-spacing-order",
+      "send": "OPTIONS sip:bob@fixture.invalid SIP/2.0\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\nX-Demo : first\r\nx-demo : third\r\nX-Other: middle\r\nX-Demo: second\r\nX-Demo: fourth\r\n\r\n",
+      "events": [{"msg":"new message","header":{"CSeq":"1 OPTIONS","Call-ID":"packet@fixture.invalid","Content-Length":"0","From":"<sip:alice@fixture.invalid>;tag=from01","Max-Forwards":"70","To":"<sip:bob@fixture.invalid>","Via":"SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture"}}]
+    },
+    {
+      "name": "optional-tabs-before",
+      "listener": "optional-tabs-before",
+      "send": "OPTIONS sip:bob@fixture.invalid SIP/2.0\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\nX-One\t: value\r\nx-one\t: next\r\nX-One: final\r\nX-Two: \tvalue\t\r\nX-Three: \r\n\r\n",
+      "events": [{"msg":"new message","header":{"CSeq":"1 OPTIONS","Call-ID":"packet@fixture.invalid","Content-Length":"0","From":"<sip:alice@fixture.invalid>;tag=from01","Max-Forwards":"70","To":"<sip:bob@fixture.invalid>","Via":"SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture"}}]
+    },
+    {
+      "name": "optional-literal-first-colon",
+      "listener": "optional-literal-first-colon",
+      "send": "OPTIONS sip:bob@fixture.invalid SIP/2.0\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\nX-Demo: value: more\r\nX-Other: next: with: several\r\nX-Third : left: right\r\n\r\n",
+      "events": [{"msg":"new message","header":{"CSeq":"1 OPTIONS","Call-ID":"packet@fixture.invalid","Content-Length":"0","From":"<sip:alice@fixture.invalid>;tag=from01","Max-Forwards":"70","To":"<sip:bob@fixture.invalid>","Via":"SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture"}}]
+    },
+    {
+      "name": "optional-response-config-compact",
+      "listener": "optional-response-config-compact",
+      "send": "OPTIONS sip:bob@fixture.invalid SIP/2.0\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\no: presence\r\ns: Fixture title\r\nk: timer, path\r\nx: 1800;refresher=uas\r\nX-Demo  :   left:right  \r\n\r\n",
+      "events": [{"msg":"new message","header":{"CSeq":"1 OPTIONS","Call-ID":"packet@fixture.invalid","Content-Length":"0","From":"<sip:alice@fixture.invalid>;tag=from01","Max-Forwards":"70","To":"<sip:bob@fixture.invalid>","Via":"SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture"}}]
+    },
+    {
+      "name": "optional-response-config-body",
+      "listener": "optional-response-config-body",
+      "send": "OPTIONS sip:bob@fixture.invalid SIP/2.0\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nContent-Length: 14\r\nMax-Forwards: 70\r\nc: text/plain\r\nX-Note: synthetic\r\n\r\n样本 café\r\n",
+      "events": [{"msg":"new message","header":{"CSeq":"1 OPTIONS","Call-ID":"packet@fixture.invalid","Content-Length":"0","From":"<sip:alice@fixture.invalid>;tag=from01","Max-Forwards":"70","To":"<sip:bob@fixture.invalid>","Via":"SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture"}}]
+    },
+    {
+      "name": "optional-compact-optional",
+      "listener": "default",
+      "send": "OPTIONS sip:bob@fixture.invalid SIP/2.0\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nMax-Forwards: 70\r\ns: Demo call\r\nk: timer, path\r\ne: identity\r\nc: text/plain\r\no: presence\r\nu: presence, dialog\r\nr: <sip:carol@fixture.invalid>\r\nb: <sip:alice@fixture.invalid>\r\nx: 1800;refresher=uas\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [{"msg":"new message","header":{"CSeq":"1 OPTIONS","Call-ID":"packet@fixture.invalid","Content-Length":"0","Content-Type":"text/plain","From":"<sip:alice@fixture.invalid>;tag=from01","Max-Forwards":"70","Supported":"timer, path","To":"<sip:bob@fixture.invalid>","Via":"SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture","b":"<sip:alice@fixture.invalid>","e":"identity","o":"presence","r":"<sip:carol@fixture.invalid>","s":"Demo call","u":"presence, dialog","x":"1800;refresher=uas"}}]
+    },
+    {
+      "name": "optional-varycase-optional",
+      "listener": "default",
+      "send": "OPTIONS sip:bob@fixture.invalid SIP/2.0\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nMax-Forwards: 70\r\nsUbJeCt: Demo call\r\nsUpPoRtEd: path\r\nO: presence\r\nX: 1800;refresher=uac\r\nrEtRy-AfTeR: 120\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [{"msg":"new message","header":{"CSeq":"1 OPTIONS","Call-ID":"packet@fixture.invalid","Content-Length":"0","From":"<sip:alice@fixture.invalid>;tag=from01","Max-Forwards":"70","O":"presence","Supported":"path","To":"<sip:bob@fixture.invalid>","Via":"SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture","X":"1800;refresher=uac","rEtRy-AfTeR":"120","sUbJeCt":"Demo call"}}]
+    },
+    {
+      "name": "optional-subject-long-compact",
+      "listener": "default",
+      "send": "OPTIONS sip:bob@fixture.invalid SIP/2.0\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nMax-Forwards: 70\r\nSubject: first\r\ns: second\r\nSubject: third\r\nS: fourth\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [{"msg":"new message","header":{"CSeq":"1 OPTIONS","Call-ID":"packet@fixture.invalid","Content-Length":"0","From":"<sip:alice@fixture.invalid>;tag=from01","Max-Forwards":"70","S":"fourth","Subject":"third","To":"<sip:bob@fixture.invalid>","Via":"SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture","s":"second"}}]
+    },
+    {
+      "name": "optional-supported-long-compact",
+      "listener": "default",
+      "send": "OPTIONS sip:bob@fixture.invalid SIP/2.0\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nMax-Forwards: 70\r\nSupported: timer\r\nk: path\r\nSupported: gruu\r\nK: outbound\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [{"msg":"new message","header":{"CSeq":"1 OPTIONS","Call-ID":"packet@fixture.invalid","Content-Length":"0","From":"<sip:alice@fixture.invalid>;tag=from01","Max-Forwards":"70","Supported":"outbound","To":"<sip:bob@fixture.invalid>","Via":"SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture"}}]
+    },
+    {
+      "name": "optional-via-params-standard",
+      "listener": "default",
+      "send": "OPTIONS sip:bob@fixture.invalid SIP/2.0\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;received=127.0.0.1;rport=5060;maddr=127.0.0.1;ttl=4;branch=z9hG4bK-fixture;alias\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;received=127.0.0.1;rport=5060;maddr=127.0.0.1;ttl=4;branch=z9hG4bK-fixture;alias\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [{"msg":"new message","header":{"CSeq":"1 OPTIONS","Call-ID":"packet@fixture.invalid","Content-Length":"0","From":"<sip:alice@fixture.invalid>;tag=from01","Max-Forwards":"70","To":"<sip:bob@fixture.invalid>","Via":"SIP/2.0/UDP ua.fixture.invalid:5060;received=127.0.0.1;rport=5060;maddr=127.0.0.1;ttl=4;branch=z9hG4bK-fixture;alias"}}]
+    },
+    {
+      "name": "optional-uri-telephone",
+      "listener": "default",
+      "send": "OPTIONS sip:bob@fixture.invalid SIP/2.0\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <tel:+12025550100;ext=12>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [{"msg":"new message","header":{"CSeq":"1 OPTIONS","Call-ID":"packet@fixture.invalid","Content-Length":"0","From":"<sip:alice@fixture.invalid>;tag=from01","Max-Forwards":"70","Via":"SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture"}}]
+    },
+    {
+      "name": "optional-uri-escaped-unicode",
+      "listener": "default",
+      "send": "OPTIONS sip:bob@fixture.invalid SIP/2.0\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: \"样本\" <sip:%e6%a0%b7%e6%9c%ac@fixture.invalid>;tag=t\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: \"样本\" <sip:%e6%a0%b7%e6%9c%ac@fixture.invalid>;tag=t\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [{"msg":"new message","header":{"CSeq":"1 OPTIONS","Call-ID":"packet@fixture.invalid","Content-Length":"0","From":"<sip:alice@fixture.invalid>;tag=from01","Max-Forwards":"70","To":"\"样本\" <sip:%e6%a0%b7%e6%9c%ac@fixture.invalid>;tag=t","Via":"SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture"}}]
+    },
+    {
+      "name": "optional-multiple-record-route",
+      "listener": "default",
+      "send": "OPTIONS sip:bob@fixture.invalid SIP/2.0\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nMax-Forwards: 70\r\nRecord-Route: \"Fixture, Lab\" <sip:proxy@fixture.invalid;lr>, <sip:other@fixture.invalid;lr>\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nRecord-Route: <sip:proxy@fixture.invalid;lr>, <sip:other@fixture.invalid;lr>\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [{"msg":"new message","header":{"CSeq":"1 OPTIONS","Call-ID":"packet@fixture.invalid","Content-Length":"0","From":"<sip:alice@fixture.invalid>;tag=from01","Max-Forwards":"70","Record-Route":"<sip:proxy@fixture.invalid;lr>, <sip:other@fixture.invalid;lr>","To":"<sip:bob@fixture.invalid>","Via":"SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture"}}]
+    },
+    {
+      "name": "optional-options-tel-target",
+      "listener": "default",
+      "send": "OPTIONS tel:+12025550100 SIP/2.0\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": null,
+      "events": []
+    },
+    {
+      "name": "optional-options-sips-target",
+      "listener": "default",
+      "send": "OPTIONS sips:bob@fixture.invalid;transport=tls SIP/2.0\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [{"msg":"new message","header":{"CSeq":"1 OPTIONS","Call-ID":"packet@fixture.invalid","Content-Length":"0","From":"<sip:alice@fixture.invalid>;tag=from01","Max-Forwards":"70","To":"<sip:bob@fixture.invalid>","Via":"SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture"}}]
+    },
+    {
+      "name": "literal-to-plus-lower",
+      "listener": "default",
+      "send": "OPTIONS sip:bob@fixture.invalid SIP/2.0\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob%2blabel@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob%2blabel@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "1 OPTIONS",
+            "Call-ID": "packet@fixture.invalid",
+            "Content-Length": "0",
+            "From": "<sip:alice@fixture.invalid>;tag=from01",
+            "Max-Forwards": "70",
+            "To": "<sip:bob%2blabel@fixture.invalid>",
+            "Via": "SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture"
+          }
+        }
+      ]
+    },
+    {
+      "name": "literal-params-and-query",
+      "listener": "default",
+      "send": "OPTIONS sip:bob@fixture.invalid SIP/2.0\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob%2b@fixture.invalid;x=%62?Subject=%2B>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob%2b@fixture.invalid;x=%62?Subject=%2B>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "1 OPTIONS",
+            "Call-ID": "packet@fixture.invalid",
+            "Content-Length": "0",
+            "From": "<sip:alice@fixture.invalid>;tag=from01",
+            "Max-Forwards": "70",
+            "To": "<sip:bob%2b@fixture.invalid;x=%62?Subject=%2B>",
+            "Via": "SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture"
+          }
+        }
+      ]
+    },
+    {
+      "name": "literal-multiple-route",
+      "listener": "default",
+      "send": "OPTIONS sip:bob@fixture.invalid SIP/2.0\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nMax-Forwards: 70\r\nRecord-Route: <sip:a%2b@fixture.invalid;lr>, <sip:b%2f@fixture.invalid;lr>\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nRecord-Route: <sip:a%2b@fixture.invalid;lr>, <sip:b%2f@fixture.invalid;lr>\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "1 OPTIONS",
+            "Call-ID": "packet@fixture.invalid",
+            "Content-Length": "0",
+            "From": "<sip:alice@fixture.invalid>;tag=from01",
+            "Max-Forwards": "70",
+            "Record-Route": "<sip:a%2b@fixture.invalid;lr>, <sip:b%2f@fixture.invalid;lr>",
+            "To": "<sip:bob@fixture.invalid>",
+            "Via": "SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture"
+          }
+        }
+      ]
+    },
+    {
+      "name": "literal-user-slash",
+      "listener": "default",
+      "send": "OPTIONS sip:bob@fixture.invalid SIP/2.0\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob/label@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob/label@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "1 OPTIONS",
+            "Call-ID": "packet@fixture.invalid",
+            "Content-Length": "0",
+            "From": "<sip:alice@fixture.invalid>;tag=from01",
+            "Max-Forwards": "70",
+            "To": "<sip:bob/label@fixture.invalid>",
+            "Via": "SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture"
+          }
+        }
+      ]
+    },
+    {
+      "name": "literal-via-escape",
+      "listener": "default",
+      "send": "OPTIONS sip:bob@fixture.invalid SIP/2.0\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture;tag=one%2btwo\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture;tag=one%2btwo\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "1 OPTIONS",
+            "Call-ID": "packet@fixture.invalid",
+            "Content-Length": "0",
+            "From": "<sip:alice@fixture.invalid>;tag=from01",
+            "Max-Forwards": "70",
+            "To": "<sip:bob@fixture.invalid>",
+            "Via": "SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture;tag=one%2btwo"
+          }
+        }
+      ]
+    },
+    {
+      "name": "options",
+      "listener": "default",
+      "send": "OPTIONS sip:lab SIP/2.0\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "42 OPTIONS",
+            "Call-ID": "parity-test",
+            "Content-Length": "0",
+            "From": "<sip:source@lab>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:target@lab>",
+            "Via": "SIP/2.0/UDP lab;branch=z9hG4bKtest;rport"
+          }
+        }
+      ]
+    },
+    {
+      "name": "lowercase-options",
+      "listener": "default",
+      "send": "options sip:lab SIP/2.0\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 options\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 options\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "42 options",
+            "Call-ID": "parity-test",
+            "Content-Length": "0",
+            "From": "<sip:source@lab>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:target@lab>",
+            "Via": "SIP/2.0/UDP lab;branch=z9hG4bKtest;rport"
+          }
+        }
+      ]
+    },
+    {
+      "name": "register",
+      "listener": "default",
+      "send": "REGISTER sip:lab SIP/2.0\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 REGISTER\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 REGISTER\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "42 REGISTER",
+            "Call-ID": "parity-test",
+            "Content-Length": "0",
+            "From": "<sip:source@lab>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:target@lab>",
+            "Via": "SIP/2.0/UDP lab;branch=z9hG4bKtest;rport"
+          }
+        }
+      ]
+    },
+    {
+      "name": "invite",
+      "listener": "default",
+      "send": "INVITE sip:lab SIP/2.0\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 INVITE\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 INVITE\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "42 INVITE",
+            "Call-ID": "parity-test",
+            "Content-Length": "0",
+            "From": "<sip:source@lab>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:target@lab>",
+            "Via": "SIP/2.0/UDP lab;branch=z9hG4bKtest;rport"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ack",
+      "listener": "default",
+      "send": "ACK sip:lab SIP/2.0\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 ACK\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 ACK\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "42 ACK",
+            "Call-ID": "parity-test",
+            "Content-Length": "0",
+            "From": "<sip:source@lab>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:target@lab>",
+            "Via": "SIP/2.0/UDP lab;branch=z9hG4bKtest;rport"
+          }
+        }
+      ]
+    },
+    {
+      "name": "cancel",
+      "listener": "default",
+      "send": "CANCEL sip:lab SIP/2.0\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 CANCEL\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 CANCEL\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "42 CANCEL",
+            "Call-ID": "parity-test",
+            "Content-Length": "0",
+            "From": "<sip:source@lab>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:target@lab>",
+            "Via": "SIP/2.0/UDP lab;branch=z9hG4bKtest;rport"
+          }
+        }
+      ]
+    },
+    {
+      "name": "bye",
+      "listener": "default",
+      "send": "BYE sip:lab SIP/2.0\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 BYE\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 BYE\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "42 BYE",
+            "Call-ID": "parity-test",
+            "Content-Length": "0",
+            "From": "<sip:source@lab>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:target@lab>",
+            "Via": "SIP/2.0/UDP lab;branch=z9hG4bKtest;rport"
+          }
+        }
+      ]
+    },
+    {
+      "name": "message",
+      "listener": "default",
+      "send": "MESSAGE sip:lab SIP/2.0\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 MESSAGE\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 MESSAGE\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "42 MESSAGE",
+            "Call-ID": "parity-test",
+            "Content-Length": "0",
+            "From": "<sip:source@lab>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:target@lab>",
+            "Via": "SIP/2.0/UDP lab;branch=z9hG4bKtest;rport"
+          }
+        }
+      ]
+    },
+    {
+      "name": "subscribe",
+      "listener": "default",
+      "send": "SUBSCRIBE sip:lab SIP/2.0\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 SUBSCRIBE\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 SUBSCRIBE\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "42 SUBSCRIBE",
+            "Call-ID": "parity-test",
+            "Content-Length": "0",
+            "From": "<sip:source@lab>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:target@lab>",
+            "Via": "SIP/2.0/UDP lab;branch=z9hG4bKtest;rport"
+          }
+        }
+      ]
+    },
+    {
+      "name": "notify",
+      "listener": "default",
+      "send": "NOTIFY sip:lab SIP/2.0\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 NOTIFY\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 NOTIFY\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "42 NOTIFY",
+            "Call-ID": "parity-test",
+            "Content-Length": "0",
+            "From": "<sip:source@lab>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:target@lab>",
+            "Via": "SIP/2.0/UDP lab;branch=z9hG4bKtest;rport"
+          }
+        }
+      ]
+    },
+    {
+      "name": "update",
+      "listener": "default",
+      "send": "UPDATE sip:lab SIP/2.0\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 UPDATE\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 UPDATE\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "42 UPDATE",
+            "Call-ID": "parity-test",
+            "Content-Length": "0",
+            "From": "<sip:source@lab>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:target@lab>",
+            "Via": "SIP/2.0/UDP lab;branch=z9hG4bKtest;rport"
+          }
+        }
+      ]
+    },
+    {
+      "name": "info",
+      "listener": "default",
+      "send": "INFO sip:lab SIP/2.0\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 INFO\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 INFO\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "42 INFO",
+            "Call-ID": "parity-test",
+            "Content-Length": "0",
+            "From": "<sip:source@lab>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:target@lab>",
+            "Via": "SIP/2.0/UDP lab;branch=z9hG4bKtest;rport"
+          }
+        }
+      ]
+    },
+    {
+      "name": "prack",
+      "listener": "default",
+      "send": "PRACK sip:lab SIP/2.0\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 PRACK\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 PRACK\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "42 PRACK",
+            "Call-ID": "parity-test",
+            "Content-Length": "0",
+            "From": "<sip:source@lab>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:target@lab>",
+            "Via": "SIP/2.0/UDP lab;branch=z9hG4bKtest;rport"
+          }
+        }
+      ]
+    },
+    {
+      "name": "refer",
+      "listener": "default",
+      "send": "REFER sip:lab SIP/2.0\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 REFER\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 REFER\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "42 REFER",
+            "Call-ID": "parity-test",
+            "Content-Length": "0",
+            "From": "<sip:source@lab>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:target@lab>",
+            "Via": "SIP/2.0/UDP lab;branch=z9hG4bKtest;rport"
+          }
+        }
+      ]
+    },
+    {
+      "name": "publish",
+      "listener": "default",
+      "send": "PUBLISH sip:lab SIP/2.0\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 PUBLISH\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 PUBLISH\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "42 PUBLISH",
+            "Call-ID": "parity-test",
+            "Content-Length": "0",
+            "From": "<sip:source@lab>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:target@lab>",
+            "Via": "SIP/2.0/UDP lab;branch=z9hG4bKtest;rport"
+          }
+        }
+      ]
+    },
+    {
+      "name": "unknown",
+      "listener": "default",
+      "send": "UNKNOWN sip:lab SIP/2.0\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 UNKNOWN\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 UNKNOWN\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "42 UNKNOWN",
+            "Call-ID": "parity-test",
+            "Content-Length": "0",
+            "From": "<sip:source@lab>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:target@lab>",
+            "Via": "SIP/2.0/UDP lab;branch=z9hG4bKtest;rport"
+          }
+        }
+      ]
+    },
+    {
+      "name": "missing-via",
+      "listener": "default",
+      "send": "OPTIONS sip:lab SIP/2.0\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "42 OPTIONS",
+            "Call-ID": "parity-test",
+            "Content-Length": "0",
+            "From": "<sip:source@lab>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:target@lab>"
+          }
+        }
+      ]
+    },
+    {
+      "name": "missing-from",
+      "listener": "default",
+      "send": "OPTIONS sip:lab SIP/2.0\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "42 OPTIONS",
+            "Call-ID": "parity-test",
+            "Content-Length": "0",
+            "Max-Forwards": "70",
+            "To": "<sip:target@lab>",
+            "Via": "SIP/2.0/UDP lab;branch=z9hG4bKtest;rport"
+          }
+        }
+      ]
+    },
+    {
+      "name": "missing-to",
+      "listener": "default",
+      "send": "OPTIONS sip:lab SIP/2.0\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "42 OPTIONS",
+            "Call-ID": "parity-test",
+            "Content-Length": "0",
+            "From": "<sip:source@lab>;tag=lab",
+            "Max-Forwards": "70",
+            "Via": "SIP/2.0/UDP lab;branch=z9hG4bKtest;rport"
+          }
+        }
+      ]
+    },
+    {
+      "name": "missing-call-id",
+      "listener": "default",
+      "send": "OPTIONS sip:lab SIP/2.0\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCSeq: 42 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCSeq: 42 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "42 OPTIONS",
+            "Content-Length": "0",
+            "From": "<sip:source@lab>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:target@lab>",
+            "Via": "SIP/2.0/UDP lab;branch=z9hG4bKtest;rport"
+          }
+        }
+      ]
+    },
+    {
+      "name": "missing-cseq",
+      "listener": "default",
+      "send": "OPTIONS sip:lab SIP/2.0\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "Call-ID": "parity-test",
+            "Content-Length": "0",
+            "From": "<sip:source@lab>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:target@lab>",
+            "Via": "SIP/2.0/UDP lab;branch=z9hG4bKtest;rport"
+          }
+        }
+      ]
+    },
+    {
+      "name": "missing-max-forwards",
+      "listener": "default",
+      "send": "OPTIONS sip:lab SIP/2.0\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nContent-Length: 0\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "42 OPTIONS",
+            "Call-ID": "parity-test",
+            "Content-Length": "0",
+            "From": "<sip:source@lab>;tag=lab",
+            "To": "<sip:target@lab>",
+            "Via": "SIP/2.0/UDP lab;branch=z9hG4bKtest;rport"
+          }
+        }
+      ]
+    },
+    {
+      "name": "missing-content-length",
+      "listener": "default",
+      "send": "OPTIONS sip:lab SIP/2.0\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nMax-Forwards: 70\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "42 OPTIONS",
+            "Call-ID": "parity-test",
+            "From": "<sip:source@lab>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:target@lab>",
+            "Via": "SIP/2.0/UDP lab;branch=z9hG4bKtest;rport"
+          }
+        }
+      ]
+    },
+    {
+      "name": "lower-headers",
+      "listener": "default",
+      "send": "OPTIONS sip:lab SIP/2.0\r\nvia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nfrom: <sip:source@lab>;tag=lab\r\nto: <sip:target@lab>\r\ncall-id: parity-test\r\ncseq: 42 OPTIONS\r\nmax-forwards: 70\r\ncontent-length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "42 OPTIONS",
+            "Call-ID": "parity-test",
+            "Content-Length": "0",
+            "From": "<sip:source@lab>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:target@lab>",
+            "Via": "SIP/2.0/UDP lab;branch=z9hG4bKtest;rport"
+          }
+        }
+      ]
+    },
+    {
+      "name": "compact",
+      "listener": "default",
+      "send": "OPTIONS sip:lab SIP/2.0\r\nv: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nf: <sip:source@lab>;tag=lab\r\nt: <sip:target@lab>\r\ni: parity-test\r\nCSeq: 42 OPTIONS\r\nMax-Forwards: 70\r\nl: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "42 OPTIONS",
+            "Call-ID": "parity-test",
+            "Content-Length": "0",
+            "From": "<sip:source@lab>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:target@lab>",
+            "Via": "SIP/2.0/UDP lab;branch=z9hG4bKtest;rport"
+          }
+        }
+      ]
+    },
+    {
+      "name": "duplicate",
+      "listener": "default",
+      "send": "OPTIONS sip:lab SIP/2.0\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\nVia: SIP/2.0/UDP next;branch=z9hG4bKn\r\nCSeq: 43 BYE\r\nCall-ID: second\r\nTo: <sip:alt@lab>\r\nMax-Forwards: 3\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nVia: SIP/2.0/UDP next;branch=z9hG4bKn\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nTo: <sip:alt@lab>\r\nCall-ID: parity-test\r\nCall-ID: second\r\nCSeq: 42 OPTIONS\r\nCSeq: 43 BYE\r\nContent-Length: 0\r\nMax-Forwards: 70\r\nMax-Forwards: 3\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "43 BYE",
+            "Call-ID": "second",
+            "Content-Length": "0",
+            "From": "<sip:source@lab>;tag=lab",
+            "Max-Forwards": "3",
+            "To": "<sip:alt@lab>",
+            "Via": "SIP/2.0/UDP next;branch=z9hG4bKn"
+          }
+        }
+      ]
+    },
+    {
+      "name": "wrong-case-cseq",
+      "listener": "default",
+      "send": "OPTIONS sip:lab SIP/2.0\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 REGISTER\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 REGISTER\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "42 REGISTER",
+            "Call-ID": "parity-test",
+            "Content-Length": "0",
+            "From": "<sip:source@lab>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:target@lab>",
+            "Via": "SIP/2.0/UDP lab;branch=z9hG4bKtest;rport"
+          }
+        }
+      ]
+    },
+    {
+      "name": "wrong-version",
+      "listener": "default",
+      "send": "OPTIONS sip:lab SIP/3.0\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/3.0 200 OK\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "42 OPTIONS",
+            "Call-ID": "parity-test",
+            "Content-Length": "0",
+            "From": "<sip:source@lab>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:target@lab>",
+            "Via": "SIP/2.0/UDP lab;branch=z9hG4bKtest;rport"
+          }
+        }
+      ]
+    },
+    {
+      "name": "relative",
+      "listener": "default",
+      "send": "OPTIONS * SIP/2.0\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "42 OPTIONS",
+            "Call-ID": "parity-test",
+            "Content-Length": "0",
+            "From": "<sip:source@lab>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:target@lab>",
+            "Via": "SIP/2.0/UDP lab;branch=z9hG4bKtest;rport"
+          }
+        }
+      ]
+    },
+    {
+      "name": "custom",
+      "listener": "custom",
+      "send": "OPTIONS sip:lab SIP/2.0\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nContent-Length: 8\r\nMax-Forwards: 70\r\nX-Lab: first\r\nX-Lab: second\r\nX-Other: left:right\r\nContent-Type: text/plain\r\n\r\nhello é",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "42 OPTIONS",
+            "Call-ID": "parity-test",
+            "Content-Length": "0",
+            "From": "<sip:source@lab>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:target@lab>",
+            "Via": "SIP/2.0/UDP lab;branch=z9hG4bKtest;rport"
+          }
+        }
+      ]
+    },
+    {
+      "name": "conflict",
+      "listener": "conflict",
+      "send": "OPTIONS sip:lab SIP/2.0\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nVia: custom\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nTo: synthetic\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nCSeq: 8 UPDATE\r\nContent-Length: 2\r\nMax-Forwards: 70\r\nMax-Forwards: 4\r\n\r\nok",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "42 OPTIONS",
+            "Call-ID": "parity-test",
+            "Content-Length": "0",
+            "From": "<sip:source@lab>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:target@lab>",
+            "Via": "SIP/2.0/UDP lab;branch=z9hG4bKtest;rport"
+          }
+        }
+      ]
+    },
+    {
+      "name": "bad-config",
+      "listener": "malformed-config",
+      "send": "OPTIONS sip:lab SIP/2.0\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\nX-Good: ok\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "42 OPTIONS",
+            "Call-ID": "parity-test",
+            "Content-Length": "0",
+            "From": "<sip:source@lab>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:target@lab>",
+            "Via": "SIP/2.0/UDP lab;branch=z9hG4bKtest;rport"
+          }
+        }
+      ]
+    },
+    {
+      "name": "message-body",
+      "listener": "default",
+      "send": "MESSAGE sip:lab SIP/2.0\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 MESSAGE\r\nMax-Forwards: 70\r\nContent-Length: 13\r\n\r\nhello fixture",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 MESSAGE\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "42 MESSAGE",
+            "Call-ID": "parity-test",
+            "Content-Length": "13",
+            "From": "<sip:source@lab>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:target@lab>",
+            "Via": "SIP/2.0/UDP lab;branch=z9hG4bKtest;rport"
+          }
+        }
+      ]
+    },
+    {
+      "name": "message-bad-length",
+      "listener": "default",
+      "send": "MESSAGE sip:lab SIP/2.0\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\nignored",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "42 OPTIONS",
+            "Call-ID": "parity-test",
+            "Content-Length": "0",
+            "From": "<sip:source@lab>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:target@lab>",
+            "Via": "SIP/2.0/UDP lab;branch=z9hG4bKtest;rport"
+          }
+        }
+      ]
+    },
+    {
+      "name": "lf",
+      "listener": "default",
+      "send": "OPTIONS sip:lab SIP/2.0\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\nFrom: <sip:source@lab>;tag=lab\nTo: <sip:target@lab>\nCall-ID: parity-test\nCSeq: 42 OPTIONS\nMax-Forwards: 70\nContent-Length: 0\n\n",
+      "receive": null,
+      "events": []
+    },
+    {
+      "name": "header-whitespace",
+      "listener": "default",
+      "send": "OPTIONS sip:lab SIP/2.0\r\nVia : SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "42 OPTIONS",
+            "Call-ID": "parity-test",
+            "Content-Length": "0",
+            "From": "<sip:source@lab>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:target@lab>",
+            "Via": "SIP/2.0/UDP lab;branch=z9hG4bKtest;rport"
+          }
+        }
+      ]
+    },
+    {
+      "name": "fold",
+      "listener": "default",
+      "send": "OPTIONS sip:lab SIP/2.0\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\nVia: SIP/2.0/UDP next;branch=z9hG4bKn\r\n ;rport\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nVia: SIP/2.0/UDP next;branch=z9hG4bKn;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "42 OPTIONS",
+            "Call-ID": "parity-test",
+            "Content-Length": "0",
+            "From": "<sip:source@lab>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:target@lab>",
+            "Via": "SIP/2.0/UDP next;branch=z9hG4bKn;rport"
+          }
+        }
+      ]
+    },
+    {
+      "name": "empty",
+      "listener": "default",
+      "send": "\r\n",
+      "receive": null,
+      "events": []
+    },
+    {
+      "name": "non-sip-version",
+      "listener": "default",
+      "send": "OPTIONS sip:lab HTTP/1.1\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": null,
+      "events": []
+    },
+    {
+      "name": "named-version",
+      "listener": "default",
+      "send": "OPTIONS sip:lab SIP/x\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/x 200 OK\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "42 OPTIONS",
+            "Call-ID": "parity-test",
+            "Content-Length": "0",
+            "From": "<sip:source@lab>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:target@lab>",
+            "Via": "SIP/2.0/UDP lab;branch=z9hG4bKtest;rport"
+          }
+        }
+      ]
+    },
+    {
+      "name": "blank-headers",
+      "listener": "default",
+      "send": "OPTIONS sip:lab SIP/2.0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nContent-Length: 0\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {}
+        }
+      ]
+    },
+    {
+      "name": "not-separated",
+      "listener": "default",
+      "send": "OPTIONS sip:lab SIP/2.0\r\n",
+      "receive": null,
+      "events": []
+    },
+    {
+      "name": "bad-header-line",
+      "listener": "default",
+      "send": "OPTIONS sip:lab SIP/2.0\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nMax-Forwards: 70\r\nInvalid\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "42 OPTIONS",
+            "Call-ID": "parity-test",
+            "From": "<sip:source@lab>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:target@lab>",
+            "Via": "SIP/2.0/UDP lab;branch=z9hG4bKtest;rport"
+          }
+        }
+      ]
+    },
+    {
+      "name": "spaces",
+      "listener": "default",
+      "send": "OPTIONS  sip:lab SIP/2.0\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": null,
+      "events": []
+    },
+    {
+      "name": "tab-start",
+      "listener": "default",
+      "send": "OPTIONS\tsip:lab SIP/2.0\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": null,
+      "events": []
+    },
+    {
+      "name": "multivia",
+      "listener": "default",
+      "send": "OPTIONS sip:lab SIP/2.0\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport, SIP/2.0/UDP hop;branch=z9hG4bKx\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport, SIP/2.0/UDP hop;branch=z9hG4bKx\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "42 OPTIONS",
+            "Call-ID": "parity-test",
+            "Content-Length": "0",
+            "From": "<sip:source@lab>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:target@lab>",
+            "Via": "SIP/2.0/UDP lab;branch=z9hG4bKtest;rport, SIP/2.0/UDP hop;branch=z9hG4bKx"
+          }
+        }
+      ]
+    },
+    {
+      "name": "compact-plus-long",
+      "listener": "default",
+      "send": "OPTIONS sip:lab SIP/2.0\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\nv: SIP/2.0/UDP other;branch=z9hG4bKx\r\ni: extra\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nVia: SIP/2.0/UDP other;branch=z9hG4bKx\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCall-ID: extra\r\nCSeq: 42 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "42 OPTIONS",
+            "Call-ID": "extra",
+            "Content-Length": "0",
+            "From": "<sip:source@lab>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:target@lab>",
+            "Via": "SIP/2.0/UDP other;branch=z9hG4bKx"
+          }
+        }
+      ]
+    },
+    {
+      "name": "empty-via",
+      "listener": "default",
+      "send": "OPTIONS sip:lab SIP/2.0\r\nVia: \r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "42 OPTIONS",
+            "Call-ID": "parity-test",
+            "Content-Length": "0",
+            "From": "<sip:source@lab>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:target@lab>"
+          }
+        }
+      ]
+    },
+    {
+      "name": "unknown-header",
+      "listener": "default",
+      "send": "OPTIONS sip:lab SIP/2.0\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\ncontact: <sip:target@lab>\r\nX-Foo: a\r\nX-FOO: b\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "42 OPTIONS",
+            "Call-ID": "parity-test",
+            "Contact": "<sip:target@lab>",
+            "Content-Length": "0",
+            "From": "<sip:source@lab>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:target@lab>",
+            "Via": "SIP/2.0/UDP lab;branch=z9hG4bKtest;rport",
+            "X-FOO": "b",
+            "X-Foo": "a"
+          }
+        }
+      ]
+    },
+    {
+      "name": "fold-with-space",
+      "listener": "default",
+      "send": "OPTIONS sip:lab SIP/2.0\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\nX-Lab: first\r\n second\r\n\tfolded\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "42 OPTIONS",
+            "Call-ID": "parity-test",
+            "Content-Length": "0",
+            "From": "<sip:source@lab>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:target@lab>",
+            "Via": "SIP/2.0/UDP lab;branch=z9hG4bKtest;rport",
+            "X-Lab": "first  second \tfolded"
+          }
+        }
+      ]
+    },
+    {
+      "name": "request-with-extra-space",
+      "listener": "default",
+      "send": "OPTIONS sip:lab SIP/2.0 extra\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": null,
+      "events": []
+    },
+    {
+      "name": "route",
+      "listener": "default",
+      "send": "OPTIONS sip:lab SIP/2.0\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\nRecord-Route: <sip:synthetic@lab;lr>\r\nRoute: <sip:other@lab;lr>\r\nContact: <sip:contact@lab>\r\nTimestamp: 1.2\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nRecord-Route: <sip:synthetic@lab;lr>\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "42 OPTIONS",
+            "Call-ID": "parity-test",
+            "Contact": "<sip:contact@lab>",
+            "Content-Length": "0",
+            "From": "<sip:source@lab>;tag=lab",
+            "Max-Forwards": "70",
+            "Record-Route": "<sip:synthetic@lab;lr>",
+            "Route": "<sip:other@lab;lr>",
+            "Timestamp": "1.2",
+            "To": "<sip:target@lab>",
+            "Via": "SIP/2.0/UDP lab;branch=z9hG4bKtest;rport"
+          }
+        }
+      ]
+    },
+    {
+      "name": "response",
+      "listener": "default",
+      "send": "SIP/2.0 200 OK\r\nCSeq: 12 OPTIONS\r\n\r\n",
+      "receive": null,
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "12 OPTIONS"
+          }
+        }
+      ]
+    },
+    {
+      "name": "config-case",
+      "listener": "header-order",
+      "send": "OPTIONS sip:lab SIP/2.0\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP lab;branch=z9hG4bKtest;rport\r\nFrom: <sip:source@lab>;tag=lab\r\nTo: <sip:target@lab>\r\nCall-ID: parity-test\r\nCSeq: 42 OPTIONS\r\nContent-Length: 8\r\nMax-Forwards: 70\r\nx-lab: first\r\nX-Lab: second\r\nX-Q: mid\r\nv: test\r\nX-Other: left:right\r\nContent-Type: text/plain\r\n\r\nhello é",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "42 OPTIONS",
+            "Call-ID": "parity-test",
+            "Content-Length": "0",
+            "From": "<sip:source@lab>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:target@lab>",
+            "Via": "SIP/2.0/UDP lab;branch=z9hG4bKtest;rport"
+          }
+        }
+      ]
+    },
+    {
+      "name": "configured-body-1025",
+      "listener": "configured-body-1025",
+      "send": "OPTIONS sip:device.fixture.invalid SIP/2.0\r\nVia: SIP/2.0/UDP 127.0.0.1;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=one\r\nTo: <sip:device@fixture.invalid>\r\nCall-ID: fixture\r\nCSeq: 1 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP 127.0.0.1;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=one\r\nTo: <sip:device@fixture.invalid>\r\nCall-ID: fixture\r\nCSeq: 1 OPTIONS\r\nContent-Length: 1025\r\nMax-Forwards: 70\r\n\r\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "1 OPTIONS",
+            "Call-ID": "fixture",
+            "Content-Length": "0",
+            "From": "<sip:alice@fixture.invalid>;tag=one",
+            "Max-Forwards": "70",
+            "To": "<sip:device@fixture.invalid>",
+            "Via": "SIP/2.0/UDP 127.0.0.1;branch=z9hG4bK-fixture"
+          }
+        }
+      ]
+    },
+    {
+      "name": "configured-body-1200",
+      "listener": "configured-body-1200",
+      "send": "OPTIONS sip:device.fixture.invalid SIP/2.0\r\nVia: SIP/2.0/UDP 127.0.0.1;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=one\r\nTo: <sip:device@fixture.invalid>\r\nCall-ID: fixture\r\nCSeq: 1 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP 127.0.0.1;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=one\r\nTo: <sip:device@fixture.invalid>\r\nCall-ID: fixture\r\nCSeq: 1 OPTIONS\r\nContent-Length: 1200\r\nMax-Forwards: 70\r\n\r\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "1 OPTIONS",
+            "Call-ID": "fixture",
+            "Content-Length": "0",
+            "From": "<sip:alice@fixture.invalid>;tag=one",
+            "Max-Forwards": "70",
+            "To": "<sip:device@fixture.invalid>",
+            "Via": "SIP/2.0/UDP 127.0.0.1;branch=z9hG4bK-fixture"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ipv6-target-port",
+      "listener": "default",
+      "send": "OPTIONS sip:fixture@[2001:db8::2]:5060 SIP/2.0\r\nVia: SIP/2.0/UDP client.fixture.invalid:5060;branch=z9hG4bKfixture;rport\r\nFrom: <sip:fixture@client.fixture.invalid>;tag=lab\r\nTo: <sip:service@fixture.invalid>\r\nCall-ID: fixture-sip\r\nCSeq: 10 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": null,
+      "events": []
+    },
+    {
+      "name": "ipv6-target-mapped",
+      "listener": "default",
+      "send": "OPTIONS sip:fixture@[::ffff:192.0.2.2]:5060 SIP/2.0\r\nVia: SIP/2.0/UDP client.fixture.invalid:5060;branch=z9hG4bKfixture;rport\r\nFrom: <sip:fixture@client.fixture.invalid>;tag=lab\r\nTo: <sip:service@fixture.invalid>\r\nCall-ID: fixture-sip\r\nCSeq: 10 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": null,
+      "events": []
+    },
+    {
+      "name": "ipv6-via-zone",
+      "listener": "default",
+      "send": "OPTIONS sip:fixture.invalid SIP/2.0\r\nVia: SIP/2.0/UDP [fe80::1%25lab]:5060;branch=z9hG4bKfixture\r\nFrom: <sip:fixture@client.fixture.invalid>;tag=lab\r\nTo: <sip:service@fixture.invalid>\r\nCall-ID: fixture-sip\r\nCSeq: 10 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nFrom: <sip:fixture@client.fixture.invalid>;tag=lab\r\nTo: <sip:service@fixture.invalid>\r\nCall-ID: fixture-sip\r\nCSeq: 10 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "10 OPTIONS",
+            "Call-ID": "fixture-sip",
+            "Content-Length": "0",
+            "From": "<sip:fixture@client.fixture.invalid>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:service@fixture.invalid>"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ipv6-via-mixed-line",
+      "listener": "default",
+      "send": "OPTIONS sip:fixture.invalid SIP/2.0\r\nFrom: <sip:fixture@client.fixture.invalid>;tag=lab\r\nTo: <sip:service@fixture.invalid>\r\nCall-ID: fixture-sip\r\nCSeq: 10 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\nVia: SIP/2.0/UDP [2001:db8::2]:5060;branch=z9hG4bKipv6, SIP/2.0/UDP fallback.fixture.invalid;branch=z9hG4bKdns\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nFrom: <sip:fixture@client.fixture.invalid>;tag=lab\r\nTo: <sip:service@fixture.invalid>\r\nCall-ID: fixture-sip\r\nCSeq: 10 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "10 OPTIONS",
+            "Call-ID": "fixture-sip",
+            "Content-Length": "0",
+            "From": "<sip:fixture@client.fixture.invalid>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:service@fixture.invalid>"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ipv6-compact-via-separate-lines",
+      "listener": "default",
+      "send": "OPTIONS sip:fixture.invalid SIP/2.0\r\nFrom: <sip:fixture@client.fixture.invalid>;tag=lab\r\nTo: <sip:service@fixture.invalid>\r\nCall-ID: fixture-sip\r\nCSeq: 10 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\nv: SIP/2.0/UDP fallback.fixture.invalid;branch=z9hG4bKdns\r\nv: SIP/2.0/UDP [2001:db8::2]:5060;branch=z9hG4bKipv6\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP fallback.fixture.invalid;branch=z9hG4bKdns\r\nFrom: <sip:fixture@client.fixture.invalid>;tag=lab\r\nTo: <sip:service@fixture.invalid>\r\nCall-ID: fixture-sip\r\nCSeq: 10 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "10 OPTIONS",
+            "Call-ID": "fixture-sip",
+            "Content-Length": "0",
+            "From": "<sip:fixture@client.fixture.invalid>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:service@fixture.invalid>",
+            "Via": "SIP/2.0/UDP fallback.fixture.invalid;branch=z9hG4bKdns"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ipv6-from",
+      "listener": "default",
+      "send": "OPTIONS sip:fixture.invalid SIP/2.0\r\nVia: SIP/2.0/UDP client.fixture.invalid:5060;branch=z9hG4bKfixture;rport\r\nTo: <sip:service@fixture.invalid>\r\nCall-ID: fixture-sip\r\nCSeq: 10 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\nFrom: <sip:fixture@[::1]:5060>\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP client.fixture.invalid:5060;branch=z9hG4bKfixture;rport\r\nTo: <sip:service@fixture.invalid>\r\nCall-ID: fixture-sip\r\nCSeq: 10 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "10 OPTIONS",
+            "Call-ID": "fixture-sip",
+            "Content-Length": "0",
+            "Max-Forwards": "70",
+            "To": "<sip:service@fixture.invalid>",
+            "Via": "SIP/2.0/UDP client.fixture.invalid:5060;branch=z9hG4bKfixture;rport"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ipv6-to",
+      "listener": "default",
+      "send": "OPTIONS sip:fixture.invalid SIP/2.0\r\nVia: SIP/2.0/UDP client.fixture.invalid:5060;branch=z9hG4bKfixture;rport\r\nFrom: <sip:fixture@client.fixture.invalid>;tag=lab\r\nCall-ID: fixture-sip\r\nCSeq: 10 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\nTo: <sip:fixture@[2001:db8::2]:5060>\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP client.fixture.invalid:5060;branch=z9hG4bKfixture;rport\r\nFrom: <sip:fixture@client.fixture.invalid>;tag=lab\r\nCall-ID: fixture-sip\r\nCSeq: 10 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "10 OPTIONS",
+            "Call-ID": "fixture-sip",
+            "Content-Length": "0",
+            "From": "<sip:fixture@client.fixture.invalid>;tag=lab",
+            "Max-Forwards": "70",
+            "Via": "SIP/2.0/UDP client.fixture.invalid:5060;branch=z9hG4bKfixture;rport"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ipv6-route-mixed-line",
+      "listener": "default",
+      "send": "OPTIONS sip:fixture.invalid SIP/2.0\r\nVia: SIP/2.0/UDP client.fixture.invalid:5060;branch=z9hG4bKfixture;rport\r\nFrom: <sip:fixture@client.fixture.invalid>;tag=lab\r\nTo: <sip:service@fixture.invalid>\r\nCall-ID: fixture-sip\r\nCSeq: 10 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\nRoute: <sip:fixture@[2001:db8::2]:5060>, <sip:fixture@fallback.fixture.invalid>\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP client.fixture.invalid:5060;branch=z9hG4bKfixture;rport\r\nFrom: <sip:fixture@client.fixture.invalid>;tag=lab\r\nTo: <sip:service@fixture.invalid>\r\nCall-ID: fixture-sip\r\nCSeq: 10 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "10 OPTIONS",
+            "Call-ID": "fixture-sip",
+            "Content-Length": "0",
+            "From": "<sip:fixture@client.fixture.invalid>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:service@fixture.invalid>",
+            "Via": "SIP/2.0/UDP client.fixture.invalid:5060;branch=z9hG4bKfixture;rport"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ipv6-record-route-mixed-line",
+      "listener": "default",
+      "send": "OPTIONS sip:fixture.invalid SIP/2.0\r\nVia: SIP/2.0/UDP client.fixture.invalid:5060;branch=z9hG4bKfixture;rport\r\nFrom: <sip:fixture@client.fixture.invalid>;tag=lab\r\nTo: <sip:service@fixture.invalid>\r\nCall-ID: fixture-sip\r\nCSeq: 10 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\nRecord-Route: <sip:fixture@[2001:db8::2]:5060>, <sip:fixture@fallback.fixture.invalid>\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP client.fixture.invalid:5060;branch=z9hG4bKfixture;rport\r\nFrom: <sip:fixture@client.fixture.invalid>;tag=lab\r\nTo: <sip:service@fixture.invalid>\r\nCall-ID: fixture-sip\r\nCSeq: 10 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "10 OPTIONS",
+            "Call-ID": "fixture-sip",
+            "Content-Length": "0",
+            "From": "<sip:fixture@client.fixture.invalid>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:service@fixture.invalid>",
+            "Via": "SIP/2.0/UDP client.fixture.invalid:5060;branch=z9hG4bKfixture;rport"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ipv6-contact-mixed-line",
+      "listener": "default",
+      "send": "OPTIONS sip:fixture.invalid SIP/2.0\r\nVia: SIP/2.0/UDP client.fixture.invalid:5060;branch=z9hG4bKfixture;rport\r\nFrom: <sip:fixture@client.fixture.invalid>;tag=lab\r\nTo: <sip:service@fixture.invalid>\r\nCall-ID: fixture-sip\r\nCSeq: 10 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\nContact: <sip:fixture@[2001:db8::2]:5060>, <sip:fixture@fallback.fixture.invalid>\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP client.fixture.invalid:5060;branch=z9hG4bKfixture;rport\r\nFrom: <sip:fixture@client.fixture.invalid>;tag=lab\r\nTo: <sip:service@fixture.invalid>\r\nCall-ID: fixture-sip\r\nCSeq: 10 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "10 OPTIONS",
+            "Call-ID": "fixture-sip",
+            "Content-Length": "0",
+            "From": "<sip:fixture@client.fixture.invalid>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:service@fixture.invalid>",
+            "Via": "SIP/2.0/UDP client.fixture.invalid:5060;branch=z9hG4bKfixture;rport"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ipv6-contact-separate-lines",
+      "listener": "default",
+      "send": "OPTIONS sip:fixture.invalid SIP/2.0\r\nVia: SIP/2.0/UDP client.fixture.invalid:5060;branch=z9hG4bKfixture;rport\r\nFrom: <sip:fixture@client.fixture.invalid>;tag=lab\r\nTo: <sip:service@fixture.invalid>\r\nCall-ID: fixture-sip\r\nCSeq: 10 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\nContact: <sip:fixture@[2001:db8::2]:5060>\r\nContact: <sip:fixture@fallback.fixture.invalid>\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP client.fixture.invalid:5060;branch=z9hG4bKfixture;rport\r\nFrom: <sip:fixture@client.fixture.invalid>;tag=lab\r\nTo: <sip:service@fixture.invalid>\r\nCall-ID: fixture-sip\r\nCSeq: 10 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "10 OPTIONS",
+            "Call-ID": "fixture-sip",
+            "Contact": "<sip:fixture@fallback.fixture.invalid>",
+            "Content-Length": "0",
+            "From": "<sip:fixture@client.fixture.invalid>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:service@fixture.invalid>",
+            "Via": "SIP/2.0/UDP client.fixture.invalid:5060;branch=z9hG4bKfixture;rport"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ipv4-bracketed-target",
+      "listener": "default",
+      "send": "OPTIONS sip:fixture@[127.0.0.1]:5060 SIP/2.0\r\nVia: SIP/2.0/UDP client.fixture.invalid:5060;branch=z9hG4bKfixture;rport\r\nFrom: <sip:fixture@client.fixture.invalid>;tag=lab\r\nTo: <sip:service@fixture.invalid>\r\nCall-ID: fixture-sip\r\nCSeq: 10 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP client.fixture.invalid:5060;branch=z9hG4bKfixture;rport\r\nFrom: <sip:fixture@client.fixture.invalid>;tag=lab\r\nTo: <sip:service@fixture.invalid>\r\nCall-ID: fixture-sip\r\nCSeq: 10 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "10 OPTIONS",
+            "Call-ID": "fixture-sip",
+            "Content-Length": "0",
+            "From": "<sip:fixture@client.fixture.invalid>;tag=lab",
+            "Max-Forwards": "70",
+            "To": "<sip:service@fixture.invalid>",
+            "Via": "SIP/2.0/UDP client.fixture.invalid:5060;branch=z9hG4bKfixture;rport"
+          }
+        }
+      ]
+    },
+    {
+      "name": "transaction-compact-combined",
+      "listener": "default",
+      "send": "OPTIONS sip:bob@fixture.invalid SIP/2.0\r\nCSeq: 1 OPTIONS\r\nMax-Forwards: 70\r\nv: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture, SIP/2.0/UDP next.fixture.invalid:5070;received=192.0.2.22;rport=5072;branch=z9hG4bK-second\r\nf: Alice <sip:alice@fixture.invalid>;tag=from01\r\nt: Bob <sip:bob@fixture.invalid>;tag=to01\r\ni: compact@fixture.invalid\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture, SIP/2.0/UDP next.fixture.invalid:5070;received=192.0.2.22;rport=5072;branch=z9hG4bK-second\r\nFrom: \"Alice\" <sip:alice@fixture.invalid>;tag=from01\r\nTo: \"Bob\" <sip:bob@fixture.invalid>;tag=to01\r\nCall-ID: compact@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "1 OPTIONS",
+            "Call-ID": "compact@fixture.invalid",
+            "Content-Length": "0",
+            "From": "\"Alice\" <sip:alice@fixture.invalid>;tag=from01",
+            "Max-Forwards": "70",
+            "To": "\"Bob\" <sip:bob@fixture.invalid>;tag=to01",
+            "Via": "SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture, SIP/2.0/UDP next.fixture.invalid:5070;received=192.0.2.22;rport=5072;branch=z9hG4bK-second"
+          }
+        }
+      ]
+    },
+    {
+      "name": "transaction-compact-split",
+      "listener": "default",
+      "send": "OPTIONS sip:bob@fixture.invalid SIP/2.0\r\nCSeq: 1 OPTIONS\r\nMax-Forwards: 70\r\nv: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture, SIP/2.0/UDP next.fixture.invalid:5070;received=192.0.2.22;rport=5072;branch=z9hG4bK-second\r\nf: Alice <sip:alice@fixture.invalid>;tag=from01\r\nt: Bob <sip:bob@fixture.invalid>;tag=to01\r\ni: compact@fixture.invalid\r\nVia: SIP/2.0/UDP next.fixture.invalid:5070;received=192.0.2.22;rport=5072;branch=z9hG4bK-second\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture, SIP/2.0/UDP next.fixture.invalid:5070;received=192.0.2.22;rport=5072;branch=z9hG4bK-second\r\nVia: SIP/2.0/UDP next.fixture.invalid:5070;received=192.0.2.22;rport=5072;branch=z9hG4bK-second\r\nFrom: \"Alice\" <sip:alice@fixture.invalid>;tag=from01\r\nTo: \"Bob\" <sip:bob@fixture.invalid>;tag=to01\r\nCall-ID: compact@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "1 OPTIONS",
+            "Call-ID": "compact@fixture.invalid",
+            "Content-Length": "0",
+            "From": "\"Alice\" <sip:alice@fixture.invalid>;tag=from01",
+            "Max-Forwards": "70",
+            "To": "\"Bob\" <sip:bob@fixture.invalid>;tag=to01",
+            "Via": "SIP/2.0/UDP next.fixture.invalid:5070;received=192.0.2.22;rport=5072;branch=z9hG4bK-second"
+          }
+        }
+      ]
+    },
+    {
+      "name": "transaction-compact-mixed-case",
+      "listener": "default",
+      "send": "OPTIONS sip:bob@fixture.invalid SIP/2.0\r\nCSeq: 1 OPTIONS\r\nMax-Forwards: 70\r\nV: SIP/2.0/UDP next.fixture.invalid:5070;received=192.0.2.22;rport=5072;branch=z9hG4bK-second\r\nf: Alice <sip:alice@fixture.invalid>;tag=from01\r\nt: Bob <sip:bob@fixture.invalid>;tag=to01\r\ni: compact@fixture.invalid\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP next.fixture.invalid:5070;received=192.0.2.22;rport=5072;branch=z9hG4bK-second\r\nFrom: \"Alice\" <sip:alice@fixture.invalid>;tag=from01\r\nTo: \"Bob\" <sip:bob@fixture.invalid>;tag=to01\r\nCall-ID: compact@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "1 OPTIONS",
+            "Call-ID": "compact@fixture.invalid",
+            "Content-Length": "0",
+            "From": "\"Alice\" <sip:alice@fixture.invalid>;tag=from01",
+            "Max-Forwards": "70",
+            "To": "\"Bob\" <sip:bob@fixture.invalid>;tag=to01",
+            "Via": "SIP/2.0/UDP next.fixture.invalid:5070;received=192.0.2.22;rport=5072;branch=z9hG4bK-second"
+          }
+        }
+      ]
+    },
+    {
+      "name": "transaction-multihop-line-fold",
+      "listener": "default",
+      "send": "OPTIONS sip:bob@fixture.invalid SIP/2.0\r\nCSeq: 1 OPTIONS\r\nMax-Forwards: 70\r\nv: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture,\r\n  SIP/2.0/UDP next.fixture.invalid:5070;received=192.0.2.22;rport=5072;branch=z9hG4bK-second\r\nf: Alice <sip:alice@fixture.invalid>;tag=from01\r\nt: Bob <sip:bob@fixture.invalid>;tag=to01\r\ni: compact@fixture.invalid\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture, SIP/2.0/UDP next.fixture.invalid:5070;received=192.0.2.22;rport=5072;branch=z9hG4bK-second\r\nFrom: \"Alice\" <sip:alice@fixture.invalid>;tag=from01\r\nTo: \"Bob\" <sip:bob@fixture.invalid>;tag=to01\r\nCall-ID: compact@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "1 OPTIONS",
+            "Call-ID": "compact@fixture.invalid",
+            "Content-Length": "0",
+            "From": "\"Alice\" <sip:alice@fixture.invalid>;tag=from01",
+            "Max-Forwards": "70",
+            "To": "\"Bob\" <sip:bob@fixture.invalid>;tag=to01",
+            "Via": "SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture, SIP/2.0/UDP next.fixture.invalid:5070;received=192.0.2.22;rport=5072;branch=z9hG4bK-second"
+          }
+        }
+      ]
+    },
+    {
+      "name": "transaction-multihop-second-compact",
+      "listener": "default",
+      "send": "OPTIONS sip:bob@fixture.invalid SIP/2.0\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nMax-Forwards: 70\r\nv: SIP/2.0/UDP next.fixture.invalid:5070;received=192.0.2.22;rport=5072;branch=z9hG4bK-second\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nVia: SIP/2.0/UDP next.fixture.invalid:5070;received=192.0.2.22;rport=5072;branch=z9hG4bK-second\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "1 OPTIONS",
+            "Call-ID": "packet@fixture.invalid",
+            "Content-Length": "0",
+            "From": "<sip:alice@fixture.invalid>;tag=from01",
+            "Max-Forwards": "70",
+            "To": "<sip:bob@fixture.invalid>",
+            "Via": "SIP/2.0/UDP next.fixture.invalid:5070;received=192.0.2.22;rport=5072;branch=z9hG4bK-second"
+          }
+        }
+      ]
+    },
+    {
+      "name": "transaction-compact-with-route",
+      "listener": "default",
+      "send": "OPTIONS sip:bob@fixture.invalid SIP/2.0\r\nCSeq: 1 OPTIONS\r\nMax-Forwards: 70\r\nv: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture, SIP/2.0/UDP next.fixture.invalid:5070;received=192.0.2.22;rport=5072;branch=z9hG4bK-second\r\nf: Alice <sip:alice@fixture.invalid>;tag=from01\r\nt: Bob <sip:bob@fixture.invalid>;tag=to01\r\ni: compact@fixture.invalid\r\nRecord-Route: <sip:one.fixture.invalid;lr>, <sip:two.fixture.invalid;lr>\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nRecord-Route: <sip:one.fixture.invalid;lr>, <sip:two.fixture.invalid;lr>\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture, SIP/2.0/UDP next.fixture.invalid:5070;received=192.0.2.22;rport=5072;branch=z9hG4bK-second\r\nFrom: \"Alice\" <sip:alice@fixture.invalid>;tag=from01\r\nTo: \"Bob\" <sip:bob@fixture.invalid>;tag=to01\r\nCall-ID: compact@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "1 OPTIONS",
+            "Call-ID": "compact@fixture.invalid",
+            "Content-Length": "0",
+            "From": "\"Alice\" <sip:alice@fixture.invalid>;tag=from01",
+            "Max-Forwards": "70",
+            "Record-Route": "<sip:one.fixture.invalid;lr>, <sip:two.fixture.invalid;lr>",
+            "To": "\"Bob\" <sip:bob@fixture.invalid>;tag=to01",
+            "Via": "SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture, SIP/2.0/UDP next.fixture.invalid:5070;received=192.0.2.22;rport=5072;branch=z9hG4bK-second"
+          }
+        }
+      ]
+    },
+    {
+      "name": "transaction-sequence-high",
+      "listener": "default",
+      "send": "OPTIONS sip:bob@fixture.invalid SIP/2.0\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 2147483647 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 2147483647 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "2147483647 OPTIONS",
+            "Call-ID": "packet@fixture.invalid",
+            "Content-Length": "0",
+            "From": "<sip:alice@fixture.invalid>;tag=from01",
+            "Max-Forwards": "70",
+            "To": "<sip:bob@fixture.invalid>",
+            "Via": "SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture"
+          }
+        }
+      ]
+    },
+    {
+      "name": "transaction-sequence-leading-zero",
+      "listener": "default",
+      "send": "OPTIONS sip:bob@fixture.invalid SIP/2.0\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 0002147483647 OPTIONS\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 2147483647 OPTIONS\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "2147483647 OPTIONS",
+            "Call-ID": "packet@fixture.invalid",
+            "Content-Length": "0",
+            "From": "<sip:alice@fixture.invalid>;tag=from01",
+            "Max-Forwards": "70",
+            "To": "<sip:bob@fixture.invalid>",
+            "Via": "SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture"
+          }
+        }
+      ]
+    },
+    {
+      "name": "transaction-sequence-sync-case",
+      "listener": "default",
+      "send": "INVITE sip:bob@fixture.invalid SIP/2.0\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 300 INVITE\r\nMax-Forwards: 70\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 300 INVITE\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "300 INVITE",
+            "Call-ID": "packet@fixture.invalid",
+            "Content-Length": "0",
+            "From": "<sip:alice@fixture.invalid>;tag=from01",
+            "Max-Forwards": "70",
+            "To": "<sip:bob@fixture.invalid>",
+            "Via": "SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture"
+          }
+        }
+      ]
+    },
+    {
+      "name": "transaction-binary-body-header",
+      "listener": "default",
+      "send": "MESSAGE sip:bob@fixture.invalid SIP/2.0\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 200 MESSAGE\r\nMax-Forwards: 70\r\nc: application/octet-stream\r\nl: 4\r\n\r\nabcd",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture\r\nFrom: <sip:alice@fixture.invalid>;tag=from01\r\nTo: <sip:bob@fixture.invalid>\r\nCall-ID: packet@fixture.invalid\r\nCSeq: 200 MESSAGE\r\nContent-Length: 0\r\nMax-Forwards: 70\r\n\r\n",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "200 MESSAGE",
+            "Call-ID": "packet@fixture.invalid",
+            "Content-Length": "4",
+            "Content-Type": "application/octet-stream",
+            "From": "<sip:alice@fixture.invalid>;tag=from01",
+            "Max-Forwards": "70",
+            "To": "<sip:bob@fixture.invalid>",
+            "Via": "SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture"
+          }
+        }
+      ]
+    },
+    {
+      "name": "transaction-configured-response-1200",
+      "listener": "configured-body-1200",
+      "send": "OPTIONS sip:bob@fixture.invalid SIP/2.0\r\nCSeq: 1 OPTIONS\r\nMax-Forwards: 70\r\nv: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture, SIP/2.0/UDP next.fixture.invalid:5070;received=192.0.2.22;rport=5072;branch=z9hG4bK-second\r\nf: Alice <sip:alice@fixture.invalid>;tag=from01\r\nt: Bob <sip:bob@fixture.invalid>;tag=to01\r\ni: compact@fixture.invalid\r\nContent-Length: 0\r\n\r\n",
+      "receive": "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture, SIP/2.0/UDP next.fixture.invalid:5070;received=192.0.2.22;rport=5072;branch=z9hG4bK-second\r\nFrom: \"Alice\" <sip:alice@fixture.invalid>;tag=from01\r\nTo: \"Bob\" <sip:bob@fixture.invalid>;tag=to01\r\nCall-ID: compact@fixture.invalid\r\nCSeq: 1 OPTIONS\r\nContent-Length: 1200\r\nMax-Forwards: 70\r\n\r\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "events": [
+        {
+          "msg": "new message",
+          "header": {
+            "CSeq": "1 OPTIONS",
+            "Call-ID": "compact@fixture.invalid",
+            "Content-Length": "0",
+            "From": "\"Alice\" <sip:alice@fixture.invalid>;tag=from01",
+            "Max-Forwards": "70",
+            "To": "\"Bob\" <sip:bob@fixture.invalid>;tag=to01",
+            "Via": "SIP/2.0/UDP ua.fixture.invalid:5060;branch=z9hG4bK-fixture, SIP/2.0/UDP next.fixture.invalid:5070;received=192.0.2.22;rport=5072;branch=z9hG4bK-second"
+          }
+        }
+      ]
+    }
+  ]
+}

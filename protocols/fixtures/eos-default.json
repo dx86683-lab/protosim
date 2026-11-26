@@ -1,0 +1,37 @@
+{
+    "/v1/chain/get_info": {
+        "server_version": "26a4d285",
+        "chain_id": "aca376f206b8fc25a6ed44dbdc66547c36c6c33e3a119ffbeaef943642f0e906",
+        "head_block_num": 221135212,
+        "last_irreversible_block_num": 221134882,
+        "last_irreversible_block_id": "0d2e40227962589a01feae6d4ff411b5018f54b70c94d2a41b870ffe74915c6c",
+        "head_block_id": "0d2e416c724fe6e4f486ce139d1996218b657637d263e0aa7fcb17d17fe26a64",
+        "head_block_time": "2021-12-17T09:07:56.500",
+        "head_block_producer": "bitfinexeos1",
+        "virtual_block_cpu_limit": 200000,
+        "virtual_block_net_limit": 1048576000,
+        "block_cpu_limit": 196939,
+        "block_net_limit": 1047664,
+        "server_version_string": "v2.1.0",
+        "fork_db_head_block_num": 221135212,
+        "fork_db_head_block_id": "0d2e416c724fe6e4f486ce139d1996218b657637d263e0aa7fcb17d17fe26a64",
+        "server_full_version_string": "v2.1.0-26a4d285d0be1052d962149e431eb81500782991",
+        "last_irreversible_block_time": "2021-12-17T09:05:11.500"
+    },
+    "error": {
+        "code": 404,
+        "message": "Not Found",
+        "error": {
+            "code": 0,
+            "name": "exception",
+            "what": "unspecified",
+            "details": [
+                {
+                    "message": "Unknown Endpoint",
+                    "file": "http_plugin.cpp",
+                    "line_number": 244,
+                    "method": "handle_http_request"
+                }
+            ]
+        }}
+}

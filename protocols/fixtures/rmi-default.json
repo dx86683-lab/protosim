@@ -1,0 +1,10 @@
+{
+    "services": [
+        {
+            "name": "jmxrmi",
+            "object": "javax.management.remote.rmi.RMIServerImpl_Stub",
+            "ip": "172.17.17.1",
+            "port": 62413
+        }
+    ]
+}

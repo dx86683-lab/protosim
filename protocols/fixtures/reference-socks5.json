@@ -1,0 +1,670 @@
+{
+  "listeners": {
+    "required": {
+      "auth": true,
+      "accounts": [
+        "fixture:lab-only",
+        "other:other-pass"
+      ]
+    },
+    "no-auth": {
+      "auth": false,
+      "resp_message": "DEMO"
+    },
+    "empty-accounts": {
+      "auth": true,
+      "accounts": []
+    },
+    "empty-message": {
+      "auth": false,
+      "resp_message": ""
+    },
+    "colon": {
+      "auth": true,
+      "accounts": [
+        "fixture:lab:only"
+      ]
+    },
+    "omitted-accounts": {
+      "auth": true
+    },
+    "omitted-auth": {}
+  },
+  "cases": [
+    {
+      "name": "ipv4",
+      "listener": "required",
+      "steps": [
+        {
+          "send": "05020002",
+          "receive": "0502"
+        },
+        {
+          "send": "010766697874757265086c61622d6f6e6c79",
+          "receive": "0100"
+        },
+        {
+          "send": "05010001c000021301bb",
+          "receive": "05000001000000000000323030204f4b",
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "login ok",
+          "user": "fixture"
+        },
+        {
+          "msg": "action",
+          "method": "connect",
+          "target_ip": "192.0.2.19",
+          "target_fqdn": "",
+          "target_port": 443,
+          "body": "",
+          "body_raw": ""
+        }
+      ]
+    },
+    {
+      "name": "ipv6",
+      "listener": "required",
+      "steps": [
+        {
+          "send": "050102",
+          "receive": "0502"
+        },
+        {
+          "send": "010766697874757265086c61622d6f6e6c79",
+          "receive": "0100"
+        },
+        {
+          "send": "0501000420010db800000000000000000000005701bb",
+          "receive": "05000001000000000000323030204f4b",
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "login ok",
+          "user": "fixture"
+        },
+        {
+          "msg": "action",
+          "method": "connect",
+          "target_ip": "2001:db8::57",
+          "target_fqdn": "",
+          "target_port": 443,
+          "body": "",
+          "body_raw": ""
+        }
+      ]
+    },
+    {
+      "name": "domain",
+      "listener": "required",
+      "steps": [
+        {
+          "send": "050102",
+          "receive": "0502"
+        },
+        {
+          "send": "010766697874757265086c61622d6f6e6c79",
+          "receive": "0100"
+        },
+        {
+          "send": "05010003167461726765742e666978747572652e696e76616c696401bb",
+          "receive": "05000001000000000000323030204f4b",
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "login ok",
+          "user": "fixture"
+        },
+        {
+          "msg": "action",
+          "method": "connect",
+          "target_ip": "0.0.0.0",
+          "target_fqdn": "target.fixture.invalid",
+          "target_port": 443,
+          "body": "",
+          "body_raw": ""
+        }
+      ]
+    },
+    {
+      "name": "bind",
+      "listener": "required",
+      "steps": [
+        {
+          "send": "050102",
+          "receive": "0502"
+        },
+        {
+          "send": "010766697874757265086c61622d6f6e6c79",
+          "receive": "0100"
+        },
+        {
+          "send": "05020001c000021301bb",
+          "receive": "05070001000000000000",
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "login ok",
+          "user": "fixture"
+        },
+        {
+          "msg": "action",
+          "method": "bind",
+          "target_ip": "192.0.2.19",
+          "target_fqdn": "",
+          "target_port": 443
+        }
+      ]
+    },
+    {
+      "name": "udp",
+      "listener": "required",
+      "steps": [
+        {
+          "send": "050102",
+          "receive": "0502"
+        },
+        {
+          "send": "010766697874757265086c61622d6f6e6c79",
+          "receive": "0100"
+        },
+        {
+          "send": "05030001c000021301bb",
+          "receive": "05070001000000000000",
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "login ok",
+          "user": "fixture"
+        },
+        {
+          "msg": "action",
+          "method": "assoc",
+          "target_ip": "192.0.2.19",
+          "target_fqdn": "",
+          "target_port": 443
+        }
+      ]
+    },
+    {
+      "name": "udp6",
+      "listener": "required",
+      "steps": [
+        {
+          "send": "050102",
+          "receive": "0502"
+        },
+        {
+          "send": "010766697874757265086c61622d6f6e6c79",
+          "receive": "0100"
+        },
+        {
+          "send": "0503000420010db800000000000000000000005701bb",
+          "receive": "05070001000000000000",
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "login ok",
+          "user": "fixture"
+        },
+        {
+          "msg": "action",
+          "method": "assoc",
+          "target_ip": "2001:db8::57",
+          "target_fqdn": "",
+          "target_port": 443
+        }
+      ]
+    },
+    {
+      "name": "second-account",
+      "listener": "required",
+      "steps": [
+        {
+          "send": "050102",
+          "receive": "0502"
+        },
+        {
+          "send": "01056f746865720a6f746865722d70617373",
+          "receive": "0100"
+        },
+        {
+          "send": "05010001c000021301bb",
+          "receive": "05000001000000000000323030204f4b",
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "login ok",
+          "user": "other"
+        },
+        {
+          "msg": "action",
+          "method": "connect",
+          "target_ip": "192.0.2.19",
+          "target_fqdn": "",
+          "target_port": 443,
+          "body": "",
+          "body_raw": ""
+        }
+      ]
+    },
+    {
+      "name": "wrong-password",
+      "listener": "required",
+      "steps": [
+        {
+          "send": "050102",
+          "receive": "0502"
+        },
+        {
+          "send": "01076669787475726503626164",
+          "receive": "0101",
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "login failed",
+          "user": "fixture"
+        }
+      ]
+    },
+    {
+      "name": "wrong-user",
+      "listener": "required",
+      "steps": [
+        {
+          "send": "050102",
+          "receive": "0502"
+        },
+        {
+          "send": "0107756e6b6e6f776e086c61622d6f6e6c79",
+          "receive": "0101",
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "login failed",
+          "user": "unknown"
+        }
+      ]
+    },
+    {
+      "name": "require-no-auth-offer",
+      "listener": "required",
+      "steps": [
+        {
+          "send": "050100",
+          "receive": "05ff",
+          "closed": true
+        }
+      ],
+      "events": []
+    },
+    {
+      "name": "require-unsupported-offer",
+      "listener": "required",
+      "steps": [
+        {
+          "send": "050101",
+          "receive": "05ff",
+          "closed": true
+        }
+      ],
+      "events": []
+    },
+    {
+      "name": "no-auth-both",
+      "listener": "no-auth",
+      "steps": [
+        {
+          "send": "05020200",
+          "receive": "0500"
+        },
+        {
+          "send": "05010003167461726765742e666978747572652e696e76616c696401bb",
+          "receive": "0500000100000000000044454d4f",
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "action",
+          "method": "connect",
+          "target_ip": "0.0.0.0",
+          "target_fqdn": "target.fixture.invalid",
+          "target_port": 443,
+          "body": "",
+          "body_raw": ""
+        }
+      ]
+    },
+    {
+      "name": "no-auth-only",
+      "listener": "no-auth",
+      "steps": [
+        {
+          "send": "050100",
+          "receive": "0500"
+        },
+        {
+          "send": "05010001c000021301bb",
+          "receive": "0500000100000000000044454d4f",
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "action",
+          "method": "connect",
+          "target_ip": "192.0.2.19",
+          "target_fqdn": "",
+          "target_port": 443,
+          "body": "",
+          "body_raw": ""
+        }
+      ]
+    },
+    {
+      "name": "no-auth-password-offer",
+      "listener": "no-auth",
+      "steps": [
+        {
+          "send": "050102",
+          "receive": "05ff",
+          "closed": true
+        }
+      ],
+      "events": []
+    },
+    {
+      "name": "no-auth-unsupported-offer",
+      "listener": "no-auth",
+      "steps": [
+        {
+          "send": "050101",
+          "receive": "05ff",
+          "closed": true
+        }
+      ],
+      "events": []
+    },
+    {
+      "name": "empty-accounts",
+      "listener": "empty-accounts",
+      "steps": [
+        {
+          "send": "050102",
+          "receive": "0502"
+        },
+        {
+          "send": "010673616d706c650466616b65",
+          "receive": "0101",
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "login failed",
+          "user": "sample"
+        }
+      ]
+    },
+    {
+      "name": "empty-message",
+      "listener": "empty-message",
+      "steps": [
+        {
+          "send": "050100",
+          "receive": "0500"
+        },
+        {
+          "send": "05010001c000021301bb",
+          "receive": "05000001000000000000323030204f4b",
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "action",
+          "method": "connect",
+          "target_ip": "192.0.2.19",
+          "target_fqdn": "",
+          "target_port": 443,
+          "body": "",
+          "body_raw": ""
+        }
+      ]
+    },
+    {
+      "name": "colon-full",
+      "listener": "colon",
+      "steps": [
+        {
+          "send": "050102",
+          "receive": "0502"
+        },
+        {
+          "send": "010766697874757265086c61623a6f6e6c79",
+          "receive": "0100"
+        },
+        {
+          "send": "05010001c000021301bb",
+          "receive": "05000001000000000000323030204f4b",
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "login ok",
+          "user": "fixture"
+        },
+        {
+          "msg": "action",
+          "method": "connect",
+          "target_ip": "192.0.2.19",
+          "target_fqdn": "",
+          "target_port": 443,
+          "body": "",
+          "body_raw": ""
+        }
+      ]
+    },
+    {
+      "name": "colon-prefix",
+      "listener": "colon",
+      "steps": [
+        {
+          "send": "050102",
+          "receive": "0502"
+        },
+        {
+          "send": "010766697874757265036c6162",
+          "receive": "0101",
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "login failed",
+          "user": "fixture"
+        }
+      ]
+    },
+    {
+      "name": "unknown-atyp",
+      "listener": "no-auth",
+      "steps": [
+        {
+          "send": "050100",
+          "receive": "0500"
+        },
+        {
+          "send": "05010009",
+          "receive": "05080001000000000000",
+          "closed": true
+        }
+      ],
+      "events": []
+    },
+    {
+      "name": "unknown-command",
+      "listener": "no-auth",
+      "steps": [
+        {
+          "send": "050100",
+          "receive": "0500"
+        },
+        {
+          "send": "05120001c000021301bb",
+          "receive": "05070001000000000000",
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "action",
+          "method": "unknown(18)",
+          "target_ip": "192.0.2.19",
+          "target_fqdn": "",
+          "target_port": 443
+        }
+      ]
+    },
+    {
+      "name": "request-with-body",
+      "listener": "no-auth",
+      "steps": [
+        {
+          "send": "050100",
+          "receive": "0500"
+        },
+        {
+          "send": "05010001c000021301bb66697874757265206170706c69636174696f6e2064617461",
+          "receive": "0500000100000000000044454d4f",
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "action",
+          "method": "connect",
+          "target_ip": "192.0.2.19",
+          "target_fqdn": "",
+          "target_port": 443,
+          "body": "",
+          "body_raw": ""
+        }
+      ]
+    },
+    {
+      "name": "omitted-accounts",
+      "listener": "omitted-accounts",
+      "steps": [
+        {
+          "send": "050102",
+          "receive": "0502"
+        },
+        {
+          "send": "0105677565737406313233343536",
+          "receive": "0100"
+        },
+        {
+          "send": "05010001c000021301bb",
+          "receive": "05000001000000000000323030204f4b",
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "login ok",
+          "user": "guest"
+        },
+        {
+          "msg": "action",
+          "method": "connect",
+          "target_ip": "192.0.2.19",
+          "target_fqdn": "",
+          "target_port": 443,
+          "body": "",
+          "body_raw": ""
+        }
+      ]
+    },
+    {
+      "name": "omitted-accounts-unknown",
+      "listener": "omitted-accounts",
+      "steps": [
+        {
+          "send": "050102",
+          "receive": "0502"
+        },
+        {
+          "send": "010673616d706c650466616b65",
+          "receive": "0101",
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "login failed",
+          "user": "sample"
+        }
+      ]
+    },
+    {
+      "name": "omitted-auth",
+      "listener": "omitted-auth",
+      "steps": [
+        {
+          "send": "05020200",
+          "receive": "0500"
+        },
+        {
+          "send": "05010001c000021301bb",
+          "receive": "05000001000000000000323030204f4b",
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "action",
+          "method": "connect",
+          "target_ip": "192.0.2.19",
+          "target_fqdn": "",
+          "target_port": 443,
+          "body": "",
+          "body_raw": ""
+        }
+      ]
+    },
+    {
+      "name": "omitted-auth-unsupported",
+      "listener": "omitted-auth",
+      "steps": [
+        {
+          "send": "050102",
+          "receive": "05ff",
+          "closed": true
+        }
+      ],
+      "events": []
+    }
+  ]
+}

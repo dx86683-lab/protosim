@@ -1,0 +1,924 @@
+package network
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"io"
+	"net"
+	"net/http"
+	"runtime"
+	"sort"
+	"strings"
+	"sync"
+	"sync/atomic"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
+	"golang.org/x/time/rate"
+	"gvisor.dev/gvisor/pkg/tcpip"
+	"gvisor.dev/gvisor/pkg/tcpip/adapters/gonet"
+	"gvisor.dev/gvisor/pkg/tcpip/network/ipv4"
+	"gvisor.dev/gvisor/pkg/tcpip/network/ipv6"
+	"gvisor.dev/gvisor/pkg/tcpip/stack"
+	"gvisor.dev/gvisor/pkg/tcpip/transport/tcp"
+	"gvisor.dev/gvisor/pkg/tcpip/transport/udp"
+
+	"github.com/dx86683-lab/protosim/internal/config"
+	"github.com/dx86683-lab/protosim/internal/telemetry"
+	"github.com/dx86683-lab/protosim/pkg/capture"
+	"github.com/dx86683-lab/protosim/pkg/netstack/core"
+	"github.com/dx86683-lab/protosim/pkg/tun"
+	"github.com/dx86683-lab/protosim/protocols"
+)
+
+// ServiceStatus describes one running protocol listener exposed via /api/v2/services.
+type ServiceStatus struct {
+	ID        string                 `json:"id"`
+	IP        string                 `json:"ip"`
+	Port      uint16                 `json:"port"`
+	Protocol  string                 `json:"protocol"`
+	Transport string                 `json:"transport"`
+	App       string                 `json:"app,omitempty"`
+	Params    map[string]interface{} `json:"params,omitempty"`
+	StartedAt time.Time              `json:"started_at"`
+	Status    string                 `json:"status"`
+}
+
+// ProtocolDescriptor describes one of the 61 registered protocol handlers.
+type ProtocolDescriptor struct {
+	Name        string                 `json:"name"`
+	DefaultPort uint16                 `json:"default_port"`
+	Transport   string                 `json:"transport"`
+	Params      map[string]interface{} `json:"params,omitempty"`
+}
+
+type runningService struct {
+	status ServiceStatus
+	stopFn func()
+}
+
+// Manager orchestrates the network stack (localhost / TUN+gVisor userdef & all),
+// all 61 protocol handlers, Catch-All listeners, optional rate limiting, and capture.
+type Manager struct {
+	cfg      *config.Config
+	bus      *telemetry.Bus
+	tracker  *SessionTracker
+	protoLog *logrus.Logger
+	catchAll *CatchAllRunner
+
+	ipNet  *net.IPNet
+	nic    tcpip.NICID
+	stack  *stack.Stack
+	device core.Device
+
+	mu       sync.RWMutex
+	services map[string]*runningService
+	limiters sync.Map // ip -> *rate.Limiter
+	connSeq  atomic.Uint32
+	closed   atomic.Bool
+}
+
+// NewManager initializes the network manager and protocol telemetry logger.
+func NewManager(cfg *config.Config, bus *telemetry.Bus) (*Manager, error) {
+	if err := cfg.Normalize(); err != nil {
+		return nil, err
+	}
+	_, ipNet, err := net.ParseCIDR(cfg.Network.CIDR)
+	if err != nil {
+		return nil, fmt.Errorf("parse cidr %q: %w", cfg.Network.CIDR, err)
+	}
+	if cfg.GeoIP.CityDBPath != "" {
+		if err := protocols.SetGeoDB(cfg.GeoIP.CityDBPath); err != nil {
+			logrus.Warnf("GeoIP DB load failed (%s): %v", cfg.GeoIP.CityDBPath, err)
+		}
+	}
+
+	tracker := NewSessionTracker()
+	pLog := logrus.New()
+	pLog.SetOutput(io.Discard) // structured events flow through TelemetryHook to SQLite + SSE
+	pLog.SetLevel(logrus.InfoLevel)
+	pLog.AddHook(NewTelemetryHook(bus, tracker))
+
+	m := &Manager{
+		cfg:      cfg,
+		bus:      bus,
+		tracker:  tracker,
+		protoLog: pLog,
+		catchAll: NewCatchAllRunner(bus, tracker),
+		ipNet:    ipNet,
+		nic:      1,
+		services: make(map[string]*runningService),
+	}
+	return m, nil
+}
+
+// Start initializes the network layer (if TUN/gVisor), starts all configured services,
+// Catch-All ports, and optional packet capture.
+func (m *Manager) Start() error {
+	if m.cfg.Network.Mode != config.ModeLocalhost {
+		if err := m.initVirtualStack(); err != nil {
+			return err
+		}
+	}
+
+	for _, host := range m.cfg.Hosts {
+		if err := m.ensureVirtualIP(host.IP); err != nil {
+			return err
+		}
+		for _, svc := range host.Services {
+			if err := m.StartService(host.IP, svc); err != nil {
+				logrus.Warnf("[Manager] start service %s on %s:%d failed: %v", svc.Protocol, host.IP, svc.Port, err)
+			}
+		}
+	}
+
+	if m.cfg.CatchAll.Enabled {
+		bindIP := "0.0.0.0"
+		if len(m.cfg.Hosts) > 0 && m.cfg.Hosts[0].IP != "" {
+			bindIP = m.cfg.Hosts[0].IP
+		}
+		_ = m.catchAll.Start(bindIP, m.cfg.CatchAll.TCPPorts, m.cfg.CatchAll.UDPPorts)
+	}
+
+	if m.cfg.Capture.Enabled && m.cfg.Capture.Device != "" {
+		dev := m.cfg.Capture.Device
+		go func() {
+			defer func() { _ = recover() }()
+			capture.LogSYN(dev, m.protoLog)
+		}()
+		go func() {
+			defer func() { _ = recover() }()
+			capture.LogUDP(dev, m.protoLog)
+		}()
+		go func() {
+			defer func() { _ = recover() }()
+			capture.LogICMP(dev, m.protoLog)
+		}()
+	}
+
+	return nil
+}
+
+func (m *Manager) initVirtualStack() error {
+	dev, err := tun.NewDeviceWithMTU(m.cfg.Network.DevName, m.cfg.Network.MTU)
+	if err != nil {
+		return fmt.Errorf("create tun %s: %w", m.cfg.Network.DevName, err)
+	}
+	if err := dev.Activate(); err != nil {
+		return fmt.Errorf("activate tun: %w", err)
+	}
+	if err := dev.SetInterfaceAddress(m.ipNet.String()); err != nil {
+		return fmt.Errorf("set tun addr %s: %w", m.ipNet.String(), err)
+	}
+	if runtime.GOOS != "windows" {
+		if err := dev.AddRouteEntry([]string{m.ipNet.String()}); err != nil {
+			return fmt.Errorf("add tun route: %w", err)
+		}
+	}
+
+	ep := core.NewEndpoint(dev, m.cfg.Network.MTU)
+	s := stack.New(stack.Options{
+		NetworkProtocols:   []stack.NetworkProtocolFactory{ipv4.NewProtocol, ipv6.NewProtocol},
+		TransportProtocols: []stack.TransportProtocolFactory{tcp.NewProtocol, udp.NewProtocol},
+	})
+	if tcperr := s.CreateNIC(m.nic, ep); tcperr != nil {
+		return fmt.Errorf("create NIC: %s", tcperr)
+	}
+
+	subnet, err := tcpip.NewSubnet(ipToAddress(m.ipNet.IP), ipMaskToAddressMask(m.ipNet.Mask))
+	if err != nil {
+		return err
+	}
+	s.SetRouteTable([]tcpip.Route{{Destination: subnet, NIC: m.nic}})
+
+	ttl := tcpip.DefaultTTLOption(64)
+	_ = s.SetNetworkProtocolOption(ipv4.ProtocolNumber, &ttl)
+
+	m.device = dev
+	m.stack = s
+
+	if m.cfg.Network.Mode == config.ModeAll {
+		inc := func(ip net.IP) {
+			for j := len(ip) - 1; j >= 0; j-- {
+				ip[j]++
+				if ip[j] > 0 {
+					break
+				}
+			}
+		}
+		for ip := m.ipNet.IP.Mask(m.ipNet.Mask); m.ipNet.Contains(ip); inc(ip) {
+			pa := tcpip.ProtocolAddress{
+				Protocol:          ipv4.ProtocolNumber,
+				AddressWithPrefix: tcpip.AddrFromSlice(ip.To4()).WithPrefix(),
+			}
+			_ = s.AddProtocolAddress(m.nic, pa, stack.AddressProperties{})
+		}
+	}
+	return nil
+}
+
+func (m *Manager) ensureVirtualIP(ipStr string) error {
+	if m.cfg.Network.Mode != config.ModeUserdef || m.stack == nil {
+		return nil
+	}
+	ip := net.ParseIP(ipStr)
+	if ip == nil || ip.To4() == nil {
+		return nil
+	}
+	pa := tcpip.ProtocolAddress{
+		Protocol:          ipv4.ProtocolNumber,
+		AddressWithPrefix: tcpip.AddrFromSlice(ip.To4()).WithPrefix(),
+	}
+	if err := m.stack.AddProtocolAddress(m.nic, pa, stack.AddressProperties{}); err != nil {
+		// Ignore duplicate address errors
+		if !strings.Contains(strings.ToLower(err.String()), "duplicate") {
+			return errors.New(err.String())
+		}
+	}
+	return nil
+}
+
+// StartService launches one protocol listener on (ip, svc.Port) and registers it.
+func (m *Manager) StartService(ip string, svc config.ServiceConfig) error {
+	protoName := strings.ToLower(strings.TrimSpace(svc.Protocol))
+	if protoName == "" {
+		return fmt.Errorf("protocol is required")
+	}
+
+	// Alias https -> http with ssl=true
+	handlerName := protoName
+	params := make(map[string]interface{})
+	for k, v := range svc.Params {
+		params[k] = v
+	}
+	if protoName == "https" {
+		handlerName = "http"
+		params["ssl"] = true
+	}
+
+	pi, ok := protocols.LookupProtocol(handlerName)
+	if !ok {
+		return fmt.Errorf("unknown protocol %q", protoName)
+	}
+	port := svc.Port
+	if port == 0 {
+		port = pi.DefaultPort
+	}
+	if ip == "" {
+		ip = "0.0.0.0"
+	}
+
+	transport := "tcp"
+	if _, ok := pi.HandleFunc.(func(*protocols.UDPConnection, []byte) error); ok {
+		transport = "udp"
+	} else if _, ok := pi.HandleFunc.(protocols.UDPFunction); ok {
+		transport = "udp"
+	}
+	if pi.DatagramHandler != nil && transport == "tcp" {
+		transport = "tcp+udp"
+	}
+
+	svcID := fmt.Sprintf("%s:%d:%s:%s", ip, port, transport, protoName)
+
+	m.mu.RLock()
+	_, exists := m.services[svcID]
+	m.mu.RUnlock()
+	if exists {
+		return fmt.Errorf("service %s already running", svcID)
+	}
+
+	if err := m.ensureVirtualIP(ip); err != nil {
+		return err
+	}
+
+	bi := &protocols.BindInfo{
+		Handler: protoName,
+		Port:    port,
+		App:     svc.App,
+		Params:  params,
+		IP:      ip,
+		Log:     m.protoLog,
+	}
+	ci := protocols.NewConfigInfo(fmt.Sprintf("%s:%d", ip, port), bi, m.protoLog.WithFields(logrus.Fields{
+		"protocol": protoName,
+		"local":    fmt.Sprintf("%s:%d", ip, port),
+	}))
+
+	var stopFns []func()
+	var err error
+
+	switch fn := pi.HandleFunc.(type) {
+	case func() func(*protocols.SessionConnection) error:
+		var sf func()
+		sf, err = m.startTCPService(ip, port, protoName, bi, ci, fn())
+		if sf != nil {
+			stopFns = append(stopFns, sf)
+		}
+	case func() protocols.TCPFunction:
+		var sf func()
+		sf, err = m.startTCPService(ip, port, protoName, bi, ci, fn())
+		if sf != nil {
+			stopFns = append(stopFns, sf)
+		}
+	case func() (protocols.TCPFunction, protocols.UDPFunction):
+		tcpFn, udpFn := fn()
+		if tcpFn != nil {
+			var sf func()
+			sf, err = m.startTCPService(ip, port, protoName, bi, ci, tcpFn)
+			if sf != nil {
+				stopFns = append(stopFns, sf)
+			}
+		}
+		if err == nil && udpFn != nil {
+			if sf, uerr := m.startUDPService(ip, port, protoName, bi, ci, udpFn); uerr == nil && sf != nil {
+				stopFns = append(stopFns, sf)
+			}
+		}
+	case func(*protocols.SessionConnection) error:
+		var sf func()
+		sf, err = m.startTCPService(ip, port, protoName, bi, ci, fn)
+		if sf != nil {
+			stopFns = append(stopFns, sf)
+		}
+	case protocols.TCPFunction:
+		var sf func()
+		sf, err = m.startTCPService(ip, port, protoName, bi, ci, fn)
+		if sf != nil {
+			stopFns = append(stopFns, sf)
+		}
+	case func(*protocols.ListenConnection) error:
+		var sf func()
+		sf, err = m.startTCPListenerService(ip, port, protoName, bi, ci, fn)
+		if sf != nil {
+			stopFns = append(stopFns, sf)
+		}
+	case protocols.TCPListenerFunction:
+		var sf func()
+		sf, err = m.startTCPListenerService(ip, port, protoName, bi, ci, fn)
+		if sf != nil {
+			stopFns = append(stopFns, sf)
+		}
+	case func(*protocols.ConfigInfo) http.Handler:
+		var sf func()
+		sf, err = m.startHTTPService(ip, port, protoName, bi, ci, fn)
+		if sf != nil {
+			stopFns = append(stopFns, sf)
+		}
+	case protocols.HTTPFunction:
+		var sf func()
+		sf, err = m.startHTTPService(ip, port, protoName, bi, ci, fn)
+		if sf != nil {
+			stopFns = append(stopFns, sf)
+		}
+	case func(*protocols.UDPConnection, []byte) error:
+		var sf func()
+		sf, err = m.startUDPService(ip, port, protoName, bi, ci, fn)
+		if sf != nil {
+			stopFns = append(stopFns, sf)
+		}
+	case protocols.UDPFunction:
+		var sf func()
+		sf, err = m.startUDPService(ip, port, protoName, bi, ci, fn)
+		if sf != nil {
+			stopFns = append(stopFns, sf)
+		}
+	case func(net.Conn, net.Conn, []byte, bool) error:
+		var sf func()
+		sf, err = m.startTCPForwardService(ip, port, protoName, bi, fn)
+		if sf != nil {
+			stopFns = append(stopFns, sf)
+		}
+	case protocols.TCPForwardFunction:
+		var sf func()
+		sf, err = m.startTCPForwardService(ip, port, protoName, bi, fn)
+		if sf != nil {
+			stopFns = append(stopFns, sf)
+		}
+	default:
+		return fmt.Errorf("unsupported handler function type %T for %q", pi.HandleFunc, protoName)
+	}
+	if err != nil {
+		return err
+	}
+
+	// Start companion UDP handler for dual-transport protocols (e.g. DNS, CoAP, SIP, MelSecQ)
+	if pi.DatagramHandler != nil {
+		if udpFn := pi.DatagramHandler(bi); udpFn != nil {
+			if sf, uerr := m.startUDPService(ip, port, protoName, bi, ci, udpFn); uerr == nil && sf != nil {
+				stopFns = append(stopFns, sf)
+			}
+		}
+	}
+
+	stopFn := func() {
+		for _, sf := range stopFns {
+			sf()
+		}
+	}
+
+	m.mu.Lock()
+	m.services[svcID] = &runningService{
+		status: ServiceStatus{
+			ID:        svcID,
+			IP:        ip,
+			Port:      port,
+			Protocol:  protoName,
+			Transport: transport,
+			App:       svc.App,
+			Params:    params,
+			StartedAt: time.Now().UTC(),
+			Status:    "running",
+		},
+		stopFn: stopFn,
+	}
+	m.mu.Unlock()
+	return nil
+}
+
+func (m *Manager) listenTCP(ip string, port uint16) (net.Listener, error) {
+	if m.cfg.Network.Mode == config.ModeLocalhost {
+		return net.Listen("tcp", fmt.Sprintf("%s:%d", ip, port))
+	}
+	addr := tcpip.FullAddress{
+		NIC:  m.nic,
+		Addr: ipToAddress(net.ParseIP(ip)),
+		Port: port,
+	}
+	return gonet.ListenTCP(m.stack, addr, ipv4.ProtocolNumber)
+}
+
+func (m *Manager) listenUDP(ip string, port uint16) (net.PacketConn, error) {
+	if m.cfg.Network.Mode == config.ModeLocalhost {
+		return net.ListenPacket("udp", fmt.Sprintf("%s:%d", ip, port))
+	}
+	addr := tcpip.FullAddress{
+		NIC:  m.nic,
+		Addr: ipToAddress(net.ParseIP(ip)),
+		Port: port,
+	}
+	return gonet.DialUDP(m.stack, &addr, nil, ipv4.ProtocolNumber)
+}
+
+func (m *Manager) allowIP(remoteAddr net.Addr) bool {
+	if !m.cfg.RateLimit.Enabled || remoteAddr == nil {
+		return true
+	}
+	ip, _ := splitHostPort(remoteAddr)
+	if ip == "" {
+		return true
+	}
+	val, _ := m.limiters.LoadOrStore(ip, rate.NewLimiter(rate.Limit(m.cfg.RateLimit.PerIPPerSec), m.cfg.RateLimit.Burst))
+	return val.(*rate.Limiter).Allow()
+}
+
+func (m *Manager) startTCPService(ip string, port uint16, protoName string, bi *protocols.BindInfo, ci *protocols.ConfigInfo, fn protocols.TCPFunction) (func(), error) {
+	ln, err := m.listenTCP(ip, port)
+	if err != nil {
+		return nil, err
+	}
+	sslW := NewSSLWrapper(bi.GetCertName())
+	if bi.GetBoolParams("ssl") {
+		if err := sslW.InitSslConfig(bi.GenCert()); err != nil {
+			_ = ln.Close()
+			return nil, err
+		}
+	}
+
+	stopCh := make(chan struct{})
+	go func() {
+		for {
+			rawConn, err := ln.Accept()
+			if err != nil {
+				select {
+				case <-stopCh:
+					return
+				default:
+					return
+				}
+			}
+			if !m.allowIP(rawConn.RemoteAddr()) {
+				_ = rawConn.Close()
+				continue
+			}
+			go func(c net.Conn) {
+				tc := NewTelemetryConn(c, m.bus, m.tracker, protoName, ip, port)
+				defer tc.Close()
+				if m.cfg.Network.TimeoutSec > 0 {
+					_ = tc.SetDeadline(time.Now().Add(time.Duration(m.cfg.Network.TimeoutSec) * time.Second))
+				}
+				var conn net.Conn = tc
+				if bi.GetBoolParams("ssl") {
+					sc := sslW.WrapSslConn(tc)
+					if err := sc.Handshake(); err != nil {
+						tc.MarkParseError("tls handshake failed: " + err.Error())
+						return
+					}
+					conn = sc
+				}
+				sc := &protocols.SessionConnection{
+					SslConnWraper: sslW,
+					Conn:          conn,
+					ConnectionID:  m.connSeq.Add(1),
+					ConfigInfo:    ci,
+				}
+				if err := fn(sc); err != nil && !errors.Is(err, io.EOF) && !errors.Is(err, net.ErrClosed) {
+					if !strings.Contains(strings.ToLower(err.Error()), "closed") {
+						tc.MarkParseError(err.Error())
+					}
+				}
+			}(rawConn)
+		}
+	}()
+
+	return func() {
+		close(stopCh)
+		_ = ln.Close()
+	}, nil
+}
+
+func (m *Manager) startTCPListenerService(ip string, port uint16, protoName string, bi *protocols.BindInfo, ci *protocols.ConfigInfo, fn protocols.TCPListenerFunction) (func(), error) {
+	rawLn, err := m.listenTCP(ip, port)
+	if err != nil {
+		return nil, err
+	}
+	tl := NewTelemetryListener(rawLn, m.bus, m.tracker, protoName, ip, port)
+	sslW := NewSSLWrapper(bi.GetCertName())
+	if bi.GetBoolParams("ssl") {
+		if err := sslW.InitSslConfig(bi.GenCert()); err != nil {
+			_ = tl.Close()
+			return nil, err
+		}
+		sslW.WrapSslListener(tl)
+	}
+
+	lc := &protocols.ListenConnection{
+		SslConnWraper: sslW,
+		Listener:      tl,
+		ConfigInfo:    ci,
+	}
+	go func() {
+		if err := fn(lc); err != nil && !errors.Is(err, net.ErrClosed) {
+			logrus.Debugf("[%s] listener exited: %v", protoName, err)
+		}
+	}()
+	return func() { _ = tl.Close() }, nil
+}
+
+func (m *Manager) startHTTPService(ip string, port uint16, protoName string, bi *protocols.BindInfo, ci *protocols.ConfigInfo, fn protocols.HTTPFunction) (func(), error) {
+	rawLn, err := m.listenTCP(ip, port)
+	if err != nil {
+		return nil, err
+	}
+	tl := NewTelemetryListener(rawLn, m.bus, m.tracker, protoName, ip, port)
+	if bi.GetBoolParams("ssl") {
+		sslW := NewSSLWrapper(bi.GetCertName())
+		if err := sslW.InitSslConfig(bi.GenCert()); err != nil {
+			_ = tl.Close()
+			return nil, err
+		}
+		sslW.WrapSslListener(tl)
+	}
+	srv := &http.Server{
+		Handler:           fn(ci),
+		ReadHeaderTimeout: 10 * time.Second,
+	}
+	go func() {
+		if err := srv.Serve(tl); err != nil && !errors.Is(err, http.ErrServerClosed) && !errors.Is(err, net.ErrClosed) {
+			logrus.Debugf("[%s] http serve exited: %v", protoName, err)
+		}
+	}()
+	return func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		_ = srv.Shutdown(ctx)
+		_ = tl.Close()
+	}, nil
+}
+
+type udpTelemetryPacketConn struct {
+	net.PacketConn
+	bus       *telemetry.Bus
+	sessionID string
+	seq       atomic.Int32
+	bytesOut  atomic.Int64
+}
+
+func (u *udpTelemetryPacketConn) WriteTo(p []byte, addr net.Addr) (int, error) {
+	n, err := u.PacketConn.WriteTo(p, addr)
+	if n > 0 {
+		u.bytesOut.Add(int64(n))
+		if u.bus != nil {
+			u.bus.RecordPayload(telemetry.PayloadChunk{
+				SessionID: u.sessionID,
+				Seq:       int(u.seq.Add(1)),
+				Timestamp: time.Now().UTC(),
+				Direction: "out",
+				Data:      p[:n],
+			})
+		}
+	}
+	return n, err
+}
+
+func (m *Manager) startUDPService(ip string, port uint16, protoName string, _ *protocols.BindInfo, ci *protocols.ConfigInfo, fn protocols.UDPFunction) (func(), error) {
+	pc, err := m.listenUDP(ip, port)
+	if err != nil {
+		return nil, err
+	}
+	stopCh := make(chan struct{})
+	go func() {
+		buf := make([]byte, 65535)
+		for {
+			n, raddr, err := pc.ReadFrom(buf)
+			if err != nil {
+				select {
+				case <-stopCh:
+					return
+				default:
+					return
+				}
+			}
+			if n <= 0 || raddr == nil || !m.allowIP(raddr) {
+				continue
+			}
+			data := make([]byte, n)
+			copy(data, buf[:n])
+			go func(payload []byte, remote net.Addr) {
+				start := time.Now().UTC()
+				rIP, rPort := splitHostPort(remote)
+				sid := uuid.NewString()
+				rKey := remote.String()
+
+				hash, tag := "", "unknown"
+				if m.bus != nil {
+					hash, tag = m.bus.RecordProbeHit(protoName, "udp", port, rIP, "", sid, payload)
+					m.bus.RecordPayload(telemetry.PayloadChunk{
+						SessionID: sid,
+						Seq:       1,
+						Timestamp: start,
+						Direction: "in",
+						Data:      payload,
+					})
+				}
+				m.tracker.Register(protoName, rKey, &activeSessionMeta{
+					sessionID:  sid,
+					scannerTag: tag,
+					localPort:  port,
+				})
+				defer m.tracker.Unregister(protoName, rKey)
+
+				wrappedPC := &udpTelemetryPacketConn{PacketConn: pc, bus: m.bus, sessionID: sid}
+				wrappedPC.seq.Store(1)
+				uc := protocols.NewUDPConnection(wrappedPC, remote, ci)
+				err := fn(uc, payload)
+				end := time.Now().UTC()
+				status := "closed"
+				parseOK := true
+				if err != nil {
+					status = "parse_error"
+					parseOK = false
+					if m.bus != nil {
+						m.bus.RecordEvent(telemetry.Event{
+							SessionID: sid,
+							Timestamp: end,
+							Protocol:  protoName,
+							RemoteIP:  rIP,
+							LocalPort: port,
+							Kind:      "parse_error",
+							Summary:   err.Error(),
+						})
+					}
+				}
+				if m.bus != nil {
+					m.bus.RecordSession(telemetry.Session{
+						ID:         sid,
+						Protocol:   protoName,
+						Transport:  "udp",
+						RemoteIP:   rIP,
+						RemotePort: rPort,
+						LocalIP:    ip,
+						LocalPort:  port,
+						ScannerTag: tag,
+						ProbeHash:  hash,
+						StartedAt:  start,
+						EndedAt:    end,
+						DurationMs: end.Sub(start).Milliseconds(),
+						BytesIn:    int64(len(payload)),
+						BytesOut:   wrappedPC.bytesOut.Load(),
+						ParseOK:    parseOK,
+						Status:     status,
+					})
+				}
+			}(data, raddr)
+		}
+	}()
+	return func() {
+		close(stopCh)
+		_ = pc.Close()
+	}, nil
+}
+
+func (m *Manager) startTCPForwardService(ip string, port uint16, protoName string, bi *protocols.BindInfo, _ protocols.TCPForwardFunction) (func(), error) {
+	target := bi.GetStringParams("target", "")
+	if target == "" {
+		return nil, fmt.Errorf("tcp_forward requires target param")
+	}
+	ln, err := m.listenTCP(ip, port)
+	if err != nil {
+		return nil, err
+	}
+	stopCh := make(chan struct{})
+	go func() {
+		for {
+			rawConn, err := ln.Accept()
+			if err != nil {
+				select {
+				case <-stopCh:
+					return
+				default:
+					return
+				}
+			}
+			go func(c net.Conn) {
+				tc := NewTelemetryConn(c, m.bus, m.tracker, protoName, ip, port)
+				defer tc.Close()
+				up, err := net.DialTimeout("tcp", target, 5*time.Second)
+				if err != nil {
+					tc.MarkParseError("dial target failed: " + err.Error())
+					return
+				}
+				defer up.Close()
+				go func() { _, _ = io.Copy(up, tc) }()
+				_, _ = io.Copy(tc, up)
+			}(rawConn)
+		}
+	}()
+	return func() {
+		close(stopCh)
+		_ = ln.Close()
+	}, nil
+}
+
+// StopService stops a running service by ID.
+func (m *Manager) StopService(id string) error {
+	m.mu.Lock()
+	rs, ok := m.services[id]
+	if ok {
+		delete(m.services, id)
+	}
+	m.mu.Unlock()
+	if !ok {
+		return fmt.Errorf("service %q not found", id)
+	}
+	if rs.stopFn != nil {
+		rs.stopFn()
+	}
+	return nil
+}
+
+// ListServices returns a sorted snapshot of all active services.
+func (m *Manager) ListServices() []ServiceStatus {
+	m.mu.RLock()
+	out := make([]ServiceStatus, 0, len(m.services))
+	for _, rs := range m.services {
+		out = append(out, rs.status)
+	}
+	m.mu.RUnlock()
+	sort.Slice(out, func(i, j int) bool {
+		if out[i].Port != out[j].Port {
+			return out[i].Port < out[j].Port
+		}
+		return out[i].Protocol < out[j].Protocol
+	})
+	return out
+}
+
+// ApplyScenario stops all current services and starts all services defined in the ScenarioPreset.
+func (m *Manager) ApplyScenario(preset config.ScenarioPreset) (int, []string) {
+	m.mu.Lock()
+	old := make([]*runningService, 0, len(m.services))
+	for _, rs := range m.services {
+		old = append(old, rs)
+	}
+	m.services = make(map[string]*runningService)
+	m.mu.Unlock()
+
+	for _, rs := range old {
+		if rs.stopFn != nil {
+			rs.stopFn()
+		}
+	}
+
+	started := 0
+	var errs []string
+	for _, host := range preset.Hosts {
+		for _, svc := range host.Services {
+			if err := m.StartService(host.IP, svc); err != nil {
+				errs = append(errs, fmt.Sprintf("%s:%d (%s): %v", host.IP, svc.Port, svc.Protocol, err))
+			} else {
+				started++
+			}
+		}
+	}
+	m.cfg.Scenario = preset.ID
+	m.cfg.Hosts = preset.Hosts
+	return started, errs
+}
+
+// UpdateCatchAll reconfigures Catch-All TCP/UDP ports dynamically.
+func (m *Manager) UpdateCatchAll(cfg config.CatchAllConfig) error {
+	m.cfg.CatchAll = cfg
+	if !cfg.Enabled {
+		m.catchAll.Stop()
+		return nil
+	}
+	bindIP := "0.0.0.0"
+	if len(m.cfg.Hosts) > 0 && m.cfg.Hosts[0].IP != "" {
+		bindIP = m.cfg.Hosts[0].IP
+	}
+	return m.catchAll.Start(bindIP, cfg.TCPPorts, cfg.UDPPorts)
+}
+
+// Close shuts down all services, Catch-All listeners, and the gVisor/TUN stack cleanly.
+func (m *Manager) Close() {
+	if !m.closed.CompareAndSwap(false, true) {
+		return
+	}
+	m.catchAll.Stop()
+	m.mu.Lock()
+	svcs := make([]*runningService, 0, len(m.services))
+	for _, rs := range m.services {
+		svcs = append(svcs, rs)
+	}
+	m.services = make(map[string]*runningService)
+	m.mu.Unlock()
+
+	for _, rs := range svcs {
+		if rs.stopFn != nil {
+			rs.stopFn()
+		}
+	}
+	if m.stack != nil {
+		m.stack.Close()
+	}
+	if closer, ok := m.device.(io.Closer); ok {
+		_ = closer.Close()
+	}
+}
+
+// ListRegisteredProtocols returns metadata for all protocols registered in the engine.
+func ListRegisteredProtocols() []ProtocolDescriptor {
+	all := protocols.ProtocolDetails()
+	out := make([]ProtocolDescriptor, 0, len(all)+1)
+	hasHTTPS := false
+	for _, pi := range all {
+		if pi.Name == "https" {
+			hasHTTPS = true
+		}
+		transport := "tcp"
+		if _, ok := pi.HandleFunc.(func(*protocols.UDPConnection, []byte) error); ok {
+			transport = "udp"
+		} else if _, ok := pi.HandleFunc.(protocols.UDPFunction); ok {
+			transport = "udp"
+		}
+		if pi.DatagramHandler != nil && transport == "tcp" {
+			transport = "tcp+udp"
+		}
+		params := map[string]interface{}{}
+		for _, v := range pi.Params {
+			params[v.Name] = v.DefaultValue
+		}
+		out = append(out, ProtocolDescriptor{
+			Name:        pi.Name,
+			DefaultPort: pi.DefaultPort,
+			Transport:   transport,
+			Params:      params,
+		})
+	}
+	if !hasHTTPS {
+		out = append(out, ProtocolDescriptor{
+			Name:        "https",
+			DefaultPort: 443,
+			Transport:   "tcp",
+			Params:      map[string]interface{}{"ssl": true},
+		})
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].Name < out[j].Name })
+	return out
+}
+
+func ipToAddress(ip net.IP) tcpip.Address {
+	if ip == nil {
+		return tcpip.AddrFrom4([4]byte{})
+	}
+	if v4 := ip.To4(); v4 != nil {
+		return tcpip.AddrFromSlice(v4)
+	}
+	return tcpip.AddrFromSlice(ip.To16())
+}
+
+func ipMaskToAddressMask(mask net.IPMask) tcpip.AddressMask {
+	return tcpip.MaskFromBytes(mask)
+}

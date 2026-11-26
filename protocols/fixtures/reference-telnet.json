@@ -1,0 +1,1449 @@
+{
+  "listeners": {
+    "default": {},
+    "custom": {
+      "password": "lab-only",
+      "prompt": "fixture> "
+    },
+    "tls": {
+      "password": "lab-only",
+      "prompt": "fixture> ",
+      "ssl": true
+    },
+    "empty": {
+      "password": "",
+      "prompt": ""
+    }
+  },
+  "cases": [
+    {
+      "name": "default-shell",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "",
+          "receive": "fffb01"
+        },
+        {
+          "send": "fffb01",
+          "receive": "50617373776f72643a20"
+        },
+        {
+          "send": "3132333435360a",
+          "receive": "2420"
+        },
+        {
+          "send": "77686f616d690a",
+          "receive": "0d0a726f6f740d0a2420"
+        },
+        {
+          "send": "7077640a",
+          "receive": "0d0a2f726f6f740d0a2420"
+        },
+        {
+          "send": "69640a",
+          "receive": "0d0a7569643d3028726f6f7429206769643d3028726f6f74292067726f7570733d3028726f6f74290d0a2420"
+        },
+        {
+          "send": "6364202f73796e7468657469630a",
+          "receive": "0d0a2420"
+        },
+        {
+          "send": "7077640a",
+          "receive": "0d0a2f73796e7468657469630d0a2420"
+        },
+        {
+          "send": "6c730a",
+          "receive": "0d0a2e202e2e0d0a2420"
+        },
+        {
+          "send": "6c7320616c70686120626574610a",
+          "receive": "0d0a6c733a2063616e6e6f742061636365737320616c7068613a204e6f20737563682066696c65206f72206469726563746f72790d0a6c733a2063616e6e6f742061636365737320626574613a204e6f20737563682066696c65206f72206469726563746f72790d0a2420"
+        },
+        {
+          "send": "746f7563680a",
+          "receive": "0d0a",
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "login successfully"
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "whoami"
+          ]
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "pwd"
+          ]
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "id"
+          ]
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "cd",
+            "/synthetic"
+          ]
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "pwd"
+          ]
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "ls"
+          ]
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "ls",
+            "alpha",
+            "beta"
+          ]
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "touch"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "negotiated-echo",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "",
+          "receive": "fffb01"
+        },
+        {
+          "send": "fffd01",
+          "receive": "fffe01fffb03"
+        },
+        {
+          "send": "fffd03",
+          "receive": "fffd03"
+        },
+        {
+          "send": "fffb03",
+          "receive": "fffc2250617373776f72643a20"
+        },
+        {
+          "send": "3132333435360d0a",
+          "receive": "2420"
+        },
+        {
+          "send": "77686f616d690d0a",
+          "receive": "77686f616d690d0a726f6f740d0a24200d0a2420"
+        },
+        {
+          "send": "7077640d00",
+          "receive": "7077640d0a2f726f6f740d0a2420"
+        },
+        {
+          "send": "0a",
+          "receive": "0d0a2420"
+        },
+        {
+          "send": "657869740d0a",
+          "receive": "657869740d0a",
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "login successfully"
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "whoami"
+          ]
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "pwd"
+          ]
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "exit"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "negotiated-echo-lf",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "",
+          "receive": "fffb01"
+        },
+        {
+          "send": "fffd01",
+          "receive": "fffe01fffb03"
+        },
+        {
+          "send": "fffd03",
+          "receive": "fffd03"
+        },
+        {
+          "send": "fffb03",
+          "receive": "fffc2250617373776f72643a20"
+        },
+        {
+          "send": "3132333435360a",
+          "receive": "2420"
+        },
+        {
+          "send": "77686f616d690a",
+          "receive": "77686f616d690d0a726f6f740d0a2420"
+        },
+        {
+          "send": "657869740a",
+          "receive": "657869740d0a",
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "login successfully"
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "whoami"
+          ]
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "exit"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "reject-echo",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "",
+          "receive": "fffb01"
+        },
+        {
+          "send": "fffe01",
+          "receive": "50617373776f72643a20"
+        },
+        {
+          "send": "3132333435360a",
+          "receive": "2420"
+        },
+        {
+          "send": "77686f616d690a",
+          "receive": "0d0a726f6f740d0a2420"
+        }
+      ],
+      "events": [
+        {
+          "msg": "login successfully"
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "whoami"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "initial-plain",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "",
+          "receive": "fffb01"
+        },
+        {
+          "send": "3132333435360a",
+          "receive": "50617373776f72643a20"
+        },
+        {
+          "send": "3132333435360a",
+          "receive": "2420"
+        },
+        {
+          "send": "77686f616d690a",
+          "receive": "0d0a726f6f740d0a2420"
+        }
+      ],
+      "events": [
+        {
+          "msg": "login successfully"
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "whoami"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "blank-handshake",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "",
+          "receive": "fffb01"
+        },
+        {
+          "send": "0a",
+          "receive": "50617373776f72643a20"
+        },
+        {
+          "send": "3132333435360a",
+          "receive": "2420"
+        },
+        {
+          "send": "77686f616d690a",
+          "receive": "0d0a726f6f740d0a2420"
+        }
+      ],
+      "events": [
+        {
+          "msg": "login successfully"
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "whoami"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "fail-limit",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "",
+          "receive": "fffb01"
+        },
+        {
+          "send": "fffb01",
+          "receive": "50617373776f72643a20"
+        },
+        {
+          "send": "6261640a",
+          "receive": "4c6f67696e20696e636f72726563740d0a50617373776f72643a20"
+        },
+        {
+          "send": "66616b650a",
+          "receive": "4c6f67696e20696e636f72726563740d0a50617373776f72643a20"
+        },
+        {
+          "send": "77726f6e670a",
+          "receive": "4c6f67696e20696e636f72726563740d0a",
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "login failed"
+        },
+        {
+          "msg": "login failed"
+        },
+        {
+          "msg": "login failed"
+        }
+      ]
+    },
+    {
+      "name": "custom",
+      "listener": "custom",
+      "steps": [
+        {
+          "send": "",
+          "receive": "fffb01"
+        },
+        {
+          "send": "fffb01",
+          "receive": "50617373776f72643a20"
+        },
+        {
+          "send": "3132333435360a",
+          "receive": "4c6f67696e20696e636f72726563740d0a50617373776f72643a20"
+        },
+        {
+          "send": "6c61622d6f6e6c790a",
+          "receive": "666978747572653e20"
+        },
+        {
+          "send": "77686f616d690a",
+          "receive": "0d0a726f6f740d0a666978747572653e20"
+        },
+        {
+          "send": "657869740a",
+          "receive": "0d0a",
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "login failed"
+        },
+        {
+          "msg": "login successfully"
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "whoami"
+          ]
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "exit"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "secure",
+      "listener": "tls",
+      "steps": [
+        {
+          "send": "",
+          "receive": "fffb01"
+        },
+        {
+          "send": "fffb01",
+          "receive": "50617373776f72643a20"
+        },
+        {
+          "send": "6c61622d6f6e6c790a",
+          "receive": "666978747572653e20"
+        },
+        {
+          "send": "77686f616d690a",
+          "receive": "0d0a726f6f740d0a666978747572653e20"
+        },
+        {
+          "send": "657869740a",
+          "receive": "0d0a",
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "login successfully"
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "whoami"
+          ]
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "exit"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "empty-default",
+      "listener": "empty",
+      "steps": [
+        {
+          "send": "",
+          "receive": "fffb01"
+        },
+        {
+          "send": "fffb01",
+          "receive": "50617373776f72643a20"
+        },
+        {
+          "send": "0a",
+          "receive": "4c6f67696e20696e636f72726563740d0a50617373776f72643a20"
+        },
+        {
+          "send": "3132333435360a",
+          "receive": "2420"
+        },
+        {
+          "send": "77686f616d690a",
+          "receive": "0d0a726f6f740d0a2420"
+        }
+      ],
+      "events": [
+        {
+          "msg": "login failed"
+        },
+        {
+          "msg": "login successfully"
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "whoami"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "edit-default",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "",
+          "receive": "fffb01"
+        },
+        {
+          "send": "fffb01",
+          "receive": "50617373776f72643a20"
+        },
+        {
+          "send": "3132333435360a",
+          "receive": "2420"
+        },
+        {
+          "send": "7077587f640a",
+          "receive": "0820080d0a2f726f6f740d0a2420"
+        },
+        {
+          "send": "1b5b410a",
+          "receive": "7077640d0a2f726f6f740d0a2420"
+        },
+        {
+          "send": "646973636172640377686f616d690a",
+          "receive": "0d0a24200d0a726f6f740d0a2420"
+        },
+        {
+          "send": "04",
+          "receive": "0d0a",
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "login successfully"
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "pwd"
+          ]
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "pwd"
+          ]
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "whoami"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "edit-echo",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "",
+          "receive": "fffb01"
+        },
+        {
+          "send": "fffd01",
+          "receive": "fffe01fffb03"
+        },
+        {
+          "send": "fffd03",
+          "receive": "fffd03"
+        },
+        {
+          "send": "fffb03",
+          "receive": "fffc2250617373776f72643a20"
+        },
+        {
+          "send": "3132333435360a",
+          "receive": "2420"
+        },
+        {
+          "send": "7077587f640a",
+          "receive": "707758082008640d0a2f726f6f740d0a2420"
+        },
+        {
+          "send": "1b5b410a",
+          "receive": "7077640d0a2f726f6f740d0a2420"
+        },
+        {
+          "send": "646973636172640377686f616d690a",
+          "receive": "646973636172640d0a242077686f616d690d0a726f6f740d0a2420"
+        },
+        {
+          "send": "04",
+          "receive": "0d0a",
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "login successfully"
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "pwd"
+          ]
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "pwd"
+          ]
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "whoami"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "quoting",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "",
+          "receive": "fffb01"
+        },
+        {
+          "send": "fffb01",
+          "receive": "50617373776f72643a20"
+        },
+        {
+          "send": "3132333435360a",
+          "receive": "2420"
+        },
+        {
+          "send": "636420272f6c61622f70617468207370616365270a",
+          "receive": "0d0a2420"
+        },
+        {
+          "send": "7077640a",
+          "receive": "0d0a2f6c61622f706174682073706163650d0a2420"
+        },
+        {
+          "send": "746f756368202264656d6f2066696c65220a",
+          "receive": "0d0a746f7563683a2064656d6f2066696c653a204f7065726174696f6e206e6f74207065726d69747465640d0a2420"
+        },
+        {
+          "send": "63642027756e66696e69736865640a",
+          "receive": "0d0a",
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "login successfully"
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "cd",
+            "/lab/path space"
+          ]
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "pwd"
+          ]
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "touch",
+            "demo file"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "fragmented-negotiation",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "",
+          "receive": "fffb01"
+        },
+        {
+          "send": "ff",
+          "receive": "50617373776f72643a20"
+        },
+        {
+          "send": "fb01",
+          "receive": ""
+        },
+        {
+          "send": "3132333435360a",
+          "receive": "4c6f67696e20696e636f72726563740d0a50617373776f72643a20"
+        },
+        {
+          "send": "77686f616d690a",
+          "receive": "4c6f67696e20696e636f72726563740d0a50617373776f72643a20"
+        }
+      ],
+      "events": [
+        {
+          "msg": "login failed"
+        },
+        {
+          "msg": "login failed"
+        }
+      ]
+    },
+    {
+      "name": "after-prompt-option",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "",
+          "receive": "fffb01"
+        },
+        {
+          "send": "fffb01",
+          "receive": "50617373776f72643a20"
+        },
+        {
+          "send": "fffc033132333435360a",
+          "receive": "4c6f67696e20696e636f72726563740d0a50617373776f72643a20"
+        },
+        {
+          "send": "77686f616d690a",
+          "receive": "4c6f67696e20696e636f72726563740d0a50617373776f72643a20"
+        }
+      ],
+      "events": [
+        {
+          "msg": "login failed"
+        },
+        {
+          "msg": "login failed"
+        }
+      ]
+    },
+    {
+      "name": "no-echo-touch-with-arg",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "",
+          "receive": "fffb01"
+        },
+        {
+          "send": "fffb01",
+          "receive": "50617373776f72643a20"
+        },
+        {
+          "send": "3132333435360a",
+          "receive": "2420"
+        },
+        {
+          "send": "746f7563682064656d6f0a",
+          "receive": "0d0a746f7563683a2064656d6f3a204f7065726174696f6e206e6f74207065726d69747465640d0a2420"
+        },
+        {
+          "send": "756e616d650a",
+          "receive": "0d0a636f6d6d616e64206e6f7420666f756e643a20756e616d650d0a2420"
+        },
+        {
+          "send": "657869740a",
+          "receive": "0d0a",
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "login successfully"
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "touch",
+            "demo"
+          ]
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "uname"
+          ]
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "exit"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "no-echo-shell-crlf",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "",
+          "receive": "fffb01"
+        },
+        {
+          "send": "fffb01",
+          "receive": "50617373776f72643a20"
+        },
+        {
+          "send": "3132333435360d0a",
+          "receive": "2420"
+        },
+        {
+          "send": "77686f616d690d0a",
+          "receive": "0d0a726f6f740d0a24200d0a2420"
+        },
+        {
+          "send": "7077640d",
+          "receive": "0d0a2f726f6f740d0a2420"
+        },
+        {
+          "send": "0a",
+          "receive": "0d0a2420"
+        },
+        {
+          "send": "657869740a",
+          "receive": "0d0a",
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "login successfully"
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "whoami"
+          ]
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "pwd"
+          ]
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "exit"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "password-space",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "",
+          "receive": "fffb01"
+        },
+        {
+          "send": "fffb01",
+          "receive": "50617373776f72643a20"
+        },
+        {
+          "send": "20313233343536200d0a",
+          "receive": "4c6f67696e20696e636f72726563740d0a50617373776f72643a20"
+        },
+        {
+          "send": "77686f616d690a",
+          "receive": "4c6f67696e20696e636f72726563740d0a50617373776f72643a20"
+        },
+        {
+          "send": "3132333435360a",
+          "receive": "2420"
+        },
+        {
+          "send": "657869740a",
+          "receive": "0d0a",
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "login failed"
+        },
+        {
+          "msg": "login failed"
+        },
+        {
+          "msg": "login successfully"
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "exit"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "password-cr-only",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "",
+          "receive": "fffb01"
+        },
+        {
+          "send": "fffb01",
+          "receive": "50617373776f72643a20"
+        },
+        {
+          "send": "3132333435360d",
+          "receive": ""
+        },
+        {
+          "send": "0a",
+          "receive": "2420"
+        },
+        {
+          "send": "657869740a",
+          "receive": "0d0a",
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "login successfully"
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "exit"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "plain-byte-handshake",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "",
+          "receive": "fffb01"
+        },
+        {
+          "send": "78",
+          "receive": "50617373776f72643a20"
+        },
+        {
+          "send": "3132333435360a",
+          "receive": "2420"
+        },
+        {
+          "send": "657869740a",
+          "receive": "0d0a",
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "login successfully"
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "exit"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "pipelined-initial",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "",
+          "receive": "fffb01"
+        },
+        {
+          "send": "fffb013132333435360a",
+          "receive": "50617373776f72643a20"
+        },
+        {
+          "send": "3132333435360a",
+          "receive": "2420"
+        },
+        {
+          "send": "657869740a",
+          "receive": "0d0a",
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "login successfully"
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "exit"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "coalesced-options",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "",
+          "receive": "fffb01"
+        },
+        {
+          "send": "fffd01fffd03fffb03",
+          "receive": "50617373776f72643a20"
+        },
+        {
+          "send": "3132333435360a",
+          "receive": "2420"
+        },
+        {
+          "send": "657869740a",
+          "receive": "0d0a",
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "login successfully"
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "exit"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "cr-nul-shell",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "",
+          "receive": "fffb01"
+        },
+        {
+          "send": "fffb01",
+          "receive": "50617373776f72643a20"
+        },
+        {
+          "send": "3132333435360a",
+          "receive": "2420"
+        },
+        {
+          "send": "7077640d00",
+          "receive": "0d0a2f726f6f740d0a2420"
+        },
+        {
+          "send": "657869740a",
+          "receive": "0d0a",
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "login successfully"
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "pwd"
+          ]
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "exit"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "shell-ws-and-empty",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "",
+          "receive": "fffb01"
+        },
+        {
+          "send": "fffb01",
+          "receive": "50617373776f72643a20"
+        },
+        {
+          "send": "3132333435360a",
+          "receive": "2420"
+        },
+        {
+          "send": "0a",
+          "receive": "0d0a2420"
+        },
+        {
+          "send": "20200a",
+          "receive": "0d0a636f6d6d616e64206e6f7420666f756e643a20200d0a2420"
+        },
+        {
+          "send": "202077686f616d690a",
+          "receive": "0d0a636f6d6d616e64206e6f7420666f756e643a202077686f616d690d0a2420"
+        },
+        {
+          "send": "657869740a",
+          "receive": "0d0a",
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "login successfully"
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            " "
+          ]
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            " whoami"
+          ]
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "exit"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "fallback-keeps-echo-after-echo",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "",
+          "receive": "fffb01"
+        },
+        {
+          "send": "fffd01",
+          "receive": "fffe01fffb03"
+        },
+        {
+          "send": "fffa1f00500018fff0",
+          "receive": "50617373776f72643a20"
+        },
+        {
+          "send": "3132333435360a",
+          "receive": "2420"
+        },
+        {
+          "send": "77686f616d690a",
+          "receive": "77686f616d690d0a726f6f740d0a2420"
+        },
+        {
+          "send": "657869740a",
+          "receive": "657869740d0a",
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "login successfully"
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "whoami"
+          ]
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "exit"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "fallback-keeps-echo-after-sga",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "",
+          "receive": "fffb01"
+        },
+        {
+          "send": "fffd01",
+          "receive": "fffe01fffb03"
+        },
+        {
+          "send": "fffd03",
+          "receive": "fffd03"
+        },
+        {
+          "send": "fffb18",
+          "receive": "50617373776f72643a20"
+        },
+        {
+          "send": "3132333435360a",
+          "receive": "2420"
+        },
+        {
+          "send": "77686f616d690a",
+          "receive": "77686f616d690d0a726f6f740d0a2420"
+        },
+        {
+          "send": "657869740a",
+          "receive": "657869740d0a",
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "login successfully"
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "whoami"
+          ]
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "exit"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "fallback-tls-keeps-echo",
+      "listener": "tls",
+      "steps": [
+        {
+          "send": "",
+          "receive": "fffb01"
+        },
+        {
+          "send": "fffd01",
+          "receive": "fffe01fffb03"
+        },
+        {
+          "send": "fffa1f00500018fff0",
+          "receive": "50617373776f72643a20"
+        },
+        {
+          "send": "6c61622d6f6e6c790a",
+          "receive": "666978747572653e20"
+        },
+        {
+          "send": "77686f616d690a",
+          "receive": "77686f616d690d0a726f6f740d0a666978747572653e20"
+        },
+        {
+          "send": "657869740a",
+          "receive": "657869740d0a",
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "login successfully"
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "whoami"
+          ]
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "exit"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "nul-terminated-password",
+      "listener": "custom",
+      "steps": [
+        {
+          "send": "",
+          "receive": "fffb01"
+        },
+        {
+          "send": "fffb01",
+          "receive": "50617373776f72643a20"
+        },
+        {
+          "send": "6c61622d6f6e6c790d00",
+          "receive": "0d0a666978747572653e20"
+        },
+        {
+          "send": "77686f616d690a",
+          "receive": "0d0a726f6f740d0a666978747572653e20"
+        },
+        {
+          "send": "657869740a",
+          "receive": "0d0a",
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "login successfully"
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "whoami"
+          ]
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "exit"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "history-returns-to-empty",
+      "listener": "custom",
+      "steps": [
+        {"send": "", "receive": "fffb01"},
+        {"send": "fffd01", "receive": "fffe01fffb03"},
+        {"send": "fffd03", "receive": "fffd03"},
+        {"send": "fffb03", "receive": "fffc2250617373776f72643a20"},
+        {"send": "6c61622d6f6e6c790a", "receive": "666978747572653e20"},
+        {"send": "7077640a", "receive": "7077640d0a2f726f6f740d0a666978747572653e20"},
+        {"send": "1b5b41", "receive": "707764"},
+        {"send": "1b5b42", "receive": "080808202020080808"},
+        {"send": "77686f616d690a", "receive": "77686f616d690d0a726f6f740d0a666978747572653e20"},
+        {"send": "657869740a", "receive": "657869740d0a", "closed": true}
+      ],
+      "events": [
+        {"msg": "login successfully"},
+        {"msg": "execute command", "cmdline": ["pwd"]},
+        {"msg": "execute command", "cmdline": ["whoami"]},
+        {"msg": "execute command", "cmdline": ["exit"]}
+      ]
+    },
+    {
+      "name": "split-utf8-directory",
+      "listener": "tls",
+      "steps": [
+        {"send": "", "receive": "fffb01"},
+        {"send": "fffc01", "receive": "50617373776f72643a20"},
+        {"send": "6c61622d6f6e6c790a", "receive": "666978747572653e20"},
+        {"send": "6364202f66697874757265c3", "receive": ""},
+        {"send": "a90a", "receive": "0d0a666978747572653e20"},
+        {"send": "7077640a", "receive": "0d0a2f666978747572650d0a666978747572653e20"},
+        {"send": "657869740a", "receive": "0d0a", "closed": true}
+      ],
+      "events": [
+        {"msg": "login successfully"},
+        {"msg": "execute command", "cmdline": ["cd", "/fixture"]},
+        {"msg": "execute command", "cmdline": ["pwd"]},
+        {"msg": "execute command", "cmdline": ["exit"]}
+      ]
+    },
+    {
+      "name": "nul-separates-password-attempts",
+      "listener": "custom",
+      "steps": [
+        {
+          "send": "",
+          "receive": "fffb01"
+        },
+        {
+          "send": "fffb01",
+          "receive": "50617373776f72643a20"
+        },
+        {
+          "send": "77726f6e6700",
+          "receive": "0d0a4c6f67696e20696e636f72726563740d0a50617373776f72643a20"
+        },
+        {
+          "send": "00",
+          "receive": "0d0a4c6f67696e20696e636f72726563740d0a50617373776f72643a20"
+        },
+        {
+          "send": "6c61622d6f6e6c790a",
+          "receive": "666978747572653e20"
+        },
+        {
+          "send": "657869740a",
+          "receive": "0d0a",
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "login failed"
+        },
+        {
+          "msg": "login failed"
+        },
+        {
+          "msg": "login successfully"
+        },
+        {
+          "msg": "execute command",
+          "cmdline": [
+            "exit"
+          ]
+        }
+      ]
+    }
+  ]
+}

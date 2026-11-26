@@ -1,0 +1,330 @@
+{
+  "query": {
+    "listDatabases": {
+      "totalSize": 143360,
+      "ok": 1,
+      "databases": [
+        {
+          "name": "admin",
+          "sizeOnDisk": 61440,
+          "empty": false
+        },
+        {
+          "name": "config",
+          "sizeOnDisk": 40960,
+          "empty": false
+        },
+        {
+          "name": "READ__ME_TO_RECOVER_YOUR_DATA",
+          "sizeOnDisk": 40960,
+          "empty": false
+        }
+      ]
+    },
+    "whatsmyuri": {
+      "you": "0.0.0.0:45000",
+      "ok": 1
+    },
+    "serverStatus": {
+      "asserts": {
+        "msg": 0,
+        "regular": 0,
+        "rollovers": 0,
+        "user": 7594,
+        "warning": 0
+      },
+      "backgroundFlushing": {
+        "average_ms": 0.014799483483373477,
+        "flushes": 327579,
+        "last_finished": "2022-03-18T09:35:16.182+08:00",
+        "last_ms": 0,
+        "total_ms": 4848
+      },
+      "connections": {
+        "available": 8872,
+        "current": 4,
+        "totalCreated": 92913
+      },
+      "cursors": {
+        "clientCursors_size": 0,
+        "note": "deprecated, use server status metrics",
+        "pinned": 0,
+        "timedOut": 0,
+        "totalNoTimeout": 99,
+        "totalOpen": 0
+      },
+      "dur": {
+        "commits": 29,
+        "commitsInWriteLock": 0,
+        "compression": 0,
+        "earlyCommits": 0,
+        "journaledMB": 0,
+        "timeMs": {
+          "dt": 3046,
+          "prepLogBuffer": 0,
+          "remapPrivateView": 0,
+          "writeToDataFiles": 0,
+          "writeToJournal": 0
+        },
+        "writeToDataFilesMB": 0
+      },
+      "extra_info": {
+        "note": "fields vary by platform"
+      },
+      "globalLock": {
+        "activeClients": {
+          "readers": 0,
+          "total": 0,
+          "writers": 0
+        },
+        "currentQueue": {
+          "readers": 0,
+          "total": 0,
+          "writers": 0
+        },
+        "lockTime": 587876680,
+        "totalTime": 19655140446000
+      },
+      "host": "test.mongodb.org",
+      "indexCounters": {
+        "accesses": 840,
+        "hits": 840,
+        "missRatio": 0,
+        "misses": 0,
+        "resets": 0
+      },
+      "localTime": "2022-03-16T09:36:00.343+08:00",
+      "locks": {
+        ".": {
+          "timeAcquiringMicros": {
+            "R": 863267570,
+            "W": 120161160
+          },
+          "timeLockedMicros": {
+            "R": 1072274676,
+            "W": 587876680
+          }
+        },
+        "DB_H4CK3D": {
+          "timeAcquiringMicros": {
+            "r": 367045,
+            "w": 288248
+          },
+          "timeLockedMicros": {
+            "r": 5367303,
+            "w": 154
+          }
+        },
+        "READ__ME_TO_RECOVER_YOUR_DATA": {
+          "timeAcquiringMicros": {
+            "r": 93961115,
+            "w": 5882
+          },
+          "timeLockedMicros": {
+            "r": 338153378,
+            "w": 4947092
+          }
+        },
+        "admin": {
+          "timeAcquiringMicros": {
+            "r": 1805761,
+            "w": 0
+          },
+          "timeLockedMicros": {
+            "r": 12980298,
+            "w": 0
+          }
+        },
+        "local": {
+          "timeAcquiringMicros": {
+            "r": 3254111,
+            "w": 0
+          },
+          "timeLockedMicros": {
+            "r": 4944340,
+            "w": 0
+          }
+        },
+        "test": {
+          "timeAcquiringMicros": {
+            "r": 2428,
+            "w": 0
+          },
+          "timeLockedMicros": {
+            "r": 12653,
+            "w": 0
+          }
+        }
+      },
+      "mem": {
+        "bits": 64,
+        "mapped": 80,
+        "mappedWithJournal": 160,
+        "resident": 78,
+        "supported": true,
+        "virtual": 2042
+      },
+      "metrics": {
+        "cursor": {
+          "open": {
+            "noTimeout": 99,
+            "pinned": 0,
+            "total": 0
+          },
+          "timedOut": 0
+        },
+        "document": {
+          "deleted": 0,
+          "inserted": 813,
+          "returned": 9992,
+          "updated": 0
+        },
+        "getLastError": {
+          "wtime": {
+            "num": 0,
+            "totalMillis": 0
+          },
+          "wtimeouts": 0
+        },
+        "operation": {
+          "fastmod": 0,
+          "idhack": 0,
+          "scanAndOrder": 0
+        },
+        "queryExecutor": {
+          "scanned": 0,
+          "scannedObjects": 0
+        },
+        "record": {
+          "moves": 0
+        },
+        "repl": {
+          "apply": {
+            "batches": {
+              "num": 0,
+              "totalMillis": 0
+            },
+            "ops": 0
+          },
+          "buffer": {
+            "count": 0,
+            "maxSizeBytes": 268435456,
+            "sizeBytes": 0
+          },
+          "network": {
+            "bytes": 0,
+            "getmores": {
+              "num": 0,
+              "totalMillis": 0
+            },
+            "ops": 0,
+            "readersCreated": 0
+          },
+          "preload": {
+            "docs": {
+              "num": 0,
+              "totalMillis": 0
+            },
+            "indexes": {
+              "num": 0,
+              "totalMillis": 0
+            }
+          }
+        },
+        "storage": {
+          "freelist": {
+            "search": {
+              "bucketExhausted": 0,
+              "requests": 5535,
+              "scanned": 10282
+            }
+          }
+        },
+        "ttl": {
+          "deletedDocuments": 0,
+          "passes": 327579
+        }
+      },
+      "network": {
+        "bytesIn": 39980833,
+        "bytesOut": 81729931,
+        "numRequests": 390808
+      },
+      "ok": 1,
+      "opcounters": {
+        "command": 375752,
+        "delete": 0,
+        "getmore": 0,
+        "insert": 813,
+        "query": 657248,
+        "update": 0
+      },
+      "opcountersRepl": {
+        "command": 0,
+        "delete": 0,
+        "getmore": 0,
+        "insert": 0,
+        "query": 0,
+        "update": 0
+      },
+      "pid": 3915,
+      "process": "mongod",
+      "recordStats": {
+        "READ__ME_TO_RECOVER_YOUR_DATA": {
+          "accessesNotInMemory": 0,
+          "pageFaultExceptionsThrown": 0
+        },
+        "accessesNotInMemory": 0,
+        "admin": {
+          "accessesNotInMemory": 0,
+          "pageFaultExceptionsThrown": 0
+        },
+        "pageFaultExceptionsThrown": 0
+      },
+      "uptime": 19655141,
+      "uptimeEstimate": 17760355,
+      "uptimeMillis": 19655140375,
+      "version": "2.6.1",
+      "writeBacksQueued": false
+    },
+    "buildinfo": {
+      "storageEngines": [
+        "devnull",
+        "ephemeralForTest",
+        "mmapv1",
+        "wiredTiger"
+      ],
+      "maxBsonObjectSize": 16777216,
+      "ok": 1.0,
+      "bits": 64,
+      "modules": [],
+      "openssl": {
+        "compiled": "OpenSSL 1.0.1e-fips 11 Feb 2013",
+        "running": "OpenSSL 1.0.0-fips 29 Mar 2010"
+      },
+      "javascriptEngine": "mozjs",
+      "version": "3.4.24",
+      "gitVersion": "865b4f6a96d0f5425e39a18337105f33e8db504d",
+      "versionArray": [
+        3,
+        4,
+        24,
+        0
+      ],
+      "debug": false,
+      "buildEnvironment": {
+        "cxxflags": "-Woverloaded-virtual -Wno-maybe-uninitialized -std=c++11",
+        "cc": "/opt/mongodbtoolchain/v2/bin/gcc: gcc (GCC) 5.4.0",
+        "linkflags": "-pthread -Wl,-z,now -rdynamic -Wl,--fatal-warnings -fstack-protector-strong -fuse-ld=gold -Wl,--build-id -Wl,-z,noexecstack -Wl,--warn-execstack -Wl,-z,relro",
+        "distarch": "x86_64",
+        "cxx": "/opt/mongodbtoolchain/v2/bin/g++: g++ (GCC) 5.4.0",
+        "ccflags": "-fno-omit-frame-pointer -fno-strict-aliasing -ggdb -pthread -Wall -Wsign-compare -Wno-unknown-pragmas -Winvalid-pch -Werror -O2 -Wno-unused-local-typedefs -Wno-unused-function -Wno-deprecated-declarations -Wno-unused-but-set-variable -Wno-missing-braces -fstack-protector-strong -fno-builtin-memcmp",
+        "target_arch": "x86_64",
+        "distmod": "amazon",
+        "target_os": "linux"
+      },
+      "sysInfo": "deprecated",
+      "allocator": "tcmalloc"
+    }
+  }
+}

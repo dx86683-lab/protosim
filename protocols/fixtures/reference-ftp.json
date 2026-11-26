@@ -1,0 +1,441 @@
+[
+  {
+    "name": "listing-options",
+    "steps": [
+      ["","220 Welcome to the FTP Server"],
+      ["USER fixture","331 User name ok, password required"],
+      ["PASS lab-only","230 Password ok, continue"],
+      ["MKD tree","257 Directory created"],
+      ["MKD tree/child","257 Directory created"],
+      ["STOR tree/alpha.txt","150 Data transfer starting"],
+      ["STOR tree/.hidden","150 Data transfer starting"],
+      ["STOR tree/with spaces.txt","150 Data transfer starting"],
+      ["STOR tree/café.txt","150 Data transfer starting"],
+      ["STOR tree/-literal","150 Data transfer starting"],
+      ["STOR tree/child/nested.txt","150 Data transfer starting"],
+      ["CWD /tree","250 Directory changed to /tree"],
+      ["LIST -a","150 Opening ASCII mode data connection for file list\r\n226 Closing data connection, sent 359 bytes"],
+      ["LIST -l child","150 Opening ASCII mode data connection for file list\r\n226 Closing data connection, sent 61 bytes"],
+      ["LIST -a /tree","150 Opening ASCII mode data connection for file list\r\n226 Closing data connection, sent 359 bytes"],
+      ["LIST -a alpha.txt","150 Opening ASCII mode data connection for file list\r\n226 Closing data connection, sent 60 bytes"],
+      ["LIST *.txt","150 Opening ASCII mode data connection for file list\r\n226 Closing data connection, sent 0 bytes"],
+      ["NLST -a","150 Opening ASCII mode data connection for file list\r\n226 Closing data connection, sent 65 bytes"],
+      ["NLST -l child","150 Opening ASCII mode data connection for file list\r\n226 Closing data connection, sent 12 bytes"],
+      ["NLST -a alpha.txt","550 -a alpha.txt is not a directory"],
+      ["NLST .hidden","550 .hidden is not a directory"],
+      ["NLST *.txt","550 file does not exist"],
+      ["MLSD -a","150 Opening ASCII mode data connection for file list\r\n226 Closing data connection, sent 299 bytes"],
+      ["MLSD -l","550 file does not exist"],
+      ["MLSD alpha.txt","150 Opening ASCII mode data connection for file list\r\n226 Closing data connection, sent 50 bytes"],
+      ["STAT -a","213 Opening ASCII mode data connection for file list\r\n226 Closing data connection, sent 359 bytes"],
+      ["STAT -l","450 path /tree/-l not found"],
+      ["LIST ./-literal","150 Opening ASCII mode data connection for file list\r\n226 Closing data connection, sent 59 bytes"],
+      ["LIST -a -l child","150 Opening ASCII mode data connection for file list\r\n226 Closing data connection, sent 61 bytes"],
+      ["LIST -- -literal","150 Opening ASCII mode data connection for file list\r\n226 Closing data connection, sent 359 bytes"],
+      ["LIST -a ./-literal","150 Opening ASCII mode data connection for file list\r\n226 Closing data connection, sent 59 bytes"],
+      ["LIST -x with spaces.txt","150 Opening ASCII mode data connection for file list\r\n226 Closing data connection, sent 66 bytes"],
+      ["LIST -a\tchild","150 Opening ASCII mode data connection for file list\r\n226 Closing data connection, sent 0 bytes"],
+      ["LIST -a . ","150 Opening ASCII mode data connection for file list\r\n226 Closing data connection, sent 0 bytes"],
+      ["NLST -- with spaces.txt","550 -- with spaces.txt is not a directory"],
+      ["NLST  -la child","150 Opening ASCII mode data connection for file list\r\n226 Closing data connection, sent 12 bytes"],
+      ["MLSD -a ","550 file does not exist"],
+      ["STAT -a ","450 path /tree/-a  not found"],
+      ["LIST  alpha.txt","150 Opening ASCII mode data connection for file list\r\n226 Closing data connection, sent 60 bytes"],
+      ["LIST  ","150 Opening ASCII mode data connection for file list\r\n226 Closing data connection, sent 359 bytes"],
+      ["LIST \tchild","150 Opening ASCII mode data connection for file list\r\n226 Closing data connection, sent 0 bytes"],
+      ["NLST  alpha.txt","550  alpha.txt is not a directory"],
+      ["NLST -à child","150 Opening ASCII mode data connection for file list\r\n226 Closing data connection, sent 12 bytes"],
+      ["CWD /","250 Directory changed to /"],
+      ["RMD tree","250 Directory deleted"],
+      ["QUIT","221 Goodbye"]
+    ]
+  },
+  {
+    "name": "plain",
+    "steps": [
+      [
+        "",
+        "220 Welcome to the FTP Server"
+      ],
+      [
+        "SYST",
+        "530 not logged in"
+      ],
+      [
+        "AUTH TLS",
+        "550 Action not taken"
+      ],
+      [
+        "USER",
+        "553 action aborted, required param missing"
+      ],
+      [
+        "USER fixture",
+        "331 User name ok, password required"
+      ],
+      [
+        "PASS wrong",
+        "530 Incorrect password, not logged in"
+      ],
+      [
+        "PASS lab-only",
+        "230 Password ok, continue"
+      ],
+      [
+        "SYST",
+        "215 UNIX Type: L8"
+      ],
+      [
+        "OPTS UTF8 ON",
+        "200 UTF8 mode enabled"
+      ],
+      [
+        "TYPE A",
+        "200 Type set to ASCII"
+      ],
+      [
+        "TYPE I",
+        "200 Type set to binary"
+      ],
+      [
+        "TYPE X",
+        "500 Invalid type"
+      ],
+      [
+        "CWD missing",
+        "550 Directory change to /missing failed."
+      ],
+      [
+        "MKD protosim-lab",
+        "257 Directory created"
+      ],
+      [
+        "CWD protosim-lab",
+        "250 Directory changed to /protosim-lab"
+      ],
+      [
+        "PWD",
+        "257 \"/protosim-lab\" is the current directory"
+      ],
+      [
+        "QUIT",
+        "221 Goodbye"
+      ]
+    ]
+  },
+  {
+    "name": "plain-reconnect",
+    "steps": [
+      [
+        "",
+        "220 Welcome to the FTP Server"
+      ],
+      [
+        "USER fixture",
+        "331 User name ok, password required"
+      ],
+      [
+        "PASS lab-only",
+        "230 Password ok, continue"
+      ],
+      [
+        "PWD",
+        "257 \"/\" is the current directory"
+      ],
+      [
+        "CWD /protosim-lab",
+        "250 Directory changed to /protosim-lab"
+      ],
+      [
+        "QUIT",
+        "221 Goodbye"
+      ]
+    ]
+  },
+  {
+    "name": "extended-controls",
+    "steps": [
+      ["", "220 Welcome to the FTP Server"],
+      ["ALLO 64", "202 Obsolete"],
+      ["ALLO", "202 Obsolete"],
+      ["AUTH", "553 action aborted, required param missing"],
+      ["PBSZ", "553 action aborted, required param missing"],
+      ["PROT", "553 action aborted, required param missing"],
+      ["CCC", "553 action aborted, required param missing"],
+      ["CCC fixture", "530 not logged in"],
+      ["STAT", "530 not logged in"],
+      ["MODE", "553 action aborted, required param missing"],
+      ["MODE S", "530 not logged in"],
+      ["STRU", "553 action aborted, required param missing"],
+      ["STRU F", "530 not logged in"],
+      ["XCUP", "530 not logged in"],
+      ["XMKD fixture-alias", "530 not logged in"],
+      ["XRMD fixture-alias", "530 not logged in"],
+      ["LPRT 4,4,127,0,0,1,2,195,80", "530 not logged in"],
+      ["USER fixture", "331 User name ok, password required"],
+      ["PASS lab-only", "230 Password ok, continue"],
+      ["MODE S", "200 OK"],
+      ["MODE s", "200 OK"],
+      ["MODE B", "504 MODE is an obsolete command"],
+      ["MODE C", "504 MODE is an obsolete command"],
+      ["STRU F", "200 OK"],
+      ["STRU f", "200 OK"],
+      ["STRU R", "504 STRU is an obsolete command"],
+      ["STRU P", "504 STRU is an obsolete command"],
+      ["CCC fixture", "550 Action not taken"],
+      ["TYPE I", "200 Type set to binary"],
+      ["STAT", "211  FTP server status:\nVersion 2.0betaConnected to  (2.0beta)\nLogged in fixture\nTYPE: ASCII, FORM: Nonprint; STRUcture: File; transfer MODE: Stream\nNo data connection\r\n211 End of status"],
+      ["STAT text.txt", "212 Opening ASCII mode data connection for file list\r\n226 Closing data connection, sent 59 bytes"],
+      ["XMKD fixture-alias", "257 Directory created"],
+      ["STAT fixture-alias", "213 Opening ASCII mode data connection for file list\r\n226 Closing data connection, sent 0 bytes"],
+      ["XCWD fixture-alias", "250 Directory changed to /fixture-alias"],
+      ["STAT missing", "450 path /fixture-alias/missing not found"],
+      ["XCUP", "250 Directory changed to /"],
+      ["XRMD fixture-alias", "250 Directory deleted"],
+      ["LPRT", "553 action aborted, required param missing"],
+      ["LPRT invalid", "522 Network protocol not supported, use 4"],
+      ["LPRT 4,16,127,0,0,1,2,195,80", "522 Network IP length not supported, use 4"],
+      ["NOOP", "200 OK"],
+      ["QUIT", "221 Goodbye"]
+    ]
+  },
+  {
+    "name": "implicit-tls",
+    "steps": [
+      [
+        "",
+        "220 Welcome to the FTP Server"
+      ],
+      [
+        "PWD",
+        "530 not logged in"
+      ],
+      [
+        "USER fixture",
+        "331 User name ok, password required"
+      ],
+      [
+        "PASS lab-only",
+        "230 Password ok, continue"
+      ],
+      [
+        "PWD",
+        "257 \"/\" is the current directory"
+      ],
+      [
+        "CWD /protosim-lab",
+        "550 Directory change to /protosim-lab failed."
+      ],
+      [
+        "MKD nested",
+        "257 Directory created"
+      ],
+      [
+        "CWD nested",
+        "250 Directory changed to /nested"
+      ],
+      [
+        "CDUP",
+        "250 Directory changed to /"
+      ],
+      [
+        "RMD nested",
+        "250 Directory deleted"
+      ],
+      [
+        "RMD protosim-lab",
+        "550 Directory delete failed: open /protosim-lab: file does not exist"
+      ],
+      [
+        "QUIT",
+        "221 Goodbye"
+      ]
+    ]
+  },
+  {
+    "name": "feature-list",
+    "steps": [
+      [
+        "",
+        "220 Welcome to the FTP Server"
+      ],
+      [
+        "FEAT",
+        "211-Extensions supported:\n UTF8\n CLNT\n MLSD\n LPRT\n EPRT\n EPSV\n\r\n211 END"
+      ],
+      [
+        "QUIT",
+        "221 Goodbye"
+      ]
+    ]
+  },
+  {
+    "name": "login-status",
+    "steps": [
+      [
+        "",
+        "220 Welcome to the FTP Server"
+      ],
+      [
+        "USER fixture",
+        "331 User name ok, password required"
+      ],
+      [
+        "PASS lab-only",
+        "230 Password ok, continue"
+      ],
+      [
+        "USER another",
+        "331 User name ok, password required"
+      ],
+      [
+        "STAT",
+        "211  FTP server status:\nVersion 2.0betaConnected to  (2.0beta)\nLogged in fixture\nTYPE: ASCII, FORM: Nonprint; STRUcture: File; transfer MODE: Stream\nNo data connection\r\n211 End of status"
+      ],
+      [
+        "PASS lab-only",
+        "530 Incorrect password, not logged in"
+      ],
+      [
+        "STAT",
+        "211  FTP server status:\nVersion 2.0betaConnected to  (2.0beta)\nLogged in fixture\nTYPE: ASCII, FORM: Nonprint; STRUcture: File; transfer MODE: Stream\nNo data connection\r\n211 End of status"
+      ],
+      [
+        "USER ",
+        "553 action aborted, required param missing"
+      ],
+      [
+        "PASS lab-only",
+        "530 Incorrect password, not logged in"
+      ],
+      [
+        "STAT",
+        "211  FTP server status:\nVersion 2.0betaConnected to  (2.0beta)\nLogged in fixture\nTYPE: ASCII, FORM: Nonprint; STRUcture: File; transfer MODE: Stream\nNo data connection\r\n211 End of status"
+      ],
+      [
+        "USER fixture",
+        "331 User name ok, password required"
+      ],
+      [
+        "PASS lab-only",
+        "230 Password ok, continue"
+      ],
+      [
+        "QUIT",
+        "221 Goodbye"
+      ]
+    ]
+  },
+  {
+    "name": "control-whitespace",
+    "steps": [
+      [
+        "",
+        "220 Welcome to the FTP Server"
+      ],
+      [
+        "USER  fixture",
+        "331 User name ok, password required"
+      ],
+      [
+        "PASS lab-only",
+        "530 Incorrect password, not logged in"
+      ],
+      [
+        "USER fixture",
+        "331 User name ok, password required"
+      ],
+      [
+        "PASS  lab-only",
+        "530 Incorrect password, not logged in"
+      ],
+      [
+        "PASS lab-only",
+        "230 Password ok, continue"
+      ],
+      [
+        " NOOP ",
+        "500 Command not found"
+      ],
+      [
+        "\tPWD",
+        "500 Command not found"
+      ],
+      [
+        "NOOP ",
+        "200 OK"
+      ],
+      [
+        "TYPE  I",
+        "500 Invalid type"
+      ],
+      [
+        "TYPE I ",
+        "500 Invalid type"
+      ],
+      [
+        "CWD  /",
+        "550 Directory change to /  failed."
+      ],
+      [
+        "OPTS  UTF8 ON",
+        "200 UTF8 mode enabled"
+      ],
+      [
+        "OPTS UTF8\tON",
+        "200 UTF8 mode enabled"
+      ],
+      [
+        "OPTS UTF8 ON extra",
+        "550 Unknow params"
+      ],
+      [
+        "QUIT",
+        "221 Goodbye"
+      ]
+    ]
+  },
+  {
+    "name": "no-data-endpoint",
+    "steps": [
+      ["", "220 Welcome to the FTP Server"],
+      ["USER fixture", "331 User name ok, password required"],
+      ["PASS lab-only", "230 Password ok, continue"],
+      ["RETR text.txt", "150 Data transfer starting 4 bytes"],
+      ["NOOP", "200 OK"],
+      ["REST 4", "350 Start transfer from 4"],
+      ["RETR text.txt", "150 Data transfer starting 0 bytes\r\n226 Closing data connection, sent 0 bytes"],
+      ["REST 8", "350 Start transfer from 8"],
+      ["RETR text.txt", "150 Data transfer starting -4 bytes"],
+      ["NOOP", "200 OK"],
+      ["LIST text.txt", "150 Opening ASCII mode data connection for file list\r\n226 Closing data connection, sent 59 bytes"],
+      ["MKD no-endpoint-dir", "257 Directory created"],
+      ["NLST no-endpoint-dir", "150 Opening ASCII mode data connection for file list\r\n226 Closing data connection, sent 0 bytes"],
+      ["RMD no-endpoint-dir", "250 Directory deleted"],
+      ["NLST ./text.txt", "550 ./text.txt is not a directory"],
+      ["MLSD text.txt", "150 Opening ASCII mode data connection for file list\r\n226 Closing data connection, sent 49 bytes"],
+      ["LIST no-endpoint.txt", "150 Opening ASCII mode data connection for file list\r\n226 Closing data connection, sent 0 bytes"],
+      ["NLST no-endpoint.txt", "550 file does not exist"],
+      ["MLSD no-endpoint.txt", "550 file does not exist"],
+      ["REST 2", "350 Start transfer from 2"],
+      ["STOR text.txt", "150 Data transfer starting"],
+      ["SIZE text.txt", "213 4"],
+      ["REST -2", "350 Start transfer from -2"],
+      ["APPE text.txt", "150 Data transfer starting"],
+      ["SIZE text.txt", "213 4"],
+      ["REST -2", "350 Start transfer from -2"],
+      ["STOR no-endpoint.txt", "150 Data transfer starting\r\n450 error during transfer: open /no-endpoint.txt: file does not exist"],
+      ["SIZE no-endpoint.txt", "450 path no-endpoint.txt not found"],
+      ["REST 8", "350 Start transfer from 8"],
+      ["APPE text.txt", "150 Data transfer starting\r\n450 error during transfer: Offset 8 is beyond file size 4"],
+      ["SIZE text.txt", "213 4"],
+      ["STOR no-endpoint.txt", "150 Data transfer starting"],
+      ["SIZE no-endpoint.txt", "213 0"],
+      ["DELE no-endpoint.txt", "250 File deleted"],
+      ["APPE no-endpoint.txt", "150 Data transfer starting"],
+      ["SIZE no-endpoint.txt", "213 0"],
+      ["DELE no-endpoint.txt", "250 File deleted"],
+      ["QUIT", "221 Goodbye"]
+    ]
+  }
+]

@@ -1,0 +1,66 @@
+[
+  [
+    "",
+    "220 Welcome to the FTP Server"
+  ],
+  [
+    "USER fixture",
+    "331 User name ok, password required"
+  ],
+  [
+    "PASS lab-only",
+    "230 Password ok, continue"
+  ],
+  [
+    "RNTO /ftp-rnto-created",
+    "250 File renamed"
+  ],
+  [
+    "SIZE /ftp-rnto-created",
+    "213 42"
+  ],
+  [
+    "STOR /ftp-rnto-created/child.txt",
+    "150 Data transfer starting"
+  ],
+  [
+    "RNTO /ftp-rnto-created",
+    "250 File renamed"
+  ],
+  [
+    "SIZE /ftp-rnto-created/child.txt",
+    "213 0"
+  ],
+  [
+    "RNFR /ftp-rnto-created/child.txt",
+    "350 Requested file action pending further information."
+  ],
+  [
+    "RNFR /ftp-rnto-missing.txt",
+    "550 Action not taken: file does not exist"
+  ],
+  [
+    "RNTO /ftp-rnto-after-missing",
+    "250 File renamed"
+  ],
+  [
+    "SIZE /ftp-rnto-after-missing",
+    "213 42"
+  ],
+  [
+    "SIZE /ftp-rnto-created/child.txt",
+    "213 0"
+  ],
+  [
+    "RMD /ftp-rnto-created",
+    "250 Directory deleted"
+  ],
+  [
+    "RMD /ftp-rnto-after-missing",
+    "250 Directory deleted"
+  ],
+  [
+    "QUIT",
+    "221 Goodbye"
+  ]
+]

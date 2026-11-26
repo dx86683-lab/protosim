@@ -1,0 +1,865 @@
+[
+  {
+    "client": "subscriber",
+    "open": "mqtt"
+  },
+  {
+    "client": "subscriber",
+    "send": "101700044d5154540400001e000b666978747572652d737562",
+    "receive": "20020000"
+  },
+  {
+    "client": "publisher",
+    "open": "mqtt"
+  },
+  {
+    "client": "publisher",
+    "send": "101700044d5154540402001e000b666978747572652d707562",
+    "receive": "20020100"
+  },
+  {
+    "client": "denied",
+    "open": "auth"
+  },
+  {
+    "client": "denied",
+    "send": "101a00044d5154540402001e000e666978747572652d64656e696564",
+    "receive": "20020105"
+  },
+  {
+    "client": "denied",
+    "receive": "silence"
+  },
+  {
+    "client": "denied",
+    "close": true
+  },
+  {
+    "client": "cross-port",
+    "open": "auth"
+  },
+  {
+    "client": "cross-port",
+    "send": "102d00044d51545404c2001e000d666978747572652d63726f73730007666978747572650009746573742d6f6e6c79",
+    "receive": "20020100"
+  },
+  {
+    "client": "cross-port",
+    "send": "8216000100116c61622f6d7174742f72657461696e656400",
+    "receive": "9003000100"
+  },
+  {
+    "client": "subscriber",
+    "send": "821f0002000a6c61622f6d7174742f2302000d6c61622f6d7174742f6461746100",
+    "receive": "900400020200"
+  },
+  {
+    "client": "subscriber",
+    "send": "8217000900126c61622f6d7174742f232f696e76616c696400",
+    "receive": "9003000980"
+  },
+  {
+    "client": "publisher",
+    "send": "3013000d6c61622f6d7174742f646174617a65726f"
+  },
+  {
+    "client": "subscriber",
+    "receive": "3013000d6c61622f6d7174742f646174617a65726f"
+  },
+  {
+    "client": "subscriber",
+    "receive": "3013000d6c61622f6d7174742f646174617a65726f"
+  },
+  {
+    "client": "publisher",
+    "send": "3214000d6c61622f6d7174742f6461746100046f6e65",
+    "receive": "40020004"
+  },
+  {
+    "client": "subscriber",
+    "receive": "3214000d6c61622f6d7174742f6461746100046f6e65"
+  },
+  {
+    "client": "subscriber",
+    "receive": "3214000d6c61622f6d7174742f6461746100046f6e65"
+  },
+  {
+    "client": "subscriber",
+    "send": "40020004"
+  },
+  {
+    "client": "publisher",
+    "send": "3414000d6c61622f6d7174742f64617461000574776f",
+    "receive": "50020005"
+  },
+  {
+    "client": "subscriber",
+    "receive": "3414000d6c61622f6d7174742f64617461000574776f"
+  },
+  {
+    "client": "subscriber",
+    "receive": "3414000d6c61622f6d7174742f64617461000574776f"
+  },
+  {
+    "client": "publisher",
+    "send": "62020005",
+    "receive": "70020005"
+  },
+  {
+    "client": "subscriber",
+    "send": "50020005",
+    "receive": "62020005"
+  },
+  {
+    "client": "subscriber",
+    "send": "70020005"
+  },
+  {
+    "client": "subscriber",
+    "receive": "silence"
+  },
+  {
+    "client": "subscriber",
+    "send": "a21d0006000a6c61622f6d7174742f23000d6c61622f6d7174742f64617461",
+    "receive": "b0020006"
+  },
+  {
+    "client": "publisher",
+    "send": "3013000d6c61622f6d7174742f646174617a65726f"
+  },
+  {
+    "client": "subscriber",
+    "receive": "silence"
+  },
+  {
+    "client": "publisher",
+    "send": "331900116c61622f6d7174742f72657461696e656400076b656570",
+    "receive": "40020007"
+  },
+  {
+    "client": "cross-port",
+    "receive": "331900116c61622f6d7174742f72657461696e656400076b656570"
+  },
+  {
+    "client": "subscriber",
+    "send": "e000",
+    "receive": "closed"
+  },
+  {
+    "client": "subscriber",
+    "close": true
+  },
+  {
+    "client": "subscriber",
+    "open": "mqtt"
+  },
+  {
+    "client": "subscriber",
+    "send": "101700044d5154540400001e000b666978747572652d737562",
+    "receive": "20020000"
+  },
+  {
+    "client": "subscriber",
+    "send": "8216000800116c61622f6d7174742f72657461696e656400",
+    "receive": "9003000800"
+  },
+  {
+    "client": "subscriber",
+    "receive": "331900116c61622f6d7174742f72657461696e656400076b656570"
+  },
+  {
+    "client": "publisher",
+    "send": "311300116c61622f6d7174742f72657461696e6564"
+  },
+  {
+    "client": "cross-port",
+    "receive": "311300116c61622f6d7174742f72657461696e6564"
+  },
+  {
+    "client": "subscriber",
+    "receive": "311300116c61622f6d7174742f72657461696e6564"
+  },
+  {
+    "client": "cleared",
+    "open": "mqtt"
+  },
+  {
+    "client": "cleared",
+    "send": "101700044d5154540400001e000b666978747572652d636c72",
+    "receive": "20020000"
+  },
+  {
+    "client": "cleared",
+    "send": "8216000800116c61622f6d7174742f72657461696e656400",
+    "receive": "9003000800"
+  },
+  {
+    "client": "cleared",
+    "receive": "silence"
+  },
+  {
+    "client": "cleared",
+    "close": true
+  },
+  {
+    "client": "takeover",
+    "open": "mqtt"
+  },
+  {
+    "client": "takeover",
+    "send": "101700044d5154540402001e000b666978747572652d737562",
+    "receive": "20020100"
+  },
+  {
+    "client": "subscriber",
+    "receive": "closed"
+  },
+  {
+    "client": "subscriber",
+    "close": true
+  },
+  {
+    "client": "takeover",
+    "send": "c000",
+    "receive": "d000"
+  },
+  {
+    "client": "takeover",
+    "close": true
+  },
+  {
+    "client": "publisher",
+    "close": true
+  },
+  {
+    "client": "cross-port",
+    "close": true
+  },
+  {
+    "client": "will-listener",
+    "open": "mqtt"
+  },
+  {
+    "client": "will-listener",
+    "send": "101c00044d5154540402001e0010666978747572652d6c697374656e6572",
+    "receive": "20020100"
+  },
+  {
+    "client": "will-listener",
+    "send": "8218000a001377696c6c2d666978747572652f6e6f7469636500",
+    "receive": "9003000a00"
+  },
+  {
+    "client": "will",
+    "open": "mqtt"
+  },
+  {
+    "client": "will",
+    "send": "103600044d515454040e001e000c666978747572652d77696c6c001377696c6c2d666978747572652f6e6f7469636500076f66666c696e65",
+    "receive": "20020100"
+  },
+  {
+    "client": "will",
+    "close": true
+  },
+  {
+    "client": "will-listener",
+    "receive": "321e001377696c6c2d666978747572652f6e6f7469636500006f66666c696e65"
+  },
+  {
+    "client": "graceful",
+    "open": "mqtt"
+  },
+  {
+    "client": "graceful",
+    "send": "103600044d5154540406001e000d666978747572652d6772616365001377696c6c2d666978747572652f6e6f74696365000669676e6f7265",
+    "receive": "20020100"
+  },
+  {
+    "client": "graceful",
+    "send": "e000",
+    "receive": "closed"
+  },
+  {
+    "client": "graceful",
+    "close": true
+  },
+  {
+    "client": "will-listener",
+    "receive": "301b001377696c6c2d666978747572652f6e6f7469636569676e6f7265"
+  },
+  {
+    "client": "will-listener",
+    "close": true
+  },
+  {
+    "client": "observer",
+    "open": "mqtt"
+  },
+  {
+    "client": "observer",
+    "send": "101c00044d5154540402001e0010666978747572652d6f62736572766572",
+    "receive": "20020100"
+  },
+  {
+    "client": "observer",
+    "send": "8231000b002c245359532f62726f6b65722f636f6e6e656374696f6e2f636c69656e74732f666978747572652d6576656e7400",
+    "receive": "9003000b00"
+  },
+  {
+    "client": "event",
+    "open": "mqtt"
+  },
+  {
+    "client": "event",
+    "send": "101900044d5154540402001e000d666978747572652d6576656e74",
+    "receive": "20020100"
+  },
+  {
+    "client": "observer",
+    "event": "fixture-event",
+    "online": true
+  },
+  {
+    "client": "event",
+    "send": "e000",
+    "receive": "closed"
+  },
+  {
+    "client": "observer",
+    "event": "fixture-event",
+    "online": false
+  },
+  {
+    "client": "event",
+    "close": true
+  },
+  {
+    "client": "observer",
+    "close": true
+  },
+  {
+    "client": "retained-pub",
+    "open": "mqtt"
+  },
+  {
+    "client": "retained-pub",
+    "send": "101800044d5154540402001e000c72657461696e65642d707562",
+    "receive": "20020100"
+  },
+  {
+    "client": "retained-sub",
+    "open": "mqtt"
+  },
+  {
+    "client": "retained-sub",
+    "send": "101800044d5154540402001e000c72657461696e65642d737562",
+    "receive": "20020100"
+  },
+  {
+    "client": "retained-observer",
+    "open": "mqtt"
+  },
+  {
+    "client": "retained-observer",
+    "send": "101d00044d5154540402001e001172657461696e65642d6f62736572766572",
+    "receive": "20020100"
+  },
+  {
+    "client": "retained-wild",
+    "open": "mqtt"
+  },
+  {
+    "client": "retained-wild",
+    "send": "101900044d5154540402001e000d72657461696e65642d77696c64",
+    "receive": "20020100"
+  },
+  {
+    "client": "retained-pub",
+    "send": "330d00087265706c61792f7a00197a",
+    "receive": "40020019"
+  },
+  {
+    "client": "retained-pub",
+    "send": "c000",
+    "receive": "d000"
+  },
+  {
+    "client": "retained-pub",
+    "send": "3313000a7265706c61792f6f6e6500196669727374",
+    "receive": "40020019"
+  },
+  {
+    "client": "retained-pub",
+    "send": "c000",
+    "receive": "d000"
+  },
+  {
+    "client": "retained-pub",
+    "send": "3314000a7265706c61792f74776f00197365636f6e64",
+    "receive": "40020019"
+  },
+  {
+    "client": "retained-pub",
+    "send": "c000",
+    "receive": "d000"
+  },
+  {
+    "client": "retained-pub",
+    "send": "331000067265706c61790019706172656e74",
+    "receive": "40020019"
+  },
+  {
+    "client": "retained-pub",
+    "send": "c000",
+    "receive": "d000"
+  },
+  {
+    "client": "retained-pub",
+    "send": "3317000f7265706c61792f6f6e652f64656570001964656570",
+    "receive": "40020019"
+  },
+  {
+    "client": "retained-pub",
+    "send": "c000",
+    "receive": "d000"
+  },
+  {
+    "client": "retained-observer",
+    "send": "820f0011000a7265706c61792f6f6e6500",
+    "receive": "9003001100"
+  },
+  {
+    "client": "retained-observer",
+    "receive": "3313000a7265706c61792f6f6e6500196669727374"
+  },
+  {
+    "client": "retained-wild",
+    "send": "820d001100087265706c61792f2b00",
+    "receive": "9003001100"
+  },
+  {
+    "client": "retained-wild",
+    "receive_unordered": [
+      "330d00087265706c61792f7a00197a",
+      "3313000a7265706c61792f6f6e6500196669727374",
+      "3314000a7265706c61792f74776f00197365636f6e64"
+    ]
+  },
+  {
+    "client": "retained-wild",
+    "send": "820d001100087265706c61792f2300",
+    "receive": "9003001100"
+  },
+  {
+    "client": "retained-wild",
+    "receive_unordered": [
+      "330d00087265706c61792f7a00197a",
+      "3313000a7265706c61792f6f6e6500196669727374",
+      "3314000a7265706c61792f74776f00197365636f6e64"
+    ]
+  },
+  {
+    "client": "retained-wild",
+    "receive_unordered": [
+      "331000067265706c61790019706172656e74",
+      "330d00087265706c61792f7a00197a",
+      "3313000a7265706c61792f6f6e6500196669727374",
+      "3314000a7265706c61792f74776f00197365636f6e64",
+      "3317000f7265706c61792f6f6e652f64656570001964656570"
+    ]
+  },
+  {
+    "client": "retained-wild",
+    "receive": "silence"
+  },
+  {
+    "client": "retained-wild",
+    "close": true
+  },
+  {
+    "client": "retained-sub",
+    "send": "821c0011000a7265706c61792f6f6e6500000a7265706c61792f6f6e6500",
+    "receive": "900400110000"
+  },
+  {
+    "client": "retained-sub",
+    "receive": "3313000a7265706c61792f6f6e6500196669727374"
+  },
+  {
+    "client": "retained-sub",
+    "receive": "3313000a7265706c61792f6f6e6500196669727374"
+  },
+  {
+    "client": "retained-sub",
+    "receive": "silence"
+  },
+  {
+    "client": "retained-observer",
+    "receive": "silence"
+  },
+  {
+    "client": "retained-sub",
+    "send": "820f0011000a7265706c61792f74776f00",
+    "receive": "9003001100"
+  },
+  {
+    "client": "retained-sub",
+    "receive": "3313000a7265706c61792f6f6e6500196669727374"
+  },
+  {
+    "client": "retained-sub",
+    "receive": "3313000a7265706c61792f6f6e6500196669727374"
+  },
+  {
+    "client": "retained-sub",
+    "receive": "3314000a7265706c61792f74776f00197365636f6e64"
+  },
+  {
+    "client": "retained-sub",
+    "send": "82130011000e7265706c61792f6d697373696e6700",
+    "receive": "9003001100"
+  },
+  {
+    "client": "retained-sub",
+    "receive": "3313000a7265706c61792f6f6e6500196669727374"
+  },
+  {
+    "client": "retained-sub",
+    "receive": "3313000a7265706c61792f6f6e6500196669727374"
+  },
+  {
+    "client": "retained-sub",
+    "receive": "3314000a7265706c61792f74776f00197365636f6e64"
+  },
+  {
+    "client": "retained-sub",
+    "send": "82110011000c7265706c61792f232f62616400",
+    "receive": "9003001180"
+  },
+  {
+    "client": "retained-sub",
+    "receive": "3313000a7265706c61792f6f6e6500196669727374"
+  },
+  {
+    "client": "retained-sub",
+    "receive": "3313000a7265706c61792f6f6e6500196669727374"
+  },
+  {
+    "client": "retained-sub",
+    "receive": "3314000a7265706c61792f74776f00197365636f6e64"
+  },
+  {
+    "client": "retained-pub",
+    "send": "3010000a7265706c61792f6f6e656c697665"
+  },
+  {
+    "client": "retained-sub",
+    "receive": "3010000a7265706c61792f6f6e656c697665"
+  },
+  {
+    "client": "retained-sub",
+    "receive": "silence"
+  },
+  {
+    "client": "retained-observer",
+    "receive": "3010000a7265706c61792f6f6e656c697665"
+  },
+  {
+    "client": "retained-sub",
+    "send": "a20e0039000a7265706c61792f6f6e65",
+    "receive": "b0020039"
+  },
+  {
+    "client": "retained-pub",
+    "send": "301a000a7265706c61792f6f6e656e6f742d73756273637269626564"
+  },
+  {
+    "client": "retained-observer",
+    "receive": "301a000a7265706c61792f6f6e656e6f742d73756273637269626564"
+  },
+  {
+    "client": "retained-sub",
+    "receive": "silence"
+  },
+  {
+    "client": "retained-sub",
+    "send": "82110011000c7265706c61792f6e6576657200",
+    "receive": "9003001100"
+  },
+  {
+    "client": "retained-sub",
+    "receive": "3313000a7265706c61792f6f6e6500196669727374"
+  },
+  {
+    "client": "retained-sub",
+    "receive": "3313000a7265706c61792f6f6e6500196669727374"
+  },
+  {
+    "client": "retained-sub",
+    "receive": "3314000a7265706c61792f74776f00197365636f6e64"
+  },
+  {
+    "client": "retained-pub",
+    "send": "3315000a7265706c61792f6f6e65001975706461746564",
+    "receive": "40020019"
+  },
+  {
+    "client": "retained-pub",
+    "send": "c000",
+    "receive": "d000"
+  },
+  {
+    "client": "retained-observer",
+    "receive": "3315000a7265706c61792f6f6e65001975706461746564"
+  },
+  {
+    "client": "retained-sub",
+    "receive": "silence"
+  },
+  {
+    "client": "retained-sub",
+    "send": "820f0011000a7265706c61792f6f6e6500",
+    "receive": "9003001100"
+  },
+  {
+    "client": "retained-sub",
+    "receive": "3313000a7265706c61792f6f6e6500196669727374"
+  },
+  {
+    "client": "retained-sub",
+    "receive": "3313000a7265706c61792f6f6e6500196669727374"
+  },
+  {
+    "client": "retained-sub",
+    "receive": "3314000a7265706c61792f74776f00197365636f6e64"
+  },
+  {
+    "client": "retained-sub",
+    "receive": "3315000a7265706c61792f6f6e65001975706461746564"
+  },
+  {
+    "client": "retained-observer",
+    "receive": "silence"
+  },
+  {
+    "client": "retained-pub",
+    "send": "330e000a7265706c61792f6f6e650019",
+    "receive": "40020019"
+  },
+  {
+    "client": "retained-pub",
+    "send": "c000",
+    "receive": "d000"
+  },
+  {
+    "client": "retained-sub",
+    "receive": "330e000a7265706c61792f6f6e650019"
+  },
+  {
+    "client": "retained-observer",
+    "receive": "330e000a7265706c61792f6f6e650019"
+  },
+  {
+    "client": "retained-sub",
+    "send": "82120011000d7265706c61792f616273656e7400",
+    "receive": "9003001100"
+  },
+  {
+    "client": "retained-sub",
+    "receive": "3313000a7265706c61792f6f6e6500196669727374"
+  },
+  {
+    "client": "retained-sub",
+    "receive": "3313000a7265706c61792f6f6e6500196669727374"
+  },
+  {
+    "client": "retained-sub",
+    "receive": "3314000a7265706c61792f74776f00197365636f6e64"
+  },
+  {
+    "client": "retained-sub",
+    "receive": "3315000a7265706c61792f6f6e65001975706461746564"
+  },
+  {
+    "client": "retained-sub",
+    "receive": "silence"
+  },
+  {
+    "client": "retained-fresh",
+    "open": "mqtt"
+  },
+  {
+    "client": "retained-fresh",
+    "send": "101a00044d5154540402001e000e72657461696e65642d6672657368",
+    "receive": "20020100"
+  },
+  {
+    "client": "retained-fresh",
+    "send": "820f0011000a7265706c61792f6f6e6500",
+    "receive": "9003001100"
+  },
+  {
+    "client": "retained-fresh",
+    "receive": "silence"
+  },
+  {
+    "client": "retained-fresh",
+    "close": true
+  },
+  {
+    "client": "retained-sub",
+    "close": true
+  },
+  {
+    "client": "retained-observer",
+    "close": true
+  },
+  {
+    "client": "retained-pub",
+    "close": true
+  },
+  {
+    "client": "dupe-observer",
+    "open": "mqtt"
+  },
+  {
+    "client": "dupe-observer",
+    "send": "101900044d51545404020000000d647570652d6f62736572766572",
+    "receive": "20020100"
+  },
+  {
+    "client": "dupe-observer",
+    "send": "82340001002f245359532f62726f6b65722f636f6e6e656374696f6e2f636c69656e74732f666978747572652d74616b656f76657200",
+    "receive": "9003000100"
+  },
+  {
+    "client": "dupe-old",
+    "open": "mqtt"
+  },
+  {
+    "client": "dupe-old",
+    "send": "101c00044d515454040000000010666978747572652d74616b656f766572",
+    "receive": "20020000"
+  },
+  {
+    "client": "dupe-observer",
+    "event": "fixture-takeover",
+    "online": true
+  },
+  {
+    "client": "dupe-old",
+    "send": "821c0001001773796e7468657469632f6d7174742f74616b656f76657200",
+    "receive": "9003000100"
+  },
+  {
+    "client": "dupe-cross",
+    "open": "auth"
+  },
+  {
+    "client": "dupe-cross",
+    "send": "103000044d51545404c200000010666978747572652d74616b656f7665720007666978747572650009746573742d6f6e6c79",
+    "receive": "20020100"
+  },
+  {
+    "client": "dupe-observer",
+    "event": "fixture-takeover",
+    "online": true
+  },
+  {
+    "client": "dupe-old",
+    "send": "c000",
+    "receive": "d000"
+  },
+  {
+    "client": "dupe-observer",
+    "send": "3220001773796e7468657469632f6d7174742f74616b656f76657200077072696f72",
+    "receive": "40020007"
+  },
+  {
+    "client": "dupe-old",
+    "receive": "3220001773796e7468657469632f6d7174742f74616b656f76657200077072696f72"
+  },
+  {
+    "client": "dupe-cross",
+    "receive": "silence"
+  },
+  {
+    "client": "dupe-cross",
+    "send": "821c0001001773796e7468657469632f6d7174742f74616b656f76657200",
+    "receive": "9003000100"
+  },
+  {
+    "client": "dupe-observer",
+    "send": "321f001773796e7468657469632f6d7174742f74616b656f7665720007626f7468",
+    "receive": "40020007"
+  },
+  {
+    "client": "dupe-old",
+    "receive": "321f001773796e7468657469632f6d7174742f74616b656f7665720007626f7468"
+  },
+  {
+    "client": "dupe-cross",
+    "receive": "321f001773796e7468657469632f6d7174742f74616b656f7665720007626f7468"
+  },
+  {
+    "client": "dupe-cross",
+    "send": "e000",
+    "receive": "closed"
+  },
+  {
+    "client": "dupe-observer",
+    "event": "fixture-takeover",
+    "online": false
+  },
+  {
+    "client": "dupe-observer",
+    "send": "3226001773796e7468657469632f6d7174742f74616b656f76657200077072696f7220616761696e",
+    "receive": "40020007"
+  },
+  {
+    "client": "dupe-old",
+    "receive": "3226001773796e7468657469632f6d7174742f74616b656f76657200077072696f7220616761696e"
+  },
+  {
+    "client": "dupe-new",
+    "open": "mqtt"
+  },
+  {
+    "client": "dupe-new",
+    "send": "101c00044d515454040200000010666978747572652d74616b656f766572",
+    "receive": "20020100"
+  },
+  {
+    "client": "dupe-observer",
+    "event": "fixture-takeover",
+    "online": false
+  },
+  {
+    "client": "dupe-observer",
+    "event": "fixture-takeover",
+    "online": true
+  },
+  {
+    "client": "dupe-old",
+    "receive": "closed"
+  },
+  {
+    "client": "dupe-new",
+    "receive": "silence"
+  },
+  {
+    "client": "dupe-new",
+    "send": "e000",
+    "receive": "closed"
+  },
+  {
+    "client": "dupe-observer",
+    "event": "fixture-takeover",
+    "online": false
+  },
+  {
+    "client": "dupe-observer",
+    "close": true
+  }
+]

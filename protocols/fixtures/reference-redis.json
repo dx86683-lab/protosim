@@ -1,0 +1,2087 @@
+[
+  {
+    "name": "authenticated",
+    "steps": [
+      [
+        [
+          ""
+        ],
+        "-NOAUTH Authentication required."
+      ],
+      [
+        [
+          "PING"
+        ],
+        "-NOAUTH Authentication required."
+      ],
+      [
+        [
+          "AUTH"
+        ],
+        "-ERR syntax error"
+      ],
+      [
+        [
+          "AUTH",
+          "lab-only"
+        ],
+        "-WRONGPASS invalid username-password pair or user is disabled."
+      ],
+      [
+        [
+          "AUTH",
+          "fixture",
+          "lab-only"
+        ],
+        "+OK"
+      ],
+      [
+        [
+          ""
+        ],
+        ""
+      ],
+      [
+        [
+          "PING",
+          "probe"
+        ],
+        "+PONG"
+      ],
+      [
+        [
+          "ECHO",
+          "lab"
+        ],
+        "-ERR unknown command 'echo'"
+      ],
+      [
+        [
+          "SET",
+          "protosim-fixture",
+          "value"
+        ],
+        "+OK"
+      ],
+      [
+        [
+          "SET",
+          "protosim-fixture",
+          "replacement",
+          "NX"
+        ],
+        "+OK"
+      ],
+      [
+        [
+          "SELECT",
+          "1"
+        ],
+        "+OK"
+      ],
+      [
+        [
+          "GET",
+          "protosim-fixture"
+        ],
+        "+replacement"
+      ],
+      [
+        [
+          "EXISTS",
+          "protosim-fixture",
+          "missing"
+        ],
+        "+(integer) 1"
+      ],
+      [
+        [
+          "GET",
+          "missing"
+        ],
+        "+(nil)"
+      ],
+      [
+        [
+          "AUTH",
+          "wrong"
+        ],
+        "-WRONGPASS invalid username-password pair or user is disabled."
+      ],
+      [
+        [
+          "PING"
+        ],
+        "+PONG"
+      ],
+      [
+        [
+          "QUIT"
+        ],
+        "+OK"
+      ]
+    ]
+  },
+  {
+    "name": "second-binding",
+    "steps": [
+      [
+        [
+          "PING"
+        ],
+        "+PONG"
+      ],
+      [
+        [
+          "GET",
+          "protosim-fixture"
+        ],
+        "+replacement"
+      ],
+      [
+        [
+          "DEL",
+          "protosim-fixture",
+          "missing"
+        ],
+        "+(integer) 1"
+      ],
+      [
+        [
+          "DEL",
+          "missing"
+        ],
+        "+(integer) 1"
+      ],
+      [
+        [
+          "GET",
+          "protosim-fixture"
+        ],
+        "+(nil)"
+      ],
+      [
+        [
+          "DBSIZE"
+        ],
+        "+(integer) 0"
+      ],
+      [
+        [
+          "QUIT"
+        ],
+        "+OK"
+      ]
+    ]
+  },
+  {
+    "name": "info-default",
+    "steps": [
+      [
+        [
+          "INFO"
+        ],
+        {
+          "length": 2171,
+          "bulk_sha256": "cd6cecb2aad2d1bcd2ec295ed236cd49cd496a1cf854e4e4602c989684dfd4d7"
+        }
+      ],
+      [
+        [
+          "INFO",
+          "server"
+        ],
+        {
+          "length": 2171,
+          "bulk_sha256": "cd6cecb2aad2d1bcd2ec295ed236cd49cd496a1cf854e4e4602c989684dfd4d7"
+        }
+      ],
+      [
+        [
+          "INFO",
+          "Server"
+        ],
+        {
+          "length": 2171,
+          "bulk_sha256": "cd6cecb2aad2d1bcd2ec295ed236cd49cd496a1cf854e4e4602c989684dfd4d7"
+        }
+      ],
+      [
+        [
+          "INFO",
+          "clients"
+        ],
+        {
+          "length": 2171,
+          "bulk_sha256": "cd6cecb2aad2d1bcd2ec295ed236cd49cd496a1cf854e4e4602c989684dfd4d7"
+        }
+      ],
+      [
+        [
+          "INFO",
+          "memory"
+        ],
+        {
+          "length": 2171,
+          "bulk_sha256": "cd6cecb2aad2d1bcd2ec295ed236cd49cd496a1cf854e4e4602c989684dfd4d7"
+        }
+      ],
+      [
+        [
+          "INFO",
+          "persistence"
+        ],
+        {
+          "length": 2171,
+          "bulk_sha256": "cd6cecb2aad2d1bcd2ec295ed236cd49cd496a1cf854e4e4602c989684dfd4d7"
+        }
+      ],
+      [
+        [
+          "INFO",
+          "stats"
+        ],
+        {
+          "length": 2171,
+          "bulk_sha256": "cd6cecb2aad2d1bcd2ec295ed236cd49cd496a1cf854e4e4602c989684dfd4d7"
+        }
+      ],
+      [
+        [
+          "INFO",
+          "replication"
+        ],
+        {
+          "length": 2171,
+          "bulk_sha256": "cd6cecb2aad2d1bcd2ec295ed236cd49cd496a1cf854e4e4602c989684dfd4d7"
+        }
+      ],
+      [
+        [
+          "INFO",
+          "cpu"
+        ],
+        {
+          "length": 2171,
+          "bulk_sha256": "cd6cecb2aad2d1bcd2ec295ed236cd49cd496a1cf854e4e4602c989684dfd4d7"
+        }
+      ],
+      [
+        [
+          "INFO",
+          "cluster"
+        ],
+        {
+          "length": 2171,
+          "bulk_sha256": "cd6cecb2aad2d1bcd2ec295ed236cd49cd496a1cf854e4e4602c989684dfd4d7"
+        }
+      ],
+      [
+        [
+          "INFO",
+          "keyspace"
+        ],
+        {
+          "length": 2171,
+          "bulk_sha256": "cd6cecb2aad2d1bcd2ec295ed236cd49cd496a1cf854e4e4602c989684dfd4d7"
+        }
+      ],
+      [
+        [
+          "INFO",
+          "commandstats"
+        ],
+        {
+          "length": 2171,
+          "bulk_sha256": "cd6cecb2aad2d1bcd2ec295ed236cd49cd496a1cf854e4e4602c989684dfd4d7"
+        }
+      ],
+      [
+        [
+          "INFO",
+          "all"
+        ],
+        {
+          "length": 2171,
+          "bulk_sha256": "cd6cecb2aad2d1bcd2ec295ed236cd49cd496a1cf854e4e4602c989684dfd4d7"
+        }
+      ],
+      [
+        [
+          "INFO",
+          "default"
+        ],
+        {
+          "length": 2171,
+          "bulk_sha256": "cd6cecb2aad2d1bcd2ec295ed236cd49cd496a1cf854e4e4602c989684dfd4d7"
+        }
+      ],
+      [
+        [
+          "INFO",
+          "unknown"
+        ],
+        {
+          "length": 2171,
+          "bulk_sha256": "cd6cecb2aad2d1bcd2ec295ed236cd49cd496a1cf854e4e4602c989684dfd4d7"
+        }
+      ],
+      [
+        [
+          "INFO",
+          "server",
+          "clients"
+        ],
+        {
+          "length": 2171,
+          "bulk_sha256": "cd6cecb2aad2d1bcd2ec295ed236cd49cd496a1cf854e4e4602c989684dfd4d7"
+        }
+      ],
+      [
+        [
+          "CONFIG",
+          "GET",
+          "maxmemory"
+        ],
+        "-ERR unknown command 'config'"
+      ],
+      [
+        [
+          "CONFIG",
+          "GET",
+          "databases"
+        ],
+        "-ERR unknown command 'config'"
+      ],
+      [
+        [
+          "CONFIG",
+          "GET",
+          "*"
+        ],
+        "-ERR unknown command 'config'"
+      ],
+      [
+        [
+          "CLIENT",
+          "ID"
+        ],
+        "-ERR unknown command 'client'"
+      ],
+      [
+        [
+          "CLIENT",
+          "GETNAME"
+        ],
+        "-ERR unknown command 'client'"
+      ],
+      [
+        [
+          "HELLO",
+          "2"
+        ],
+        "-ERR unknown command 'hello'"
+      ],
+      [
+        [
+          "HELLO",
+          "3"
+        ],
+        "-ERR unknown command 'hello'"
+      ],
+      [
+        [
+          "COMMAND",
+          "COUNT"
+        ],
+        "-ERR unknown command 'command'"
+      ],
+      [
+        [
+          "LASTSAVE"
+        ],
+        "+OK"
+      ]
+    ]
+  },
+  {
+    "name": "info-custom",
+    "listener": "custom",
+    "steps": [
+      [
+        [
+          "KEYS",
+          "*"
+        ],
+        "-NOAUTH Authentication required."
+      ],
+      [
+        [
+          "INFO"
+        ],
+        "-NOAUTH Authentication required."
+      ],
+      [
+        [
+          "CONFIG",
+          "GET",
+          "maxmemory"
+        ],
+        "-ERR unknown command 'config'"
+      ],
+      [
+        [
+          "LASTSAVE"
+        ],
+        "-NOAUTH Authentication required."
+      ],
+      [
+        [
+          "AUTH",
+          "fixture",
+          "lab-only"
+        ],
+        "+OK"
+      ],
+      [
+        [
+          "INFO"
+        ],
+        {
+          "length": 2171,
+          "bulk_sha256": "062a86c5b2aba2971c59b3ab406a447e069f7d14506642f540b2b75100b11fcb"
+        }
+      ],
+      [
+        [
+          "INFO",
+          "server"
+        ],
+        {
+          "length": 2171,
+          "bulk_sha256": "062a86c5b2aba2971c59b3ab406a447e069f7d14506642f540b2b75100b11fcb"
+        }
+      ],
+      [
+        [
+          "INFO",
+          "Server"
+        ],
+        {
+          "length": 2171,
+          "bulk_sha256": "062a86c5b2aba2971c59b3ab406a447e069f7d14506642f540b2b75100b11fcb"
+        }
+      ],
+      [
+        [
+          "INFO",
+          "clients"
+        ],
+        {
+          "length": 2171,
+          "bulk_sha256": "062a86c5b2aba2971c59b3ab406a447e069f7d14506642f540b2b75100b11fcb"
+        }
+      ],
+      [
+        [
+          "INFO",
+          "memory"
+        ],
+        {
+          "length": 2171,
+          "bulk_sha256": "062a86c5b2aba2971c59b3ab406a447e069f7d14506642f540b2b75100b11fcb"
+        }
+      ],
+      [
+        [
+          "INFO",
+          "persistence"
+        ],
+        {
+          "length": 2171,
+          "bulk_sha256": "062a86c5b2aba2971c59b3ab406a447e069f7d14506642f540b2b75100b11fcb"
+        }
+      ],
+      [
+        [
+          "INFO",
+          "stats"
+        ],
+        {
+          "length": 2171,
+          "bulk_sha256": "062a86c5b2aba2971c59b3ab406a447e069f7d14506642f540b2b75100b11fcb"
+        }
+      ],
+      [
+        [
+          "INFO",
+          "replication"
+        ],
+        {
+          "length": 2171,
+          "bulk_sha256": "062a86c5b2aba2971c59b3ab406a447e069f7d14506642f540b2b75100b11fcb"
+        }
+      ],
+      [
+        [
+          "INFO",
+          "cpu"
+        ],
+        {
+          "length": 2171,
+          "bulk_sha256": "062a86c5b2aba2971c59b3ab406a447e069f7d14506642f540b2b75100b11fcb"
+        }
+      ],
+      [
+        [
+          "INFO",
+          "cluster"
+        ],
+        {
+          "length": 2171,
+          "bulk_sha256": "062a86c5b2aba2971c59b3ab406a447e069f7d14506642f540b2b75100b11fcb"
+        }
+      ],
+      [
+        [
+          "INFO",
+          "keyspace"
+        ],
+        {
+          "length": 2171,
+          "bulk_sha256": "062a86c5b2aba2971c59b3ab406a447e069f7d14506642f540b2b75100b11fcb"
+        }
+      ],
+      [
+        [
+          "INFO",
+          "commandstats"
+        ],
+        {
+          "length": 2171,
+          "bulk_sha256": "062a86c5b2aba2971c59b3ab406a447e069f7d14506642f540b2b75100b11fcb"
+        }
+      ],
+      [
+        [
+          "INFO",
+          "all"
+        ],
+        {
+          "length": 2171,
+          "bulk_sha256": "062a86c5b2aba2971c59b3ab406a447e069f7d14506642f540b2b75100b11fcb"
+        }
+      ],
+      [
+        [
+          "INFO",
+          "default"
+        ],
+        {
+          "length": 2171,
+          "bulk_sha256": "062a86c5b2aba2971c59b3ab406a447e069f7d14506642f540b2b75100b11fcb"
+        }
+      ],
+      [
+        [
+          "INFO",
+          "unknown"
+        ],
+        {
+          "length": 2171,
+          "bulk_sha256": "062a86c5b2aba2971c59b3ab406a447e069f7d14506642f540b2b75100b11fcb"
+        }
+      ],
+      [
+        [
+          "INFO",
+          "server",
+          "clients"
+        ],
+        {
+          "length": 2171,
+          "bulk_sha256": "062a86c5b2aba2971c59b3ab406a447e069f7d14506642f540b2b75100b11fcb"
+        }
+      ],
+      [
+        [
+          "LASTSAVE"
+        ],
+        "+OK"
+      ],
+      [
+        [
+          "INFO",
+          "keyspace"
+        ],
+        {
+          "length": 2171,
+          "bulk_sha256": "062a86c5b2aba2971c59b3ab406a447e069f7d14506642f540b2b75100b11fcb"
+        }
+      ],
+      [
+        [
+          "SET",
+          "protosim-redis-probe",
+          "fixture"
+        ],
+        "+OK"
+      ],
+      [
+        [
+          "INFO",
+          "keyspace"
+        ],
+        {
+          "length": 2171,
+          "bulk_sha256": "062a86c5b2aba2971c59b3ab406a447e069f7d14506642f540b2b75100b11fcb"
+        }
+      ],
+      [
+        [
+          "INFO",
+          "stats"
+        ],
+        {
+          "length": 2171,
+          "bulk_sha256": "062a86c5b2aba2971c59b3ab406a447e069f7d14506642f540b2b75100b11fcb"
+        }
+      ],
+      [
+        [
+          "INFO",
+          "clients"
+        ],
+        {
+          "length": 2171,
+          "bulk_sha256": "062a86c5b2aba2971c59b3ab406a447e069f7d14506642f540b2b75100b11fcb"
+        }
+      ],
+      [
+        [
+          "INFO",
+          "server"
+        ],
+        {
+          "length": 2171,
+          "bulk_sha256": "062a86c5b2aba2971c59b3ab406a447e069f7d14506642f540b2b75100b11fcb"
+        }
+      ],
+      [
+        [
+          "INFO",
+          "all"
+        ],
+        {
+          "length": 2171,
+          "bulk_sha256": "062a86c5b2aba2971c59b3ab406a447e069f7d14506642f540b2b75100b11fcb"
+        }
+      ],
+      [
+        [
+          "DEL",
+          "protosim-redis-probe"
+        ],
+        "+(integer) 1"
+      ],
+      [
+        [
+          "INFO",
+          "keyspace"
+        ],
+        {
+          "length": 2171,
+          "bulk_sha256": "062a86c5b2aba2971c59b3ab406a447e069f7d14506642f540b2b75100b11fcb"
+        }
+      ]
+    ]
+  },
+  {
+    "name": "keys",
+    "steps": [
+      [
+        [
+          "KEYS",
+          "*"
+        ],
+        {
+          "keys": []
+        }
+      ],
+      [
+        [
+          "KEYS"
+        ],
+        "-ERR wrong number of arguments for 'KEYS' command"
+      ],
+      [
+        [
+          "SET",
+          "redis-k1",
+          "value-01"
+        ],
+        "+OK"
+      ],
+      [
+        [
+          "SET",
+          "redis-k2",
+          "value-02"
+        ],
+        "+OK"
+      ],
+      [
+        [
+          "EXISTS",
+          "redis-k1",
+          "redis-k2"
+        ],
+        "+(integer) 1"
+      ],
+      [
+        [
+          "EXISTS",
+          "missing",
+          "redis-k2"
+        ],
+        "+(integer) 0"
+      ],
+      [
+        [
+          "EXISTS",
+          "redis-k2",
+          "redis-k2"
+        ],
+        "+(integer) 1"
+      ],
+      [
+        [
+          "DEL",
+          "missing",
+          "redis-k2"
+        ],
+        "+(integer) 1"
+      ],
+      [
+        [
+          "GET",
+          "redis-k2"
+        ],
+        "+value-02"
+      ],
+      [
+        [
+          "KEYS",
+          "*"
+        ],
+        {
+          "keys": [
+            "redis-k1",
+            "redis-k2"
+          ]
+        }
+      ],
+      [
+        [
+          "KEYS",
+          "redis-k1"
+        ],
+        {
+          "keys": [
+            "redis-k1"
+          ]
+        }
+      ],
+      [
+        [
+          "KEYS",
+          "redis-*"
+        ],
+        "+(empty array)"
+      ],
+      [
+        [
+          "KEYS",
+          "missing"
+        ],
+        "+(empty array)"
+      ],
+      [
+        [
+          "KEYS",
+          "*",
+          "extra"
+        ],
+        "-ERR wrong number of arguments for 'KEYS' command"
+      ],
+      [
+        [
+          "DEL",
+          "redis-k1",
+          "redis-k2"
+        ],
+        "+(integer) 1"
+      ],
+      [
+        [
+          "KEYS",
+          "*"
+        ],
+        {
+          "keys": [
+            "redis-k2"
+          ]
+        }
+      ],
+      [
+        [
+          "DEL",
+          "redis-k2"
+        ],
+        "+(integer) 1"
+      ],
+      [
+        [
+          "KEYS",
+          "*"
+        ],
+        {
+          "keys": []
+        }
+      ]
+    ]
+  },
+  {
+    "name": "empty-command",
+    "steps": [
+      [
+        [
+          ""
+        ],
+        ""
+      ],
+      [
+        [
+          "",
+          "arg"
+        ],
+        ""
+      ],
+      [
+        [
+          "PING"
+        ],
+        "+PONG"
+      ]
+    ]
+  },
+  {
+    "name": "blank-inline",
+    "steps": [
+      [
+        "\r\n",
+        {
+          "closed": true
+        }
+      ]
+    ]
+  },
+  {
+    "name": "whitespace-inline",
+    "steps": [
+      [
+        " \t \r\n",
+        {
+          "closed": true
+        }
+      ]
+    ]
+  },
+  {
+    "name": "inline-separators",
+    "steps": [
+      [
+        "  PING\r\n",
+        "+PONG"
+      ],
+      [
+        "PING\n",
+        "+PONG"
+      ],
+      [
+        "\tPING\tcheck\r\n",
+        "+PONG"
+      ]
+    ]
+  },
+  {
+    "name": "empty-array",
+    "steps": [
+      [
+        "*0\r\n",
+        {
+          "closed": true
+        }
+      ]
+    ]
+  },
+  {
+    "name": "persistence-acknowledgements",
+    "steps": [
+      [
+        [
+          "SET",
+          "redis-flush-fixture"
+        ],
+        "-ERR wrong number of arguments for 'SET' command"
+      ],
+      [
+        "gEt\r\n",
+        "-ERR wrong number of arguments for 'gEt' command"
+      ],
+      [
+        [
+          "sEt",
+          "redis-flush-fixture"
+        ],
+        "-ERR wrong number of arguments for 'sEt' command"
+      ],
+      [
+        [
+          "KeYs"
+        ],
+        "-ERR wrong number of arguments for 'KeYs' command"
+      ],
+      [
+        [
+          "dEl"
+        ],
+        "-ERR wrong number of arguments for 'dEl' command"
+      ],
+      [
+        [
+          "eXiStS"
+        ],
+        "-ERR wrong number of arguments for 'eXiStS' command"
+      ],
+      [
+        [
+          "mGeT",
+          "redis-flush-fixture"
+        ],
+        "-ERR unknown command 'mget'"
+      ],
+      [
+        [
+          "SET",
+          "redis-flush-fixture",
+          "synthetic"
+        ],
+        "+OK"
+      ],
+      [
+        [
+          "sAvE",
+          "extra"
+        ],
+        "+OK"
+      ],
+      [
+        [
+          "BGSAVE"
+        ],
+        "+OK"
+      ],
+      [
+        [
+          "GET",
+          "redis-flush-fixture"
+        ],
+        "+synthetic"
+      ]
+    ]
+  },
+  {
+    "name": "authenticated-shared-flush",
+    "listener": "custom",
+    "steps": [
+      [
+        [
+          "FLUSHDB"
+        ],
+        "-NOAUTH Authentication required."
+      ],
+      [
+        [
+          "SAVE"
+        ],
+        "-NOAUTH Authentication required."
+      ],
+      [
+        [
+          "AUTH",
+          "fixture",
+          "lab-only"
+        ],
+        "+OK"
+      ],
+      [
+        [
+          "GET",
+          "redis-flush-fixture"
+        ],
+        "+synthetic"
+      ],
+      [
+        [
+          "fLuShDb",
+          "ASYNC"
+        ],
+        "+OK"
+      ]
+    ]
+  },
+  {
+    "name": "flush-all-clears-shared-keys",
+    "steps": [
+      [
+        [
+          "GET",
+          "redis-flush-fixture"
+        ],
+        "+(nil)"
+      ],
+      [
+        [
+          "SET",
+          "redis-flush-fixture",
+          "synthetic"
+        ],
+        "+OK"
+      ],
+      [
+        [
+          "FLUSHALL"
+        ],
+        "+OK"
+      ],
+      [
+        [
+          "GET",
+          "redis-flush-fixture"
+        ],
+        "+(nil)"
+      ],
+      [
+        [
+          "DBSIZE"
+        ],
+        "+(integer) 0"
+      ]
+    ]
+  },
+  {
+    "name": "value-and-command-compatibility",
+    "steps": [
+      [
+        [
+          "SET",
+          "redis-value-compat",
+          ""
+        ],
+        "+OK"
+      ],
+      [
+        [
+          "GET",
+          "redis-value-compat"
+        ],
+        "+"
+      ],
+      [
+        [
+          "EXISTS",
+          "redis-value-compat"
+        ],
+        "+(integer) 1"
+      ],
+      [
+        [
+          "TYPE",
+          "redis-value-compat"
+        ],
+        "-ERR unknown command 'type'"
+      ],
+      [
+        [
+          "MGET",
+          "redis-value-compat",
+          "absent"
+        ],
+        "-ERR unknown command 'mget'"
+      ],
+      [
+        [
+          "SET",
+          "redis-value-compat",
+          "résumé 示例",
+          "NX"
+        ],
+        "+OK"
+      ],
+      [
+        [
+          "GET",
+          "redis-value-compat"
+        ],
+        "+résumé 示例"
+      ],
+      [
+        [
+          "SELECT",
+          "2"
+        ],
+        "+OK"
+      ],
+      [
+        [
+          "GET",
+          "redis-value-compat"
+        ],
+        "+résumé 示例"
+      ],
+      [
+        [
+          "SET",
+          "redis-value-compat",
+          "  padded"
+        ],
+        "+OK"
+      ],
+      [
+        [
+          "GET",
+          "redis-value-compat"
+        ],
+        "+  padded"
+      ],
+      [
+        [
+          "SET",
+          "redis-value-compat",
+          "%s %d 100%"
+        ],
+        "+OK"
+      ],
+      [
+        [
+          "GET",
+          "redis-value-compat"
+        ],
+        "+%s %d 100%"
+      ],
+      [
+        [
+          "TTL",
+          "redis-value-compat"
+        ],
+        "-ERR unknown command 'ttl'"
+      ],
+      [
+        [
+          "EXPIRE",
+          "redis-value-compat",
+          "10"
+        ],
+        "-ERR unknown command 'expire'"
+      ],
+      [
+        [
+          "DEL",
+          "redis-value-compat"
+        ],
+        "+(integer) 1"
+      ],
+      [
+        [
+          "GET",
+          "redis-value-compat"
+        ],
+        "+(nil)"
+      ]
+    ]
+  },
+  {
+    "name": "pipeline-ping-batch",
+    "steps": [
+      [
+        [
+          "FLUSHALL"
+        ],
+        "+OK"
+      ],
+      [
+        "*1\r\n$4\r\nPING\r\n*2\r\n$4\r\nPING\r\n$6\r\nsample\r\n*1\r\n$4\r\nPING\r\n",
+        {
+          "wire": "+PONG\r\n+PONG\r\n+PONG\r\n"
+        }
+      ],
+      [
+        [
+          "PING"
+        ],
+        "+PONG"
+      ]
+    ]
+  },
+  {
+    "name": "pipeline-open-state-batch",
+    "steps": [
+      [
+        [
+          "FLUSHALL"
+        ],
+        "+OK"
+      ],
+      [
+        "*3\r\n$3\r\nSET\r\n$13\r\nfixture-space\r\n$5\r\nready\r\n*3\r\n$3\r\nSET\r\n$13\r\nfixture other\r\n$11\r\nwith spaces\r\n*3\r\n$3\r\nSET\r\n$6\r\n样本\r\n$9\r\n跨端口\r\n*2\r\n$3\r\nGET\r\n$13\r\nfixture-space\r\n*2\r\n$3\r\nGET\r\n$13\r\nfixture other\r\n*2\r\n$3\r\nGET\r\n$6\r\n样本\r\n*1\r\n$6\r\nDBSIZE\r\n*2\r\n$3\r\nDEL\r\n$13\r\nfixture-space\r\n*2\r\n$6\r\nEXISTS\r\n$13\r\nfixture-space\r\n",
+        {
+          "wire": "+OK\r\n+OK\r\n+OK\r\n+ready\r\n+with spaces\r\n+跨端口\r\n+(integer) 3\r\n+(integer) 1\r\n+(integer) 0\r\n"
+        }
+      ],
+      [
+        [
+          "PING"
+        ],
+        "+PONG"
+      ]
+    ]
+  },
+  {
+    "name": "pipeline-open-mixed-encoding",
+    "steps": [
+      [
+        [
+          "FLUSHALL"
+        ],
+        "+OK"
+      ],
+      [
+        "SET fixture-space mix\r\n*2\r\n$3\r\nGET\r\n$13\r\nfixture-space\r\nGET fixture-space\r\n*2\r\n$3\r\nDEL\r\n$13\r\nfixture-space\r\nPING\r\n",
+        {
+          "wire": "+OK\r\n+mix\r\n+mix\r\n+(integer) 1\r\n+PONG\r\n"
+        }
+      ],
+      [
+        [
+          "PING"
+        ],
+        "+PONG"
+      ]
+    ]
+  },
+  {
+    "name": "pipeline-open-fully-inline",
+    "steps": [
+      [
+        [
+          "FLUSHALL"
+        ],
+        "+OK"
+      ],
+      [
+        "SET fixture-space plain\r\nGET fixture-space\r\nDEL fixture-space\r\nPING\r\n",
+        {
+          "wire": "+OK\r\n+plain\r\n+(integer) 1\r\n+PONG\r\n"
+        }
+      ],
+      [
+        [
+          "PING"
+        ],
+        "+PONG"
+      ]
+    ]
+  },
+  {
+    "name": "pipeline-inline-quotes",
+    "steps": [
+      [
+        [
+          "FLUSHALL"
+        ],
+        "+OK"
+      ],
+      [
+        "SET fixture-space \"two words\"\r\n*2\r\n$3\r\nGET\r\n$13\r\nfixture-space\r\nSET fixture-space 'another word'\r\n*2\r\n$3\r\nGET\r\n$13\r\nfixture-space\r\n",
+        {
+          "wire": "+OK\r\n+\"two\r\n+OK\r\n+'another\r\n"
+        }
+      ],
+      [
+        [
+          "PING"
+        ],
+        "+PONG"
+      ]
+    ]
+  },
+  {
+    "name": "pipeline-auth-batch",
+    "listener": "custom",
+    "steps": [
+      [
+        "*1\r\n$4\r\nPING\r\n*3\r\n$4\r\nAUTH\r\n$7\r\nfixture\r\n$8\r\nlab-only\r\n*3\r\n$3\r\nSET\r\n$13\r\nfixture-space\r\n$5\r\nready\r\n*2\r\n$3\r\nGET\r\n$13\r\nfixture-space\r\n*1\r\n$4\r\nPING\r\n",
+        {
+          "wire": "-NOAUTH Authentication required.\r\n+OK\r\n+OK\r\n+ready\r\n+PONG\r\n"
+        }
+      ],
+      [
+        [
+          "PING"
+        ],
+        "+PONG"
+      ]
+    ]
+  },
+  {
+    "name": "pipeline-auth-mixed-encoding",
+    "listener": "custom",
+    "steps": [
+      [
+        "AUTH fixture lab-only\r\n*3\r\n$3\r\nSET\r\n$13\r\nfixture-space\r\n$5\r\nmixed\r\nGET fixture-space\r\n*1\r\n$4\r\nPING\r\n",
+        {
+          "wire": "+OK\r\n+OK\r\n+mixed\r\n+PONG\r\n"
+        }
+      ],
+      [
+        [
+          "PING"
+        ],
+        "+PONG"
+      ]
+    ]
+  },
+  {
+    "name": "pipeline-auth-state-transition",
+    "listener": "custom",
+    "steps": [
+      [
+        "*3\r\n$4\r\nAUTH\r\n$7\r\nfixture\r\n$8\r\nlab-only\r\n*1\r\n$4\r\nPING\r\n*3\r\n$4\r\nAUTH\r\n$7\r\nfixture\r\n$7\r\ninvalid\r\n*1\r\n$4\r\nPING\r\n",
+        {
+          "wire": "+OK\r\n+PONG\r\n-WRONGPASS invalid username-password pair or user is disabled.\r\n+PONG\r\n"
+        }
+      ],
+      [
+        [
+          "PING"
+        ],
+        "+PONG"
+      ]
+    ]
+  },
+  {
+    "name": "pipeline-auth-default-name",
+    "listener": "custom",
+    "steps": [
+      [
+        "*3\r\n$4\r\nAUTH\r\n$7\r\ndefault\r\n$8\r\nlab-only\r\n*1\r\n$4\r\nPING\r\n",
+        {
+          "wire": "-WRONGPASS invalid username-password pair or user is disabled.\r\n-NOAUTH Authentication required.\r\n"
+        }
+      ],
+      [
+        [
+          "PING"
+        ],
+        "-NOAUTH Authentication required."
+      ]
+    ]
+  },
+  {
+    "name": "pipeline-read-only-command-discovery",
+    "steps": [
+      [
+        [
+          "FLUSHALL"
+        ],
+        "+OK"
+      ],
+      [
+        "*1\r\n$4\r\nTIME\r\n*2\r\n$7\r\nCOMMAND\r\n$5\r\nCOUNT\r\n*1\r\n$4\r\nROLE\r\n*2\r\n$4\r\nSCAN\r\n$1\r\n0\r\n*2\r\n$6\r\nSTRLEN\r\n$13\r\nfixture-space\r\n*3\r\n$6\r\nOBJECT\r\n$8\r\nENCODING\r\n$13\r\nfixture-space\r\n*1\r\n$4\r\nPING\r\n",
+        {
+          "wire": "-ERR unknown command 'time'\r\n-ERR unknown command 'command'\r\n-ERR unknown command 'role'\r\n-ERR unknown command 'scan'\r\n-ERR unknown command 'strlen'\r\n-ERR unknown command 'object'\r\n+PONG\r\n"
+        }
+      ],
+      [
+        [
+          "PING"
+        ],
+        "+PONG"
+      ]
+    ]
+  },
+  {
+    "name": "pipeline-batch-unknown-command",
+    "steps": [
+      [
+        [
+          "FLUSHALL"
+        ],
+        "+OK"
+      ],
+      [
+        "*2\r\n$3\r\nTtl\r\n$13\r\nfixture-space\r\n*3\r\n$3\r\nSET\r\n$13\r\nfixture-space\r\n$9\r\ncontinued\r\n*2\r\n$3\r\nGET\r\n$13\r\nfixture-space\r\n*2\r\n$3\r\nDEL\r\n$13\r\nfixture-space\r\n",
+        {
+          "wire": "-ERR unknown command 'ttl'\r\n+OK\r\n+continued\r\n+(integer) 1\r\n"
+        }
+      ],
+      [
+        [
+          "PING"
+        ],
+        "+PONG"
+      ]
+    ]
+  },
+  {
+    "name": "pipeline-type-space",
+    "steps": [
+      [
+        [
+          "FLUSHALL"
+        ],
+        "+OK"
+      ],
+      [
+        "*3\r\n$3\r\nSET\r\n$13\r\nfixture-space\r\n$16\r\n  padded value  \r\n*2\r\n$3\r\nGET\r\n$13\r\nfixture-space\r\n*3\r\n$3\r\nSET\r\n$13\r\nfixture-space\r\n$0\r\n\r\n*2\r\n$3\r\nGET\r\n$13\r\nfixture-space\r\n",
+        {
+          "wire": "+OK\r\n+  padded value  \r\n+OK\r\n+\r\n"
+        }
+      ],
+      [
+        [
+          "PING"
+        ],
+        "+PONG"
+      ]
+    ]
+  },
+  {
+    "name": "pipeline-literal-key-queries",
+    "steps": [
+      [
+        [
+          "FLUSHALL"
+        ],
+        "+OK"
+      ],
+      [
+        "*3\r\n$3\r\nSET\r\n$13\r\nfixture-space\r\n$5\r\nready\r\n*3\r\n$3\r\nSET\r\n$13\r\nfixture other\r\n$11\r\nwith spaces\r\n*3\r\n$3\r\nSET\r\n$6\r\n样本\r\n$9\r\n跨端口\r\n*2\r\n$4\r\nKEYS\r\n$13\r\nfixture other\r\n*2\r\n$4\r\nKEYS\r\n$6\r\n样本\r\n*2\r\n$4\r\nKEYS\r\n$13\r\nfixture?space\r\n*2\r\n$4\r\nKEYS\r\n$9\r\nfixture-*\r\n",
+        {
+          "wire": "+OK\r\n+OK\r\n+OK\r\n*1\r\n$13\r\nfixture other\r\n*1\r\n$6\r\n样本\r\n+(empty array)\r\n+(empty array)\r\n"
+        }
+      ],
+      [
+        [
+          "PING"
+        ],
+        "+PONG"
+      ]
+    ]
+  },
+  {
+    "name": "pipeline-resp-ping-quit",
+    "steps": [
+      [
+        [
+          "FLUSHALL"
+        ],
+        "+OK"
+      ],
+      [
+        "*1\r\n$4\r\nPING\r\n*1\r\n$4\r\nQUIT\r\n",
+        {
+          "wire": "+PONG\r\n+OK\r\n",
+          "closed": true
+        }
+      ]
+    ]
+  },
+  {
+    "name": "pipeline-protected-quit",
+    "listener": "custom",
+    "steps": [
+      [
+        "*1\r\n$4\r\nQUIT\r\n",
+        {
+          "wire": "+OK\r\n",
+          "closed": true
+        }
+      ]
+    ]
+  },
+  {
+    "name": "pipeline-resp-quit-ping",
+    "steps": [
+      [
+        "*1\r\n$4\r\nQUIT\r\n*1\r\n$4\r\nPING\r\n",
+        {
+          "wire": "+OK\r\n",
+          "reset": true
+        }
+      ]
+    ]
+  },
+  {
+    "name": "pipeline-resp-ping-quit-ping",
+    "steps": [
+      [
+        "*1\r\n$4\r\nPING\r\n*1\r\n$4\r\nQUIT\r\n*1\r\n$4\r\nPING\r\n",
+        {
+          "wire": "+PONG\r\n+OK\r\n",
+          "reset": true
+        }
+      ]
+    ]
+  },
+  {
+    "name": "pipeline-inline-quit-ping",
+    "steps": [
+      [
+        "QUIT\r\nPING\r\n",
+        {
+          "wire": "+OK\r\n",
+          "reset": true
+        }
+      ]
+    ]
+  },
+  {
+    "name": "pipeline-inline-ping-quit-ping",
+    "steps": [
+      [
+        "PING\r\nQUIT\r\nPING\r\n",
+        {
+          "wire": "+PONG\r\n+OK\r\n",
+          "reset": true
+        }
+      ]
+    ]
+  },
+  {
+    "name": "pipeline-inline-quit-mixed",
+    "steps": [
+      [
+        "*1\r\n$4\r\nPING\r\nQUIT\r\n*1\r\n$4\r\nPING\r\n",
+        {
+          "wire": "+PONG\r\n+OK\r\n",
+          "reset": true
+        }
+      ]
+    ]
+  },
+  {
+    "name": "pipeline-protected-quit-ping",
+    "listener": "custom",
+    "steps": [
+      [
+        "*1\r\n$4\r\nQUIT\r\n*1\r\n$4\r\nPING\r\n",
+        {
+          "wire": "+OK\r\n",
+          "reset": true
+        }
+      ]
+    ]
+  },
+  {
+    "name": "pipeline-protected-auth-quit-ping",
+    "listener": "custom",
+    "steps": [
+      [
+        "*3\r\n$4\r\nAUTH\r\n$7\r\nfixture\r\n$8\r\nlab-only\r\n*1\r\n$4\r\nQUIT\r\n*1\r\n$4\r\nPING\r\n",
+        {
+          "wire": "+OK\r\n+OK\r\n",
+          "reset": true
+        }
+      ]
+    ]
+  },
+  {
+    "name": "wildcard-wire-open",
+    "steps": [
+      [
+        [
+          "FLUSHDB"
+        ],
+        {
+          "wire": "+OK\r\n"
+        }
+      ],
+      [
+        [
+          "KEYS",
+          "*"
+        ],
+        {
+          "wire": "*0\r\n"
+        }
+      ],
+      [
+        [
+          "SET",
+          "redis-wildcard-alpha",
+          "a"
+        ],
+        {
+          "wire": "+OK\r\n"
+        }
+      ],
+      [
+        [
+          "KEYS",
+          "*"
+        ],
+        {
+          "wire": "*1\r\n$1\r\nredis-wildcard-alpha\r\n",
+          "sim_wire": "*1\r\n$20\r\nredis-wildcard-alpha\r\n"
+        }
+      ],
+      [
+        [
+          "KEYS",
+          "redis-wildcard-alpha"
+        ],
+        {
+          "wire": "*1\r\n$20\r\nredis-wildcard-alpha\r\n"
+        }
+      ],
+      [
+        [
+          "SET",
+          "redis-wildcard-alpha",
+          "longer\r\nvalue"
+        ],
+        {
+          "wire": "+OK\r\n"
+        }
+      ],
+      [
+        [
+          "KEYS",
+          "*"
+        ],
+        {
+          "wire": "*1\r\n$13\r\nredis-wildcard-alpha\r\n",
+          "sim_wire": "*1\r\n$20\r\nredis-wildcard-alpha\r\n"
+        }
+      ],
+      [
+        [
+          "DEL",
+          "redis-wildcard-alpha"
+        ],
+        {
+          "wire": "+(integer) 1\r\n"
+        }
+      ],
+      [
+        [
+          "SET",
+          "k",
+          "long value"
+        ],
+        {
+          "wire": "+OK\r\n"
+        }
+      ],
+      [
+        [
+          "KEYS",
+          "*"
+        ],
+        {
+          "wire": "*1\r\n$10\r\nk\r\n",
+          "sim_wire": "*1\r\n$1\r\nk\r\n"
+        }
+      ],
+      [
+        [
+          "DEL",
+          "k"
+        ],
+        {
+          "wire": "+(integer) 1\r\n"
+        }
+      ],
+      [
+        [
+          "SET",
+          "键\u0000尾",
+          "å🙂"
+        ],
+        {
+          "wire": "+OK\r\n"
+        }
+      ],
+      [
+        [
+          "KEYS",
+          "*"
+        ],
+        {
+          "wire": "*1\r\n$6\r\n键\u0000尾\r\n",
+          "sim_wire": "*1\r\n$7\r\n键\u0000尾\r\n"
+        }
+      ],
+      [
+        [
+          "KEYS",
+          "键\u0000尾"
+        ],
+        {
+          "wire": "*1\r\n$7\r\n键\u0000尾\r\n"
+        }
+      ],
+      [
+        [
+          "SET",
+          "space key",
+          ""
+        ],
+        {
+          "wire": "+OK\r\n"
+        }
+      ],
+      [
+        [
+          "KEYS",
+          "*"
+        ],
+        {
+          "wire": "*2\r\n$6\r\n键\u0000尾\r\n$0\r\nspace key\r\n",
+          "alternate_wire": [
+            "*2\r\n$0\r\nspace key\r\n$6\r\n键\u0000尾\r\n"
+          ],
+          "sim_wire": "*2\r\n$7\r\n键\u0000尾\r\n$9\r\nspace key\r\n",
+          "sim_alternate_wire": [
+            "*2\r\n$9\r\nspace key\r\n$7\r\n键\u0000尾\r\n"
+          ]
+        }
+      ],
+      [
+        "KEYS *\r\nPING\r\n",
+        {
+          "wire": "*2\r\n$6\r\n键\u0000尾\r\n$0\r\nspace key\r\n+PONG\r\n",
+          "alternate_wire": [
+            "*2\r\n$0\r\nspace key\r\n$6\r\n键\u0000尾\r\n+PONG\r\n"
+          ],
+          "sim_wire": "*2\r\n$7\r\n键\u0000尾\r\n$9\r\nspace key\r\n+PONG\r\n",
+          "sim_alternate_wire": [
+            "*2\r\n$9\r\nspace key\r\n$7\r\n键\u0000尾\r\n+PONG\r\n"
+          ]
+        }
+      ],
+      [
+        [
+          "KEYS",
+          "space*"
+        ],
+        {
+          "wire": "+(empty array)\r\n"
+        }
+      ],
+      [
+        [
+          "GET",
+          "space key"
+        ],
+        {
+          "wire": "+\r\n"
+        }
+      ]
+    ]
+  },
+  {
+    "name": "wildcard-wire-authenticated",
+    "listener": "custom",
+    "steps": [
+      [
+        [
+          "KEYS",
+          "*"
+        ],
+        {
+          "wire": "-NOAUTH Authentication required.\r\n"
+        }
+      ],
+      [
+        [
+          "AUTH",
+          "fixture",
+          "lab-only"
+        ],
+        {
+          "wire": "+OK\r\n"
+        }
+      ],
+      [
+        [
+          "KEYS",
+          "*"
+        ],
+        {
+          "wire": "*2\r\n$6\r\n键\u0000尾\r\n$0\r\nspace key\r\n",
+          "alternate_wire": [
+            "*2\r\n$0\r\nspace key\r\n$6\r\n键\u0000尾\r\n"
+          ],
+          "sim_wire": "*2\r\n$7\r\n键\u0000尾\r\n$9\r\nspace key\r\n",
+          "sim_alternate_wire": [
+            "*2\r\n$9\r\nspace key\r\n$7\r\n键\u0000尾\r\n"
+          ]
+        }
+      ],
+      [
+        [
+          "DEL",
+          "space key"
+        ],
+        {
+          "wire": "+(integer) 1\r\n"
+        }
+      ],
+      [
+        [
+          "KEYS",
+          "*"
+        ],
+        {
+          "wire": "*1\r\n$6\r\n键\u0000尾\r\n",
+          "sim_wire": "*1\r\n$7\r\n键\u0000尾\r\n"
+        }
+      ],
+      [
+        [
+          "FLUSHALL"
+        ],
+        {
+          "wire": "+OK\r\n"
+        }
+      ]
+    ]
+  },
+  {
+    "name": "wildcard-wire-after-clear",
+    "steps": [
+      [
+        [
+          "KEYS",
+          "*"
+        ],
+        {
+          "wire": "*0\r\n"
+        }
+      ],
+      [
+        [
+          "PING"
+        ],
+        {
+          "wire": "+PONG\r\n"
+        }
+      ]
+    ]
+  },
+  {
+    "name": "get-line-values",
+    "steps": [
+      [
+        [
+          "SET",
+          "line-value",
+          "first\nsecond"
+        ],
+        {
+          "wire": "+OK\r\n"
+        }
+      ],
+      [
+        [
+          "GET",
+          "line-value"
+        ],
+        {
+          "wire": "+first\nsecond\r\n"
+        }
+      ],
+      [
+        [
+          "PING"
+        ],
+        {
+          "wire": "+PONG\r\n"
+        }
+      ],
+      [
+        [
+          "SET",
+          "line-value",
+          "first\rsecond"
+        ],
+        {
+          "wire": "+OK\r\n"
+        }
+      ],
+      [
+        [
+          "GET",
+          "line-value"
+        ],
+        {
+          "wire": "+first\rsecond\r\n"
+        }
+      ],
+      [
+        [
+          "PING"
+        ],
+        {
+          "wire": "+PONG\r\n"
+        }
+      ],
+      [
+        [
+          "SET",
+          "line-value",
+          "first\r\nsecond"
+        ],
+        {
+          "wire": "+OK\r\n"
+        }
+      ],
+      [
+        [
+          "GET",
+          "line-value"
+        ],
+        {
+          "wire": "+first\r\nsecond\r\n"
+        }
+      ],
+      [
+        [
+          "PING"
+        ],
+        {
+          "wire": "+PONG\r\n"
+        }
+      ],
+      [
+        [
+          "SET",
+          "line-value",
+          "first\u0000second"
+        ],
+        {
+          "wire": "+OK\r\n"
+        }
+      ],
+      [
+        [
+          "GET",
+          "line-value"
+        ],
+        {
+          "wire": "+first\u0000second\r\n"
+        }
+      ],
+      [
+        [
+          "PING"
+        ],
+        {
+          "wire": "+PONG\r\n"
+        }
+      ],
+      [
+        [
+          "SET",
+          "line-value",
+          "甲\n乙"
+        ],
+        {
+          "wire": "+OK\r\n"
+        }
+      ],
+      [
+        [
+          "GET",
+          "line-value"
+        ],
+        {
+          "wire": "+甲\n乙\r\n"
+        }
+      ],
+      [
+        [
+          "PING"
+        ],
+        {
+          "wire": "+PONG\r\n"
+        }
+      ],
+      [
+        [
+          "SET",
+          "line-value",
+          ""
+        ],
+        {
+          "wire": "+OK\r\n"
+        }
+      ],
+      [
+        [
+          "GET",
+          "line-value"
+        ],
+        {
+          "wire": "+\r\n"
+        }
+      ],
+      [
+        [
+          "PING"
+        ],
+        {
+          "wire": "+PONG\r\n"
+        }
+      ],
+      [
+        [
+          "SET",
+          "line-value",
+          "first\r\nsecond"
+        ],
+        {
+          "wire": "+OK\r\n"
+        }
+      ],
+      [
+        "GET line-value\r\nPING\r\n",
+        {
+          "wire": "+first\r\nsecond\r\n+PONG\r\n"
+        }
+      ],
+      [
+        [
+          "DEL",
+          "line-value"
+        ],
+        {
+          "wire": "+(integer) 1\r\n"
+        }
+      ]
+    ]
+  }
+]

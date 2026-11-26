@@ -1,0 +1,80 @@
+[
+  {
+    "name": "default",
+    "steps": [
+      {
+        "file": "index",
+        "reply_size": 65517,
+        "skip_size": 0,
+        "length": 326,
+        "sha256": "4e1aa827efbe5094fc34fb2ada5059e7b9c6bf9ba1cca7e674bfbdf53390472c"
+      },
+      {
+        "file": "list",
+        "reply_size": 65517,
+        "skip_size": 0,
+        "length": 1245,
+        "sha256": "dfa8f00db06d75d89647b23b8d560202c7a6521669e127a4830c9fe89cad3a94"
+      },
+      {
+        "file": "missing",
+        "reply_size": 65517,
+        "skip_size": 0,
+        "length": 21,
+        "sha256": "141fe61f16f4d30535fd39e017f32fbef0c18bb40763f36e5ef5ebda1641b149"
+      },
+      {
+        "file": "",
+        "reply_size": 65517,
+        "skip_size": 0,
+        "length": 1245,
+        "sha256": "dfa8f00db06d75d89647b23b8d560202c7a6521669e127a4830c9fe89cad3a94"
+      }
+    ]
+  },
+  {
+    "name": "custom-version",
+    "params": {
+      "version": "6.49.10"
+    },
+    "steps": [
+      {
+        "file": "index",
+        "reply_size": 14,
+        "skip_size": 4,
+        "length": 335,
+        "sha256": "9d504445afa6d61b6a0ab9d70a20e1f92cda8219693cbb5e95e2f95517e3d956"
+      },
+      {
+        "file": "list",
+        "reply_size": 65517,
+        "skip_size": 0,
+        "length": 1256,
+        "sha256": "c9e5297fd0808a8253d9db39ad44fcd28445236a7c01812546e8acc2cfdf008c"
+      }
+    ]
+  },
+  {
+    "name": "custom-index",
+    "params": {
+      "version": "6.49.10",
+      "file_response_body": "123 10 fixture.dll 6.49.6\n"
+    },
+    "steps": [
+      {
+        "file": "index",
+        "reply_size": 65517,
+        "skip_size": 0,
+        "length": 47,
+        "sha256": "baeab83e1ad90acfae6ee81090e65f25b88b791eef104156febaa76c8b37b4d7"
+      },
+      {
+        "file": "list",
+        "reply_size": 65517,
+        "skip_size": 0,
+        "length": 1256,
+        "sha256": "c9e5297fd0808a8253d9db39ad44fcd28445236a7c01812546e8acc2cfdf008c"
+      }
+    ]
+  }
+]

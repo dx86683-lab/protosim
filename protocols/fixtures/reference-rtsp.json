@@ -1,0 +1,1610 @@
+{
+  "listeners": {
+    "default": {},
+    "custom": {
+      "server": "Fixture/1.2",
+      "headers": [
+        "X-Test: alpha",
+        "x-test: beta",
+        "X-App-Tag: stage"
+      ]
+    },
+    "conflict": {
+      "server": "Override/2",
+      "headers": [
+        "Server: User-Set",
+        "CSeq: 13",
+        "Public: PING",
+        "x-case: Exact"
+      ]
+    }
+  },
+  "cases": [
+    {
+      "name": "transport-uri-quoted-mode-comma-extension",
+      "listener": "default",
+      "steps": [
+        {"send": "SETUP rtsp://fixture.invalid/media/trackID=1 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1;mode=\"PLAY\";x-option=\"left,right\"\r\n\r\n", "receive": ["RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"]},
+        {"send": "OPTIONS rtsp://fixture.invalid/media RTSP/1.0\r\nCSeq: 2\r\n\r\n", "receive": ["RTSP/1.0 200 OK\r\nCSeq: 2\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"]}
+      ],
+      "events": [{"msg":"session opened"},{"msg":"setup request"},{"msg":"session closed"}]
+    },
+    {
+      "name": "transport-uri-extension-comma-bare",
+      "protosim_events": [{"msg":"session opened"},{"msg":"session closed"}],
+      "sim_steps": [
+        {"send": "SETUP rtsp://fixture.invalid/media/trackID=1 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1;x-option=left,right\r\n\r\n", "receive": ["RTSP/1.0 400 Bad Request\r\nCSeq: 1\r\n\r\n"], "closed": true}
+      ],
+      "listener": "default",
+      "steps": [
+        {"send": "SETUP rtsp://fixture.invalid/media/trackID=1 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1;x-option=left,right\r\n\r\n", "receive": ["RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"]},
+        {"send": "OPTIONS rtsp://fixture.invalid/media RTSP/1.0\r\nCSeq: 2\r\n\r\n", "receive": ["RTSP/1.0 200 OK\r\nCSeq: 2\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"]}
+      ],
+      "events": [{"msg":"session opened"},{"msg":"setup request"},{"msg":"session closed"}]
+    },
+    {
+      "name": "transport-uri-extension-semicolon-delimiter",
+      "listener": "default",
+      "steps": [
+        {"send": "SETUP rtsp://fixture.invalid/media/trackID=1 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1;x-option=\"left;mode=record\"\r\n\r\n", "receive": ["RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"]},
+        {"send": "OPTIONS rtsp://fixture.invalid/media RTSP/1.0\r\nCSeq: 2\r\n\r\n", "receive": ["RTSP/1.0 200 OK\r\nCSeq: 2\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"]}
+      ],
+      "events": [{"msg":"session opened"},{"msg":"setup request"},{"msg":"session closed"}]
+    },
+    {
+      "name": "transport-uri-extension-comma-followed-by-known",
+      "listener": "default",
+      "steps": [
+        {"send": "SETUP rtsp://fixture.invalid/media/trackID=1 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1;x-option=\"left,right\";mode=\"PLAY\"\r\n\r\n", "receive": ["RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"]},
+        {"send": "OPTIONS rtsp://fixture.invalid/media RTSP/1.0\r\nCSeq: 2\r\n\r\n", "receive": ["RTSP/1.0 200 OK\r\nCSeq: 2\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"]}
+      ],
+      "events": [{"msg":"session opened"},{"msg":"setup request"},{"msg":"session closed"}]
+    },
+    {
+      "name": "transport-uri-extension-comma-followed-by-record",
+      "protosim_events": [{"msg":"session opened"},{"msg":"setup request"},{"msg":"session closed"}],
+      "sim_steps": [
+        {"send": "SETUP rtsp://fixture.invalid/media/trackID=1 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1;x-option=\"left,right\";mode=\"RECORD\"\r\n\r\n", "receive": ["RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"]}
+      ],
+      "listener": "default",
+      "steps": [
+        {"send": "SETUP rtsp://fixture.invalid/media/trackID=1 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1;x-option=\"left,right\";mode=\"RECORD\"\r\n\r\n", "receive": ["RTSP/1.0 400 Bad Request\r\nCSeq: 1\r\n\r\n"], "closed": true}
+      ],
+      "events": [{"msg":"session opened"},{"msg":"session closed"}]
+    },
+    {
+      "name": "transport-uri-extension-comma-then-offer",
+      "listener": "default",
+      "steps": [
+        {"send": "SETUP rtsp://fixture.invalid/media/trackID=1 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1;x-option=\"left,right\", RTP/AVP;unicast;client_port=5000-5001\r\n\r\n", "receive": ["RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"]},
+        {"send": "OPTIONS rtsp://fixture.invalid/media RTSP/1.0\r\nCSeq: 2\r\n\r\n", "receive": ["RTSP/1.0 200 OK\r\nCSeq: 2\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"]}
+      ],
+      "events": [{"msg":"session opened"},{"msg":"setup request"},{"msg":"session closed"}]
+    },
+    {
+      "name": "transport-uri-extension-comma-plus-interleaved",
+      "protosim_events": [{"msg":"session opened"},{"msg":"session closed"}],
+      "sim_steps": [
+        {"send": "SETUP rtsp://fixture.invalid/media/trackID=1 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1;x-option=\"left,right\";interleaved=2-3\r\n\r\n", "receive": ["RTSP/1.0 400 Bad Request\r\nCSeq: 1\r\n\r\n"], "closed": true}
+      ],
+      "listener": "default",
+      "steps": [
+        {"send": "SETUP rtsp://fixture.invalid/media/trackID=1 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1;x-option=\"left,right\";interleaved=2-3\r\n\r\n", "receive": ["RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"]},
+        {"send": "OPTIONS rtsp://fixture.invalid/media RTSP/1.0\r\nCSeq: 2\r\n\r\n", "receive": ["RTSP/1.0 200 OK\r\nCSeq: 2\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"]}
+      ],
+      "events": [{"msg":"session opened"},{"msg":"setup request"},{"msg":"session closed"}]
+    },
+    {
+      "name": "transport-uri-extension-second-transport-phrase",
+      "listener": "default",
+      "steps": [
+        {"send": "SETUP rtsp://fixture.invalid/media/trackID=1 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1;x-option=\"left,RTP/AVP/TCP;unicast\";mode=\"PLAY\"\r\n\r\n", "receive": ["RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"]},
+        {"send": "OPTIONS rtsp://fixture.invalid/media RTSP/1.0\r\nCSeq: 2\r\n\r\n", "receive": ["RTSP/1.0 200 OK\r\nCSeq: 2\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"]}
+      ],
+      "events": [{"msg":"session opened"},{"msg":"setup request"},{"msg":"session closed"}]
+    },
+    {
+      "name": "transport-uri-extension-later-extension",
+      "listener": "default",
+      "steps": [
+        {"send": "SETUP rtsp://fixture.invalid/media/trackID=1 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1;x-option=\"left,right\";other=\"red,blue\"\r\n\r\n", "receive": ["RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"]},
+        {"send": "OPTIONS rtsp://fixture.invalid/media RTSP/1.0\r\nCSeq: 2\r\n\r\n", "receive": ["RTSP/1.0 200 OK\r\nCSeq: 2\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"]}
+      ],
+      "events": [{"msg":"session opened"},{"msg":"setup request"},{"msg":"session closed"}]
+    },
+    {
+      "name": "transport-uri-value-unclosed-unknown",
+      "listener": "default",
+      "steps": [
+        {"send": "SETUP rtsp://fixture.invalid/media/trackID=1 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1;x-option=\"left\r\n\r\n", "receive": ["RTSP/1.0 400 Bad Request\r\nCSeq: 1\r\n\r\n"], "closed": true}
+      ],
+      "events": [{"msg":"session opened"},{"msg":"session closed"}]
+    },
+    {
+      "name": "transport-uri-value-unclosed-known",
+      "listener": "default",
+      "steps": [
+        {"send": "SETUP rtsp://fixture.invalid/media/trackID=1 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1;mode=\"PLAY\r\n\r\n", "receive": ["RTSP/1.0 400 Bad Request\r\nCSeq: 1\r\n\r\n"], "closed": true}
+      ],
+      "events": [{"msg":"session opened"},{"msg":"session closed"}]
+    },
+    {
+      "name": "transport-uri-value-after-quote",
+      "protosim_events": [{"msg":"session opened"},{"msg":"session closed"}],
+      "sim_steps": [
+        {"send": "SETUP rtsp://fixture.invalid/media/trackID=1 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1;mode=\"PLAY\"suffix\r\n\r\n", "receive": ["RTSP/1.0 400 Bad Request\r\nCSeq: 1\r\n\r\n"], "closed": true}
+      ],
+      "listener": "default",
+      "steps": [
+        {"send": "SETUP rtsp://fixture.invalid/media/trackID=1 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1;mode=\"PLAY\"suffix\r\n\r\n", "receive": ["RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"]},
+        {"send": "OPTIONS rtsp://fixture.invalid/media RTSP/1.0\r\nCSeq: 2\r\n\r\n", "receive": ["RTSP/1.0 200 OK\r\nCSeq: 2\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"]}
+      ],
+      "events": [{"msg":"session opened"},{"msg":"setup request"},{"msg":"session closed"}]
+    },
+    {
+      "name": "transport-uri-value-before-quote-space",
+      "protosim_events": [{"msg":"session opened"},{"msg":"setup request"},{"msg":"session closed"}],
+      "sim_steps": [
+        {"send": "SETUP rtsp://fixture.invalid/media/trackID=1 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1;mode= \"PLAY\"\r\n\r\n", "receive": ["RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"]}
+      ],
+      "listener": "default",
+      "steps": [
+        {"send": "SETUP rtsp://fixture.invalid/media/trackID=1 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1;mode= \"PLAY\"\r\n\r\n", "receive": ["RTSP/1.0 400 Bad Request\r\nCSeq: 1\r\n\r\n"], "closed": true}
+      ],
+      "events": [{"msg":"session opened"},{"msg":"session closed"}]
+    },
+    {
+      "name": "transport-uri-value-key-trailing-pad",
+      "sim_steps": [
+        {"send": "SETUP rtsp://fixture.invalid/media/trackID=1 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1;mode =\"RECORD\"\r\n\r\n", "receive": ["RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"]},
+        {"send": "OPTIONS rtsp://fixture.invalid/media RTSP/1.0\r\nCSeq: 2\r\n\r\n", "receive": ["RTSP/1.0 200 OK\r\nCSeq: 2\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"]}
+      ],
+      "listener": "default",
+      "steps": [
+        {"send": "SETUP rtsp://fixture.invalid/media/trackID=1 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1;mode =\"RECORD\"\r\n\r\n", "receive": ["RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"]},
+        {"send": "OPTIONS rtsp://fixture.invalid/media RTSP/1.0\r\nCSeq: 2\r\n\r\n", "receive": ["RTSP/1.0 200 OK\r\nCSeq: 2\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"]}
+      ],
+      "events": [{"msg":"session opened"},{"msg":"setup request"},{"msg":"session closed"}]
+    },
+    {
+      "name": "transport-uri-value-recognized-duplicate-good",
+      "protosim_events": [{"msg":"session opened"},{"msg":"session closed"}],
+      "sim_steps": [
+        {"send": "SETUP rtsp://fixture.invalid/media/trackID=1 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1;mode=\"RECORD\";mode=\"PLAY\"\r\n\r\n", "receive": ["RTSP/1.0 400 Bad Request\r\nCSeq: 1\r\n\r\n"], "closed": true}
+      ],
+      "listener": "default",
+      "steps": [
+        {"send": "SETUP rtsp://fixture.invalid/media/trackID=1 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1;mode=\"RECORD\";mode=\"PLAY\"\r\n\r\n", "receive": ["RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"]},
+        {"send": "OPTIONS rtsp://fixture.invalid/media RTSP/1.0\r\nCSeq: 2\r\n\r\n", "receive": ["RTSP/1.0 200 OK\r\nCSeq: 2\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"]}
+      ],
+      "events": [{"msg":"session opened"},{"msg":"setup request"},{"msg":"session closed"}]
+    },
+    {
+      "name": "transport-uri-value-recognized-duplicate-bad",
+      "listener": "default",
+      "steps": [
+        {"send": "SETUP rtsp://fixture.invalid/media/trackID=1 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1;mode=\"PLAY\";mode=\"RECORD\"\r\n\r\n", "receive": ["RTSP/1.0 400 Bad Request\r\nCSeq: 1\r\n\r\n"], "closed": true}
+      ],
+      "events": [{"msg":"session opened"},{"msg":"session closed"}]
+    },
+    {
+      "name": "transport-uri-word-trailing-space",
+      "protosim_events": [{"msg":"session opened"},{"msg":"setup request"},{"msg":"session closed"}],
+      "sim_steps": [
+        {
+          "send": "SETUP rtsp://fixture.invalid/media/trackID=1 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1;mode=play \r\n\r\n",
+          "receive": [
+            "RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"
+          ],
+          "closed": false
+        }
+      ],
+      "listener": "default",
+      "steps": [
+        {"send": "SETUP rtsp://fixture.invalid/media/trackID=1 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1;mode=play \r\n\r\n", "receive": ["RTSP/1.0 400 Bad Request\r\nCSeq: 1\r\n\r\n"], "closed": true}
+      ],
+      "events": [{"msg":"session opened"},{"msg":"session closed"}]
+    },
+    {
+      "name": "transport-uri-word-leading-space",
+      "protosim_events": [{"msg":"session opened"},{"msg":"setup request"},{"msg":"session closed"}],
+      "sim_steps": [
+        {"send": "SETUP rtsp://fixture.invalid/media/trackID=1 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1;mode= play\r\n\r\n", "receive": ["RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"]}
+      ],
+      "listener": "default",
+      "steps": [
+        {"send": "SETUP rtsp://fixture.invalid/media/trackID=1 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1;mode= play\r\n\r\n", "receive": ["RTSP/1.0 400 Bad Request\r\nCSeq: 1\r\n\r\n"], "closed": true}
+      ],
+      "events": [{"msg":"session opened"},{"msg":"session closed"}]
+    },
+    {
+      "name": "transport-uri-word-before-delimiter-space",
+      "protosim_events": [{"msg":"session opened"},{"msg":"setup request"},{"msg":"session closed"}],
+      "sim_steps": [
+        {"send": "SETUP rtsp://fixture.invalid/media/trackID=1 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1;mode=play ;ttl=5\r\n\r\n", "receive": ["RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"]}
+      ],
+      "listener": "default",
+      "steps": [
+        {"send": "SETUP rtsp://fixture.invalid/media/trackID=1 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1;mode=play ;ttl=5\r\n\r\n", "receive": ["RTSP/1.0 400 Bad Request\r\nCSeq: 1\r\n\r\n"], "closed": true}
+      ],
+      "events": [{"msg":"session opened"},{"msg":"session closed"}]
+    },
+    {
+      "name": "transport-uri-quoted-before-delimiter-space",
+      "listener": "default",
+      "steps": [
+        {"send": "SETUP rtsp://fixture.invalid/media/trackID=1 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1;mode=\"play\" ;ttl=5\r\n\r\n", "receive": ["RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"]},
+        {"send": "OPTIONS rtsp://fixture.invalid/media RTSP/1.0\r\nCSeq: 2\r\n\r\n", "receive": ["RTSP/1.0 200 OK\r\nCSeq: 2\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"]}
+      ],
+      "events": [{"msg":"session opened"},{"msg":"setup request"},{"msg":"session closed"}]
+    },
+    {
+      "name": "transport-uri-known-quoted-number",
+      "protosim_events": [{"msg":"session opened"},{"msg":"session closed"}],
+      "sim_steps": [
+        {"send": "SETUP rtsp://fixture.invalid/media/trackID=1 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1;interleaved=\"2-3\"\r\n\r\n", "receive": ["RTSP/1.0 400 Bad Request\r\nCSeq: 1\r\n\r\n"], "closed": true}
+      ],
+      "listener": "default",
+      "steps": [
+        {"send": "SETUP rtsp://fixture.invalid/media/trackID=1 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1;interleaved=\"2-3\"\r\n\r\n", "receive": ["RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"]},
+        {"send": "OPTIONS rtsp://fixture.invalid/media RTSP/1.0\r\nCSeq: 2\r\n\r\n", "receive": ["RTSP/1.0 200 OK\r\nCSeq: 2\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"]}
+      ],
+      "events": [{"msg":"session opened"},{"msg":"setup request"},{"msg":"session closed"}]
+    },
+    {
+      "name": "transport-uri-tcp-udp-offer",
+      "protosim_events": [{"msg":"session opened"},{"msg":"setup request"},{"msg":"session closed"}],
+      "sim_steps": [
+        {"send": "SETUP rtsp://fixture.invalid/media/trackID=1 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1, RTP/AVP;unicast;client_port=5000-5001\r\n\r\n", "receive": ["RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"]}
+      ],
+      "listener": "default",
+      "steps": [
+        {"send": "SETUP rtsp://fixture.invalid/media/trackID=1 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1, RTP/AVP;unicast;client_port=5000-5001\r\n\r\n", "receive": ["RTSP/1.0 400 Bad Request\r\nCSeq: 1\r\n\r\n"], "closed": true}
+      ],
+      "events": [{"msg":"session opened"},{"msg":"session closed"}]
+    },
+    {
+      "name": "transport-uri-udp-tcp-offer",
+      "protosim_events": [{"msg":"session opened"},{"msg":"setup request"},{"msg":"session closed"}],
+      "sim_steps": [
+        {"send": "SETUP rtsp://fixture.invalid/media/trackID=1 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP;unicast;client_port=5000-5001, RTP/AVP/TCP;unicast;interleaved=0-1\r\n\r\n", "receive": ["RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"]}
+      ],
+      "listener": "default",
+      "steps": [
+        {"send": "SETUP rtsp://fixture.invalid/media/trackID=1 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP;unicast;client_port=5000-5001, RTP/AVP/TCP;unicast;interleaved=0-1\r\n\r\n", "receive": ["RTSP/1.0 400 Bad Request\r\nCSeq: 1\r\n\r\n"], "closed": true}
+      ],
+      "events": [{"msg":"session opened"},{"msg":"session closed"}]
+    },
+    {
+      "name": "transport-uri-track-query-path",
+      "listener": "default",
+      "steps": [
+        {"send": "SETUP rtsp://fixture.invalid/media?camera=main/trackID=1 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1\r\n\r\n", "receive": ["RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"]},
+        {"send": "OPTIONS rtsp://fixture.invalid/media RTSP/1.0\r\nCSeq: 2\r\n\r\n", "receive": ["RTSP/1.0 200 OK\r\nCSeq: 2\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"]}
+      ],
+      "events": [{"msg":"session opened"},{"msg":"setup request"},{"msg":"session closed"}]
+    },
+    {
+      "name": "transport-uri-track-escaped-path",
+      "listener": "default",
+      "steps": [
+        {"send": "SETUP rtsp://fixture.invalid/my%20media/trackID=1 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1\r\n\r\n", "receive": ["RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"]},
+        {"send": "OPTIONS rtsp://fixture.invalid/media RTSP/1.0\r\nCSeq: 2\r\n\r\n", "receive": ["RTSP/1.0 200 OK\r\nCSeq: 2\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"]}
+      ],
+      "events": [{"msg":"session opened"},{"msg":"setup request"},{"msg":"session closed"}]
+    },
+    {
+      "name": "transport-uri-track-tail-empty-query",
+      "listener": "default",
+      "steps": [
+        {"send": "SETUP rtsp://fixture.invalid/media/trackID=1? RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1\r\n\r\n", "receive": ["RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"]},
+        {"send": "OPTIONS rtsp://fixture.invalid/media RTSP/1.0\r\nCSeq: 2\r\n\r\n", "receive": ["RTSP/1.0 200 OK\r\nCSeq: 2\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"]}
+      ],
+      "events": [{"msg":"session opened"},{"msg":"setup request"},{"msg":"session closed"}]
+    },
+    {
+      "name": "transport-uri-track-empty-fragment",
+      "listener": "default",
+      "steps": [
+        {"send": "SETUP rtsp://fixture.invalid/media/trackID=1# RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1\r\n\r\n", "receive": ["RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"]},
+        {"send": "OPTIONS rtsp://fixture.invalid/media RTSP/1.0\r\nCSeq: 2\r\n\r\n", "receive": ["RTSP/1.0 200 OK\r\nCSeq: 2\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"]}
+      ],
+      "events": [{"msg":"session opened"},{"msg":"setup request"},{"msg":"session closed"}]
+    },
+    {
+      "name": "transport-uri-options-ipv6",
+      "listener": "default",
+      "steps": [
+        {"send": "OPTIONS rtsp://[::1]:8554/media RTSP/1.0\r\nCSeq: 1\r\n\r\n", "receive": ["RTSP/1.0 200 OK\r\nCSeq: 1\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"]},
+        {"send": "OPTIONS rtsp://fixture.invalid/media RTSP/1.0\r\nCSeq: 2\r\n\r\n", "receive": ["RTSP/1.0 200 OK\r\nCSeq: 2\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"]}
+      ],
+      "events": []
+    },
+    {
+      "name": "transport-uri-describe-escape",
+      "listener": "default",
+      "steps": [
+        {"send": "DESCRIBE rtsp://fixture.invalid/my%20stream?profile=hi%2Dres RTSP/1.0\r\nCSeq: 1\r\nAccept: application/sdp\r\n\r\n", "receive": ["RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"]},
+        {"send": "OPTIONS rtsp://fixture.invalid/media RTSP/1.0\r\nCSeq: 2\r\n\r\n", "receive": ["RTSP/1.0 200 OK\r\nCSeq: 2\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"]}
+      ],
+      "events": [{"msg":"describe request","url":"rtsp://fixture.invalid/my%20stream?profile=hi%2Dres"}]
+    },
+    {
+      "name": "transport-uri-describe-hierarchical",
+      "listener": "default",
+      "steps": [
+        {"send": "DESCRIBE rtsp:/media RTSP/1.0\r\nCSeq: 1\r\nAccept: application/sdp\r\n\r\n", "receive": ["RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"]},
+        {"send": "OPTIONS rtsp://fixture.invalid/media RTSP/1.0\r\nCSeq: 2\r\n\r\n", "receive": ["RTSP/1.0 200 OK\r\nCSeq: 2\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"]}
+      ],
+      "events": [{"msg":"describe request","url":"rtsp:/media"}]
+    },
+    {
+      "name": "transport-uri-control-play",
+      "sim_steps": [
+        {"send": "PLAY rtsp://fixture.invalid/media RTSP/1.0\r\nCSeq: 1\r\nRange: npt=5.0-10.0\r\nScale: 1.0\r\nSession: fixture-session\r\n\r\n", "receive": ["RTSP/1.0 454 Session Not Found\r\nCSeq: 1\r\n\r\n"]}
+      ],
+      "listener": "default",
+      "steps": [
+        {"send": "PLAY rtsp://fixture.invalid/media RTSP/1.0\r\nCSeq: 1\r\nRange: npt=5.0-10.0\r\nScale: 1.0\r\nSession: fixture-session\r\n\r\n", "receive": ["RTSP/1.0 400 Bad Request\r\nCSeq: 1\r\n\r\n"], "closed": true}
+      ],
+      "events": []
+    },
+    {
+      "name": "cseq-whitespace-preserved",
+      "sim_steps": [
+        {
+          "send": "OPTIONS rtsp://fixture.invalid/live RTSP/1.0\r\nCSeq: \t1 \r\n\r\n",
+          "receive": [
+            "RTSP/1.0 200 OK\r\nCSeq: 1\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"
+          ]
+        }
+      ],
+      "listener": "default",
+      "steps": [{
+        "send": "OPTIONS rtsp://fixture.invalid/live RTSP/1.0\r\nCSeq: \t1 \r\n\r\n",
+        "receive": ["RTSP/1.0 200 OK\r\nCSeq: \t1 \r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"]
+      }],
+      "events": []
+    },
+    {
+      "name": "options-unknown-session",
+      "sim_steps": [{"send": "OPTIONS rtsp://fixture.invalid/live RTSP/1.0\r\nCSeq: 1\r\nSession: fixture-id\r\n\r\n", "receive": ["RTSP/1.0 454 Session Not Found\r\nCSeq: 1\r\n\r\n"]}],
+      "listener": "default",
+      "steps": [{
+        "send": "OPTIONS rtsp://fixture.invalid/live RTSP/1.0\r\nCSeq: 1\r\nSession: fixture-id\r\n\r\n",
+        "receive": ["RTSP/1.0 400 Bad Request\r\nCSeq: 1\r\n\r\n"],
+        "closed": true
+      }],
+      "events": []
+    },
+    {
+      "name": "options-empty-session",
+      "listener": "default",
+      "steps": [{
+        "send": "OPTIONS rtsp://fixture.invalid/live RTSP/1.0\r\nCSeq: 1\r\nSession:\r\n\r\n",
+        "receive": ["RTSP/1.0 200 OK\r\nCSeq: 1\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"]
+      }],
+      "events": []
+    },
+    {
+      "name": "request-line-extra-space",
+      "listener": "default",
+      "steps": [{
+        "send": "OPTIONS  rtsp://fixture.invalid/live RTSP/1.0\r\nCSeq: 1\r\n\r\n",
+        "receive": [],
+        "closed": true
+      }],
+      "events": []
+    },
+    {
+      "name": "request-line-lf-without-cr",
+      "listener": "default",
+      "steps": [{
+        "send": "OPTIONS rtsp://fixture.invalid/live RTSP/1.0\nCSeq: 1\n\n",
+        "receive": []
+      }],
+      "events": []
+    },
+    {
+      "name": "describe-host-with-no-path",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "DESCRIBE rtsp://fixture.invalid?target=live RTSP/1.0\r\nCSeq: 1\r\n\r\n",
+          "receive": ["RTSP/1.0 400 Bad Request\r\nCSeq: 1\r\n\r\n"],
+          "closed": true
+        }
+      ],
+      "events": []
+    },
+    {
+      "name": "describe-uppercase-scheme",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "DESCRIBE RTSP://fixture.invalid/live RTSP/1.0\r\nCSeq: 1\r\n\r\n",
+          "receive": ["RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"]
+        }
+      ],
+      "events": [{"msg": "describe request", "url": "rtsp://fixture.invalid/live"}]
+    },
+    {
+      "name": "options-describe-continue",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "OPTIONS rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 1\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 200 OK\r\nCSeq: 1\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"
+          ]
+        },
+        {
+          "send": "DESCRIBE rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 2\r\nAccept: application/sdp\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 404 Not Found\r\nCSeq: 2\r\n\r\n"
+          ]
+        },
+        {
+          "send": "OPTIONS rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 3\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 200 OK\r\nCSeq: 3\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"
+          ]
+        }
+      ],
+      "events": [
+        {
+          "msg": "describe request",
+          "url": "rtsp://stream.fixture.invalid/live"
+        }
+      ]
+    },
+    {
+      "name": "pipelined",
+      "protosim_events": [{"msg":"describe request","url":"rtsp://stream.fixture.invalid/live"},{"msg":"session opened"},{"msg":"setup request"},{"msg":"session closed"}],
+      "sim_steps": [{"send": "OPTIONS rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 1\r\n\r\nDESCRIBE rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 2\r\n\r\nSETUP rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 3\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1\r\n\r\n", "receive": ["RTSP/1.0 200 OK\r\nCSeq: 1\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n", "RTSP/1.0 404 Not Found\r\nCSeq: 2\r\n\r\n", "RTSP/1.0 404 Not Found\r\nCSeq: 3\r\n\r\n"]}],
+      "listener": "default",
+      "steps": [
+        {
+          "send": "OPTIONS rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 1\r\n\r\nDESCRIBE rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 2\r\n\r\nSETUP rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 3\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 200 OK\r\nCSeq: 1\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n",
+            "RTSP/1.0 404 Not Found\r\nCSeq: 2\r\n\r\n",
+            "RTSP/1.0 400 Bad Request\r\nCSeq: 3\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "describe request",
+          "url": "rtsp://stream.fixture.invalid/live"
+        },
+        {
+          "msg": "session opened"
+        },
+        {
+          "msg": "session closed"
+        }
+      ]
+    },
+    {
+      "name": "configured-headers",
+      "sim_steps": [
+        {"send": "OPTIONS rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 1\r\n\r\n", "receive": ["RTSP/1.0 200 OK\r\nCSeq: 1\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\nServer: Fixture/1.2\r\nX-App-Tag: stage\r\nX-Test: alpha\r\nx-test: beta\r\n\r\n"]},
+        {"send": "DESCRIBE rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 2\r\n\r\n", "receive": ["RTSP/1.0 404 Not Found\r\nCSeq: 2\r\nServer: Fixture/1.2\r\nX-App-Tag: stage\r\nX-Test: alpha\r\nx-test: beta\r\n\r\n"]},
+        {"send": "TEARDOWN rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 3\r\n\r\n", "receive": ["RTSP/1.0 454 Session Not Found\r\nCSeq: 3\r\nServer: Fixture/1.2\r\nX-App-Tag: stage\r\nX-Test: alpha\r\nx-test: beta\r\n\r\n"]}
+      ],
+      "listener": "custom",
+      "steps": [
+        {
+          "send": "OPTIONS rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 1\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 200 OK\r\nCSeq: 1\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\nServer: Fixture/1.2\r\nX-App-Tag: stage\r\nX-Test: alpha\r\nx-test: beta\r\n\r\n"
+          ]
+        },
+        {
+          "send": "DESCRIBE rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 2\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 404 Not Found\r\nCSeq: 2\r\nServer: Fixture/1.2\r\nX-App-Tag: stage\r\nX-Test: alpha\r\nx-test: beta\r\n\r\n"
+          ]
+        },
+        {
+          "send": "TEARDOWN rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 3\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 400 Bad Request\r\nCSeq: 3\r\nServer: Fixture/1.2\r\nX-App-Tag: stage\r\nX-Test: alpha\r\nx-test: beta\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "describe request",
+          "url": "rtsp://stream.fixture.invalid/live"
+        }
+      ]
+    },
+    {
+      "name": "header-conflicts",
+      "sim_steps": [
+        {
+          "send": "OPTIONS rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 1\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 200 OK\r\nCSeq: 1\r\nPublic: OPTIONS, DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, TEARDOWN\r\nServer: User-Set\r\nx-case: Exact\r\n\r\n"
+          ]
+        },
+        {
+          "send": "DESCRIBE rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 2\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 404 Not Found\r\nCSeq: 2\r\nServer: User-Set\r\nx-case: Exact\r\n\r\n"
+          ]
+        }
+      ],
+      "listener": "conflict",
+      "steps": [
+        {
+          "send": "OPTIONS rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 1\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 200 OK\r\nCSeq: 13\r\nPublic: PING\r\nServer: User-Set\r\nx-case: Exact\r\n\r\n"
+          ]
+        },
+        {
+          "send": "DESCRIBE rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 2\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 404 Not Found\r\nCSeq: 13\r\nPublic: PING\r\nServer: User-Set\r\nx-case: Exact\r\n\r\n"
+          ]
+        }
+      ],
+      "events": [
+        {
+          "msg": "describe request",
+          "url": "rtsp://stream.fixture.invalid/live"
+        }
+      ]
+    },
+    {
+      "name": "missing-cseq",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "OPTIONS rtsp://stream.fixture.invalid/live RTSP/1.0\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 400 Bad Request\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": []
+    },
+    {
+      "name": "missing-cseq-custom",
+      "listener": "custom",
+      "steps": [
+        {
+          "send": "OPTIONS rtsp://stream.fixture.invalid/live RTSP/1.0\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 400 Bad Request\r\nServer: Fixture/1.2\r\nX-App-Tag: stage\r\nX-Test: alpha\r\nx-test: beta\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": []
+    },
+    {
+      "name": "duplicate-cseq",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "OPTIONS rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 7\r\ncseq: 8\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 400 Bad Request\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": []
+    },
+    {
+      "name": "literal-cseq",
+      "sim_steps": [
+        {
+          "send": "OPTIONS rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: \r\n\r\n",
+          "receive": [
+            "RTSP/1.0 400 Bad Request\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "listener": "default",
+      "steps": [
+        {
+          "send": "OPTIONS rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: \r\n\r\n",
+          "receive": [
+            "RTSP/1.0 200 OK\r\nCSeq: \r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"
+          ]
+        },
+        {
+          "send": "OPTIONS rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: foo\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 200 OK\r\nCSeq: foo\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"
+          ]
+        },
+        {
+          "send": "OPTIONS rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 0005\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 200 OK\r\nCSeq: 0005\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"
+          ]
+        },
+        {
+          "send": "OPTIONS rtsp://stream.fixture.invalid/live RTSP/1.0\r\ncseq: -1\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 200 OK\r\nCSeq: -1\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"
+          ]
+        }
+      ],
+      "events": []
+    },
+    {
+      "name": "wildcard",
+      "sim_steps": [
+        {
+          "send": "OPTIONS * RTSP/1.0\r\nCSeq: 1\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 200 OK\r\nCSeq: 1\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"
+          ],
+          "closed": false
+        }
+      ],
+      "listener": "default",
+      "steps": [
+        {
+          "send": "OPTIONS * RTSP/1.0\r\nCSeq: 1\r\n\r\n",
+          "receive": [],
+          "closed": true
+        }
+      ],
+      "events": []
+    },
+    {
+      "name": "relative-uri",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "OPTIONS /live RTSP/1.0\r\nCSeq: 1\r\n\r\n",
+          "receive": [],
+          "closed": true
+        }
+      ],
+      "events": []
+    },
+    {
+      "name": "http-uri",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "OPTIONS http://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 1\r\n\r\n",
+          "receive": [],
+          "closed": true
+        }
+      ],
+      "events": []
+    },
+    {
+      "name": "rtsp2",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "OPTIONS rtsp://stream.fixture.invalid/live RTSP/2.0\r\nCSeq: 1\r\n\r\n",
+          "receive": [],
+          "closed": true
+        }
+      ],
+      "events": []
+    },
+    {
+      "name": "rtsps-uri",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "OPTIONS rtsps://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 1\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 200 OK\r\nCSeq: 1\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"
+          ]
+        }
+      ],
+      "events": []
+    },
+    {
+      "name": "describe-query",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "DESCRIBE rtsp://stream.fixture.invalid/live?foo=bar RTSP/1.0\r\nCSeq: 1\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"
+          ]
+        }
+      ],
+      "events": [
+        {
+          "msg": "describe request",
+          "url": "rtsp://stream.fixture.invalid/live?foo=bar"
+        }
+      ]
+    },
+    {
+      "name": "tcp-track-and-slash",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "SETUP rtsp://stream.fixture.invalid/live/trackID=0 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"
+          ]
+        },
+        {
+          "send": "SETUP rtsp://stream.fixture.invalid/live/ RTSP/1.0\r\nCSeq: 2\r\nTransport: RTP/AVP/TCP;interleaved=2-3;mode=\"PLAY\"\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 404 Not Found\r\nCSeq: 2\r\n\r\n"
+          ]
+        },
+        {
+          "send": "OPTIONS rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 3\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 200 OK\r\nCSeq: 3\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"
+          ]
+        }
+      ],
+      "events": [
+        {
+          "msg": "session opened"
+        },
+        {
+          "msg": "setup request"
+        },
+        {
+          "msg": "session opened"
+        },
+        {
+          "msg": "setup request"
+        },
+        {
+          "msg": "session closed"
+        },
+        {
+          "msg": "session closed"
+        }
+      ]
+    },
+    {
+      "name": "udp-track",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "SETUP rtsp://stream.fixture.invalid/live/trackID=0 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP;unicast;client_port=5000-5001\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 461 Unsupported Transport\r\nCSeq: 1\r\n\r\n"
+          ]
+        },
+        {
+          "send": "OPTIONS rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 2\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 200 OK\r\nCSeq: 2\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"
+          ]
+        }
+      ],
+      "events": [
+        {
+          "msg": "session opened"
+        },
+        {
+          "msg": "session closed"
+        }
+      ]
+    },
+    {
+      "name": "tcp-multicast",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "SETUP rtsp://stream.fixture.invalid/live/trackID=0 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;multicast;interleaved=0-1\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 461 Unsupported Transport\r\nCSeq: 1\r\n\r\n"
+          ]
+        },
+        {
+          "send": "OPTIONS rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 2\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 200 OK\r\nCSeq: 2\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"
+          ]
+        }
+      ],
+      "events": [
+        {
+          "msg": "session opened"
+        },
+        {
+          "msg": "session closed"
+        }
+      ]
+    },
+    {
+      "name": "setup-without-transport",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "SETUP rtsp://stream.fixture.invalid/live/trackID=0 RTSP/1.0\r\nCSeq: 1\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 400 Bad Request\r\nCSeq: 1\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "session opened"
+        },
+        {
+          "msg": "session closed"
+        }
+      ]
+    },
+    {
+      "name": "setup-without-track",
+      "protosim_events": [{"msg":"session opened"},{"msg":"setup request"},{"msg":"session closed"}],
+      "sim_steps": [{"send": "SETUP rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1\r\n\r\n", "receive": ["RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"]}],
+      "listener": "default",
+      "steps": [
+        {
+          "send": "SETUP rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 400 Bad Request\r\nCSeq: 1\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "session opened"
+        },
+        {
+          "msg": "session closed"
+        }
+      ]
+    },
+    {
+      "name": "setup-invalid-channel",
+      "protosim_events": [{"msg":"session opened"},{"msg":"setup request"},{"msg":"session closed"}],
+      "sim_steps": [
+        {"send": "SETUP rtsp://stream.fixture.invalid/live/trackID=0 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;interleaved=3-4\r\n\r\n", "receive": ["RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"]}
+      ],
+      "listener": "default",
+      "steps": [
+        {
+          "send": "SETUP rtsp://stream.fixture.invalid/live/trackID=0 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;interleaved=3-4\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 400 Bad Request\r\nCSeq: 1\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "session opened"
+        },
+        {
+          "msg": "session closed"
+        }
+      ]
+    },
+    {
+      "name": "setup-invalid-track",
+      "protosim_events": [{"msg":"session opened"},{"msg":"setup request"},{"msg":"session closed"}],
+      "sim_steps": [{"send": "SETUP rtsp://stream.fixture.invalid/live/trackID=bad RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1\r\n\r\n", "receive": ["RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"]}],
+      "listener": "default",
+      "steps": [
+        {
+          "send": "SETUP rtsp://stream.fixture.invalid/live/trackID=bad RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 400 Bad Request\r\nCSeq: 1\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "session opened"
+        },
+        {
+          "msg": "session closed"
+        }
+      ]
+    },
+    {
+      "name": "announce-no-media",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "ANNOUNCE rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 1\r\nContent-Type: application/sdp\r\nContent-Length: 55\r\n\r\nv=0\r\no=fixture 1 1 IN IP4 127.0.0.1\r\ns=Fixture\r\nt=0 0\r\n",
+          "receive": [
+            "RTSP/1.0 400 Bad Request\r\nCSeq: 1\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "session opened"
+        },
+        {
+          "msg": "session closed"
+        }
+      ]
+    },
+    {
+      "name": "announce-with-media",
+      "sim_steps": [{"send": "ANNOUNCE rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 1\r\nContent-Type: application/sdp\r\nContent-Length: 122\r\n\r\nv=0\r\no=fixture 1 1 IN IP4 127.0.0.1\r\ns=Fixture\r\nt=0 0\r\nm=video 0 RTP/AVP 96\r\na=rtpmap:96 H264/90000\r\na=control:trackID=0\r\n", "receive": ["RTSP/1.0 200 OK\r\nCSeq: 1\r\n\r\n"]}],
+      "listener": "default",
+      "steps": [
+        {
+          "send": "ANNOUNCE rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 1\r\nContent-Type: application/sdp\r\nContent-Length: 122\r\n\r\nv=0\r\no=fixture 1 1 IN IP4 127.0.0.1\r\ns=Fixture\r\nt=0 0\r\nm=video 0 RTP/AVP 96\r\na=rtpmap:96 H264/90000\r\na=control:trackID=0\r\n",
+          "receive": [
+            "RTSP/1.0 400 Bad Request\r\nCSeq: 1\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "session opened"
+        },
+        {
+          "msg": "announce request"
+        },
+        {
+          "msg": "session closed"
+        }
+      ]
+    },
+    {
+      "name": "play-without-session",
+      "sim_steps": [
+        {"send": "PLAY rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 1\r\nSession: unknown\r\n\r\n", "receive": ["RTSP/1.0 454 Session Not Found\r\nCSeq: 1\r\n\r\n"]}
+      ],
+      "listener": "default",
+      "steps": [
+        {
+          "send": "PLAY rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 1\r\nSession: unknown\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 400 Bad Request\r\nCSeq: 1\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": []
+    },
+    {
+      "name": "pause-without-session",
+      "sim_steps": [
+        {"send": "PAUSE rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 1\r\nSession: unknown\r\n\r\n", "receive": ["RTSP/1.0 501 Not Implemented\r\nCSeq: 1\r\n\r\n"]}
+      ],
+      "listener": "default",
+      "steps": [
+        {
+          "send": "PAUSE rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 1\r\nSession: unknown\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 400 Bad Request\r\nCSeq: 1\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": []
+    },
+    {
+      "name": "record-without-session",
+      "sim_steps": [
+        {"send": "RECORD rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 1\r\nSession: unknown\r\n\r\n", "receive": ["RTSP/1.0 454 Session Not Found\r\nCSeq: 1\r\n\r\n"]}
+      ],
+      "listener": "default",
+      "steps": [
+        {
+          "send": "RECORD rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 1\r\nSession: unknown\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 400 Bad Request\r\nCSeq: 1\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": []
+    },
+    {
+      "name": "get_parameter-without-session",
+      "sim_steps": [
+        {"send": "GET_PARAMETER rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 1\r\nSession: unknown\r\n\r\n", "receive": ["RTSP/1.0 501 Not Implemented\r\nCSeq: 1\r\n\r\n"]}
+      ],
+      "listener": "default",
+      "steps": [
+        {
+          "send": "GET_PARAMETER rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 1\r\nSession: unknown\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 400 Bad Request\r\nCSeq: 1\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": []
+    },
+    {
+      "name": "teardown-without-session",
+      "sim_steps": [
+        {"send": "TEARDOWN rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 1\r\nSession: unknown\r\n\r\n", "receive": ["RTSP/1.0 454 Session Not Found\r\nCSeq: 1\r\n\r\n"]}
+      ],
+      "listener": "default",
+      "steps": [
+        {
+          "send": "TEARDOWN rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 1\r\nSession: unknown\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 400 Bad Request\r\nCSeq: 1\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": []
+    },
+    {
+      "name": "ping-without-session",
+      "sim_steps": [
+        {"send": "PING rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 1\r\nSession: unknown\r\n\r\n", "receive": ["RTSP/1.0 501 Not Implemented\r\nCSeq: 1\r\n\r\n"]}
+      ],
+      "listener": "default",
+      "steps": [
+        {
+          "send": "PING rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 1\r\nSession: unknown\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 400 Bad Request\r\nCSeq: 1\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": []
+    },
+    {
+      "name": "options-without-session",
+      "sim_steps": [
+        {"send": "options rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 1\r\nSession: unknown\r\n\r\n", "receive": ["RTSP/1.0 501 Not Implemented\r\nCSeq: 1\r\n\r\n"]}
+      ],
+      "listener": "default",
+      "steps": [
+        {
+          "send": "options rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 1\r\nSession: unknown\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 400 Bad Request\r\nCSeq: 1\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": []
+    },
+    {
+      "name": "set-parameter-body",
+      "sim_steps": [
+        {"send": "SET_PARAMETER rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 1\r\nContent-Type: text/parameters\r\nContent-Length: 6\r\n\r\nx: 1\r\n", "receive": ["RTSP/1.0 501 Not Implemented\r\nCSeq: 1\r\n\r\n"]}
+      ],
+      "listener": "default",
+      "steps": [
+        {
+          "send": "SET_PARAMETER rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 1\r\nContent-Type: text/parameters\r\nContent-Length: 6\r\n\r\nx: 1\r\n",
+          "receive": [
+            "RTSP/1.0 400 Bad Request\r\nCSeq: 1\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": []
+    },
+    {
+      "name": "setup-track-plus-sign",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "SETUP rtsp://stream.fixture.invalid/live/trackID=+1 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"
+          ]
+        },
+        {
+          "send": "OPTIONS rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 2\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 200 OK\r\nCSeq: 2\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"
+          ]
+        }
+      ],
+      "events": [
+        {
+          "msg": "session opened"
+        },
+        {
+          "msg": "setup request"
+        },
+        {
+          "msg": "session closed"
+        }
+      ]
+    },
+    {
+      "name": "setup-track-large",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "SETUP rtsp://stream.fixture.invalid/live/trackID=2147483648 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"
+          ]
+        },
+        {
+          "send": "OPTIONS rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 2\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 200 OK\r\nCSeq: 2\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"
+          ]
+        }
+      ],
+      "events": [
+        {
+          "msg": "session opened"
+        },
+        {
+          "msg": "setup request"
+        },
+        {
+          "msg": "session closed"
+        }
+      ]
+    },
+    {
+      "name": "setup-root-path",
+      "protosim_events": [{"msg":"session opened"},{"msg":"setup request"},{"msg":"session closed"}],
+      "sim_steps": [{"send": "SETUP rtsp://stream.fixture.invalid/ RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1\r\n\r\n", "receive": ["RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"]}],
+      "listener": "default",
+      "steps": [
+        {
+          "send": "SETUP rtsp://stream.fixture.invalid/ RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 400 Bad Request\r\nCSeq: 1\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "session opened"
+        },
+        {
+          "msg": "session closed"
+        }
+      ]
+    },
+    {
+      "name": "setup-track-trailing-slash",
+      "protosim_events": [{"msg":"session opened"},{"msg":"setup request"},{"msg":"session closed"}],
+      "sim_steps": [{"send": "SETUP rtsp://stream.fixture.invalid/live/trackID=0/ RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1\r\n\r\n", "receive": ["RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"]}],
+      "listener": "default",
+      "steps": [
+        {
+          "send": "SETUP rtsp://stream.fixture.invalid/live/trackID=0/ RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 400 Bad Request\r\nCSeq: 1\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "session opened"
+        },
+        {
+          "msg": "session closed"
+        }
+      ]
+    },
+    {
+      "name": "setup-track-last-marker",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "SETUP rtsp://stream.fixture.invalid/live/trackID=0/trackID=1 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"
+          ]
+        },
+        {
+          "send": "OPTIONS rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 2\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 200 OK\r\nCSeq: 2\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"
+          ]
+        }
+      ],
+      "events": [
+        {
+          "msg": "session opened"
+        },
+        {
+          "msg": "setup request"
+        },
+        {
+          "msg": "session closed"
+        }
+      ]
+    },
+    {
+      "name": "setup-track-in-query",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "SETUP rtsp://stream.fixture.invalid/live?x=1/trackID=0 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"
+          ]
+        },
+        {
+          "send": "OPTIONS rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 2\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 200 OK\r\nCSeq: 2\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"
+          ]
+        }
+      ],
+      "events": [
+        {
+          "msg": "session opened"
+        },
+        {
+          "msg": "setup request"
+        },
+        {
+          "msg": "session closed"
+        }
+      ]
+    },
+    {
+      "name": "setup-slash-in-query",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "SETUP rtsp://stream.fixture.invalid/live?x=1/ RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"
+          ]
+        },
+        {
+          "send": "OPTIONS rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 2\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 200 OK\r\nCSeq: 2\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"
+          ]
+        }
+      ],
+      "events": [
+        {
+          "msg": "session opened"
+        },
+        {
+          "msg": "setup request"
+        },
+        {
+          "msg": "session closed"
+        }
+      ]
+    },
+    {
+      "name": "setup-track-escaped-equals",
+      "protosim_events": [{"msg":"session opened"},{"msg":"setup request"},{"msg":"session closed"}],
+      "sim_steps": [{"send": "SETUP rtsp://stream.fixture.invalid/live/trackID%3D0 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1\r\n\r\n", "receive": ["RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"]}],
+      "listener": "default",
+      "steps": [
+        {
+          "send": "SETUP rtsp://stream.fixture.invalid/live/trackID%3D0 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 400 Bad Request\r\nCSeq: 1\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "session opened"
+        },
+        {
+          "msg": "session closed"
+        }
+      ]
+    },
+    {
+      "name": "setup-fragment",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "SETUP rtsp://stream.fixture.invalid/live/trackID=0#fixture RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1\r\n\r\n",
+          "receive": [],
+          "closed": true
+        }
+      ],
+      "events": []
+    },
+    {
+      "name": "setup-channel-single",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "SETUP rtsp://stream.fixture.invalid/live/trackID=0 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;interleaved=0\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"
+          ]
+        },
+        {
+          "send": "OPTIONS rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 2\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 200 OK\r\nCSeq: 2\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"
+          ]
+        }
+      ],
+      "events": [
+        {
+          "msg": "session opened"
+        },
+        {
+          "msg": "setup request"
+        },
+        {
+          "msg": "session closed"
+        }
+      ]
+    },
+    {
+      "name": "setup-channel-quoted",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "SETUP rtsp://stream.fixture.invalid/live/trackID=0 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;interleaved=\"0-1\"\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"
+          ]
+        },
+        {
+          "send": "OPTIONS rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 2\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 200 OK\r\nCSeq: 2\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"
+          ]
+        }
+      ],
+      "events": [
+        {
+          "msg": "session opened"
+        },
+        {
+          "msg": "setup request"
+        },
+        {
+          "msg": "session closed"
+        }
+      ]
+    },
+    {
+      "name": "setup-channel-plus-sign",
+      "protosim_events": [{"msg":"session opened"},{"msg":"session closed"}],
+      "sim_steps": [
+        {"send": "SETUP rtsp://stream.fixture.invalid/live/trackID=0 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;interleaved=+0-+1\r\n\r\n", "receive": ["RTSP/1.0 400 Bad Request\r\nCSeq: 1\r\n\r\n"], "closed": true}
+      ],
+      "listener": "default",
+      "steps": [
+        {
+          "send": "SETUP rtsp://stream.fixture.invalid/live/trackID=0 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;interleaved=+0-+1\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"
+          ]
+        },
+        {
+          "send": "OPTIONS rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 2\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 200 OK\r\nCSeq: 2\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"
+          ]
+        }
+      ],
+      "events": [
+        {
+          "msg": "session opened"
+        },
+        {
+          "msg": "setup request"
+        },
+        {
+          "msg": "session closed"
+        }
+      ]
+    },
+    {
+      "name": "setup-ssrc-short",
+      "protosim_events": [{"msg":"session opened"},{"msg":"session closed"}],
+      "sim_steps": [
+        {"send": "SETUP rtsp://stream.fixture.invalid/live/trackID=0 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1;ssrc=1\r\n\r\n", "receive": ["RTSP/1.0 400 Bad Request\r\nCSeq: 1\r\n\r\n"], "closed": true}
+      ],
+      "listener": "default",
+      "steps": [
+        {
+          "send": "SETUP rtsp://stream.fixture.invalid/live/trackID=0 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1;ssrc=1\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"
+          ]
+        },
+        {
+          "send": "OPTIONS rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 2\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 200 OK\r\nCSeq: 2\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"
+          ]
+        }
+      ],
+      "events": [
+        {
+          "msg": "session opened"
+        },
+        {
+          "msg": "setup request"
+        },
+        {
+          "msg": "session closed"
+        }
+      ]
+    },
+    {
+      "name": "setup-ssrc-invalid",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "SETUP rtsp://stream.fixture.invalid/live/trackID=0 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1;ssrc=nothex\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 400 Bad Request\r\nCSeq: 1\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "session opened"
+        },
+        {
+          "msg": "session closed"
+        }
+      ]
+    },
+    {
+      "name": "setup-ssrc-overflow",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "SETUP rtsp://stream.fixture.invalid/live/trackID=0 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1;ssrc=1234567890\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 400 Bad Request\r\nCSeq: 1\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "session opened"
+        },
+        {
+          "msg": "session closed"
+        }
+      ]
+    },
+    {
+      "name": "setup-udp-invalid-port",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "SETUP rtsp://stream.fixture.invalid/live/trackID=0 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/UDP;unicast;client_port=invalid\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 400 Bad Request\r\nCSeq: 1\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "session opened"
+        },
+        {
+          "msg": "session closed"
+        }
+      ]
+    },
+    {
+      "name": "setup-tcp-invalid-port",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "SETUP rtsp://stream.fixture.invalid/live/trackID=0 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1;server_port=invalid\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 400 Bad Request\r\nCSeq: 1\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "session opened"
+        },
+        {
+          "msg": "session closed"
+        }
+      ]
+    },
+    {
+      "name": "setup-invalid-ttl",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "SETUP rtsp://stream.fixture.invalid/live/trackID=0 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1;ttl=invalid\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 400 Bad Request\r\nCSeq: 1\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "session opened"
+        },
+        {
+          "msg": "session closed"
+        }
+      ]
+    },
+    {
+      "name": "setup-destination-ipv6",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "SETUP rtsp://stream.fixture.invalid/live/trackID=0 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1;destination=2001:db8::5\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"
+          ]
+        },
+        {
+          "send": "OPTIONS rtsp://stream.fixture.invalid/live RTSP/1.0\r\nCSeq: 2\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 200 OK\r\nCSeq: 2\r\nPublic: DESCRIBE, ANNOUNCE, SETUP, PLAY, RECORD, GET_PARAMETER, TEARDOWN\r\n\r\n"
+          ]
+        }
+      ],
+      "events": [
+        {
+          "msg": "session opened"
+        },
+        {
+          "msg": "setup request"
+        },
+        {
+          "msg": "session closed"
+        }
+      ]
+    },
+    {
+      "name": "setup-invalid-destination",
+      "listener": "default",
+      "steps": [
+        {
+          "send": "SETUP rtsp://stream.fixture.invalid/live/trackID=0 RTSP/1.0\r\nCSeq: 1\r\nTransport: RTP/AVP/TCP;unicast;interleaved=0-1;destination=fixture.invalid\r\n\r\n",
+          "receive": [
+            "RTSP/1.0 400 Bad Request\r\nCSeq: 1\r\n\r\n"
+          ],
+          "closed": true
+        }
+      ],
+      "events": [
+        {
+          "msg": "session opened"
+        },
+        {
+          "msg": "session closed"
+        }
+      ]
+    }
+  ]
+}
