@@ -1,47 +1,75 @@
-# ProtoSim — 协议扫描模拟器与探针观测平台
+# ProtoSim — Protocol Scan Simulator & Probe Observatory
 
-ProtoSim 是一款面向内部资产扫描器研发测试（如 `internal-scanner`）与公网扫描探针观测的**单机一体化协议模拟与遥测平台**：
+<p align="center">
+  <b>English</b> | <a href="README.zh-CN.md">简体中文</a>
+</p>
 
-- **全量 61 种 RFC 级协议**：覆盖 Web/远程访问/数据库/中间件/工控（ICS）/物联网/网络设备等 61 种协议，支持 `localhost`、`userdef`（TUN + gVisor 虚拟子网）与 `all` 三种组网模式。
-- **开箱即用的 SQLite WAL 观测库**：零外部数据库依赖，内置异步批量写入、滚动保留（默认 30 天 / 2 GB），且**唯一探针库与收藏样本永久保留**。
-- **探针聚类库（Probe Library）**：按 `(protocol, port, first_payload_sha256)` 自动聚类去重，提供 Hex/ASCII 视图、状态归档（`new` / `known` / `adopted`）及一键导出 Hex / Python / Go 复现脚本。
-- **扫描器身份归因引擎**：内置 CIDR、HTTP User-Agent、TLS JA3、首包正则规则，自动识别己方扫描器、Nmap、ZGrab、Censys、Shodan、Masscan 等来源并支持 Web 端动态热更新。
-- **测试批次与 61 协议覆盖率矩阵（Test Runs）**：一键开启/结束回归测试窗口，展示 61 协议覆盖状态（命中 / 未命中 / 解析异常 / 平均耗时）与双批次 Diff 对比。
-- **全量会话回放与 PCAP 导出**：记录有界原始收发报文（默认上限 64 KiB/会话），即使协议解析失败或提前断开仍强制留存首包，支持单会话一键导出标准 `.pcap` 文件。
-- **内嵌 Vue 3 + Element Plus + ECharts 单二进制**：通过 `//go:embed` 打包 7 大前端观测页面，默认监听 `0.0.0.0:5555`。
+**ProtoSim** is a standalone, single-binary **protocol scan simulator and probe observatory** designed for developing/benchmarking asset scanners and capturing novel network probes in the wild.
 
-## 快速开始
+---
 
-```bash
-# 1. 查看所有支持的协议
-./bin/protosim list-protocols
+## Key Features
 
-# 2. 生成默认配置文件（可选）
-./bin/protosim gen-config -o protosim.json --scenario all-61-standard --safe-ssh=true
+- **61 RFC-Verified Protocols**: Covers web, remote access, databases, middleware, ICS/SCADA, IoT, and network infrastructure protocols, with full support for `localhost`, `userdef` (TUN + gVisor virtual subnet), and `all` networking modes.
+- **Zero-Dependency SQLite WAL Store**: Built-in pure-Go SQLite (`modernc.org/sqlite`) with asynchronous batched writes, rolling retention (default 30 days / 2 GB), and **permanent preservation of deduplicated probes and pinned samples**.
+- **Probe Library (Auto-Clustering)**: Deduplicates incoming probes by `(protocol, port, first_payload_sha256)`, tracking first/last seen, hit counts, unique source IPs, Hex/ASCII previews, triage status (`new` / `known` / `adopted`), and 1-click export to **Hex / Python / Go** reproducer snippets.
+- **Scanner Attribution Engine**: Hot-reloadable rule engine matching `cidr`, `ua` (HTTP User-Agent), `ja3` (TLS fingerprint), and `payload_regex` to tag traffic (`nmap`, `zgrab`, `censys`, `shodan`, `masscan`, `self-scanner`, `unknown`, etc.).
+- **Test Runs & 61-Protocol Coverage Matrix**: Start/stop named evaluation runs, inspect per-protocol coverage (`hit` / `missed` / `parse_error` / average latency), and diff any two runs side by side.
+- **Full Session Replay & PCAP Export**: Captures bounded bidirectional payloads (64 KiB cap per session) — always persisting initial bytes even when protocol parsing fails or peers disconnect early — plus optional TCP/UDP **Catch-All** ports and 1-click Wireshark-ready `.pcap` export.
+- **Embedded Vue 3 Console**: Single binary (`//go:embed`) bundling 7 observability views built with Vue 3 + Vite + TypeScript + Element Plus + ECharts, listening on `0.0.0.0:5555` by default.
 
-# 3. 启动模拟器与观测控制台（默认监听 http://0.0.0.0:5555）
-sudo ./bin/protosim run -c protosim.json --catch-all-tcp 9999
+---
+
+## Architecture
+
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) ([简体中文](docs/ARCHITECTURE.zh-CN.md)) for module layout and database schema details.
+
+```mermaid
+flowchart LR
+    Scanners["Asset Scanners / Internet Probes"] --> Net["Network Engine (localhost / TUN + gVisor)"]
+    Net --> Proto["61 RFC Protocol Handlers + Catch-All"]
+    Proto --> Bus["Telemetry Bus (Attribution + Probe Dedup + Batch Writer)"]
+    Bus --> DB["SQLite WAL Store"]
+    Bus -.SSE.-> API["/api/v2 REST + SSE Server"]
+    DB <--> API <--> UI["Embedded Vue 3 Console (:5555)"]
 ```
 
-## CLI 常用参数
+---
 
-| 参数 | 说明 | 默认值 |
-|---|---|---|
-| `-c` | JSON/YAML 配置文件路径 | 内置全 61 协议默认配置 |
-| `--listen` | Web UI 与 `/api/v2/*` 监听地址 | `0.0.0.0:5555` |
-| `--mode` | 组网模式 (`localhost` / `userdef` / `all`) | `localhost` |
-| `--db` | SQLite 数据库文件路径 | `./data/protosim.db` |
-| `--auth-token` | 一键开启 API/Web Token 鉴权 | 空（默认内网免密） |
-| `--catch-all-tcp` | 未知探针兜底监听 TCP 端口列表 | 未启用 |
-| `--catch-all-udp` | 未知探针兜底监听 UDP 端口列表 | 未启用 |
-| `--safe-ssh` | 将模拟 SSH 映射到 2222 避免遮蔽宿主机 SSH | `true` |
-
-## 离线构建
+## Quick Start
 
 ```bash
-# 前端构建
+# 1. List all registered protocols and default ports
+./bin/protosim list-protocols
+
+# 2. Generate a ready-to-use configuration file (optional)
+./bin/protosim gen-config -o protosim.json --scenario all-61-standard --safe-ssh=true
+
+# 3. Start the simulator and Web UI (default: http://0.0.0.0:5555)
+sudo ./bin/protosim run -c protosim.json --catch-all-tcp 9999 --catch-all-udp 9999
+```
+
+### CLI Flags (`protosim run`)
+
+| Flag | Description | Default |
+|---|---|---|
+| `-c` | Path to JSON or YAML config file | Built-in 61-protocol config |
+| `--listen` | Web UI & `/api/v2/*` listen address | `0.0.0.0:5555` |
+| `--mode` | Network mode (`localhost` \| `userdef` \| `all`) | `localhost` |
+| `--db` | SQLite database file path | `./data/protosim.db` |
+| `--auth-token` | Enable Bearer / `X-API-Token` authentication | Disabled (LAN-friendly) |
+| `--catch-all-tcp` | Comma-separated Catch-All TCP ports | Disabled |
+| `--catch-all-udp` | Comma-separated Catch-All UDP ports | Disabled |
+| `--safe-ssh` | Map simulated SSH to port `2222` instead of `22` | `true` |
+
+---
+
+## Building from Source
+
+```bash
+# 1. Build embedded Vue 3 frontend
 cd web && npm install && npm run build && cd ..
 
-# Go 离线构建（含内嵌 Vue 3 静态资源）
+# 2. Build standalone Go binary
 go build -o bin/protosim ./cmd/protosim
 ```
