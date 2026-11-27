@@ -161,3 +161,25 @@ func TestResolveTunHostIP(t *testing.T) {
 		}
 	}
 }
+
+func TestManagerExclusions(t *testing.T) {
+	cfg := config.DefaultConfig()
+	cfg.Network.TTL = 128
+	cfg.Network.Exclusions = []string{"10.0.0.5", "192.168.10.0/24"}
+	mgr, err := NewManager(cfg, nil)
+	if err != nil {
+		t.Fatalf("NewManager: %v", err)
+	}
+	if cfg.Network.TTL != 128 {
+		t.Fatalf("expected TTL 128, got %d", cfg.Network.TTL)
+	}
+	if !mgr.isExcluded(&net.TCPAddr{IP: net.ParseIP("10.0.0.5"), Port: 12345}) {
+		t.Errorf("expected exact IP 10.0.0.5 to be excluded")
+	}
+	if !mgr.isExcluded(&net.UDPAddr{IP: net.ParseIP("192.168.10.99"), Port: 5555}) {
+		t.Errorf("expected CIDR IP 192.168.10.99 to be excluded")
+	}
+	if mgr.isExcluded(&net.TCPAddr{IP: net.ParseIP("192.168.11.1"), Port: 12345}) {
+		t.Errorf("expected non-matching IP 192.168.11.1 NOT to be excluded")
+	}
+}

@@ -76,12 +76,14 @@ type Manager struct {
 	vrouter *virtualRouter
 	device  core.Device
 
-	mu       sync.RWMutex
-	services map[string]*runningService
-	limiters sync.Map      // ip -> *rate.Limiter
-	connSem  chan struct{} // global concurrent TCP connection guard
-	connSeq  atomic.Uint32
-	closed   atomic.Bool
+	mu           sync.RWMutex
+	services     map[string]*runningService
+	limiters     sync.Map      // ip -> *rate.Limiter
+	excludedIPs  map[string]struct{}
+	excludedNets []*net.IPNet
+	connSem      chan struct{} // global concurrent TCP connection guard
+	connSeq      atomic.Uint32
+	closed       atomic.Bool
 }
 
 // NewManager initializes the network manager and protocol telemetry logger.
@@ -110,17 +112,38 @@ func NewManager(cfg *config.Config, bus *telemetry.Bus) (*Manager, error) {
 	if maxConns <= 0 {
 		maxConns = 4096
 	}
+	excludedIPs := make(map[string]struct{})
+	var excludedNets []*net.IPNet
+	for _, raw := range cfg.Network.Exclusions {
+		entry := strings.TrimSpace(raw)
+		if entry == "" {
+			continue
+		}
+		if strings.Contains(entry, "/") {
+			if _, cidr, err := net.ParseCIDR(entry); err == nil {
+				excludedNets = append(excludedNets, cidr)
+			}
+			continue
+		}
+		if ip := net.ParseIP(entry); ip != nil {
+			excludedIPs[ip.String()] = struct{}{}
+			protocols.AddLogRemoteIpExclusion(ip.String())
+		}
+	}
+
 	m := &Manager{
-		cfg:      cfg,
-		bus:      bus,
-		tracker:  tracker,
-		protoLog: pLog,
-		catchAll: NewCatchAllRunner(bus, tracker),
-		tunIP:    tunIP,
-		ipNet:    ipNet,
-		nic:      1,
-		services: make(map[string]*runningService),
-		connSem:  make(chan struct{}, maxConns),
+		cfg:          cfg,
+		bus:          bus,
+		tracker:      tracker,
+		protoLog:     pLog,
+		catchAll:     NewCatchAllRunner(bus, tracker),
+		tunIP:        tunIP,
+		ipNet:        ipNet,
+		nic:          1,
+		services:     make(map[string]*runningService),
+		excludedIPs:  excludedIPs,
+		excludedNets: excludedNets,
+		connSem:      make(chan struct{}, maxConns),
 	}
 	return m, nil
 }
@@ -236,7 +259,11 @@ func (m *Manager) initVirtualStack() error {
 	_ = s.SetPromiscuousMode(m.nic, true)
 	_ = s.SetSpoofing(m.nic, true)
 
-	ttl := tcpip.DefaultTTLOption(64)
+	ttlVal := m.cfg.Network.TTL
+	if ttlVal <= 0 || ttlVal > 255 {
+		ttlVal = 64
+	}
+	ttl := tcpip.DefaultTTLOption(ttlVal)
 	_ = s.SetNetworkProtocolOption(ipv4.ProtocolNumber, &ttl)
 	_ = s.SetNetworkProtocolOption(ipv6.ProtocolNumber, &ttl)
 	tcpDelay := tcpip.TCPDelayEnabled(false)
@@ -484,6 +511,29 @@ func (m *Manager) listenUDP(ip string, port uint16) (net.PacketConn, error) {
 	return m.vrouter.ListenUDP(ip, port)
 }
 
+func (m *Manager) isExcluded(remoteAddr net.Addr) bool {
+	if remoteAddr == nil || (len(m.excludedIPs) == 0 && len(m.excludedNets) == 0) {
+		return false
+	}
+	ipStr, _ := splitHostPort(remoteAddr)
+	if ipStr == "" {
+		return false
+	}
+	if _, ok := m.excludedIPs[ipStr]; ok {
+		return true
+	}
+	if len(m.excludedNets) > 0 {
+		if parsed := net.ParseIP(ipStr); parsed != nil {
+			for _, cidr := range m.excludedNets {
+				if cidr.Contains(parsed) {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
 func (m *Manager) allowIP(remoteAddr net.Addr) bool {
 	if !m.cfg.RateLimit.Enabled || remoteAddr == nil {
 		return true
@@ -533,7 +583,11 @@ func (m *Manager) startTCPService(ip string, port uint16, protoName string, bi *
 			}
 			go func(c net.Conn) {
 				defer func() { <-m.connSem }()
-				tc := NewTelemetryConn(c, m.bus, m.tracker, protoName, ip, port)
+				bus := m.bus
+				if m.isExcluded(c.RemoteAddr()) {
+					bus = nil
+				}
+				tc := NewTelemetryConn(c, bus, m.tracker, protoName, ip, port)
 				defer tc.Close()
 				if m.cfg.Network.TimeoutSec > 0 {
 					_ = tc.SetDeadline(time.Now().Add(time.Duration(m.cfg.Network.TimeoutSec) * time.Second))
@@ -658,10 +712,10 @@ func (m *Manager) startUDPService(ip string, port uint16, protoName string, _ *p
 		return nil, err
 	}
 	stopCh := make(chan struct{})
-	go func() {
+	servePacketConn := func(conn net.PacketConn) {
 		buf := make([]byte, 65535)
 		for {
-			n, raddr, err := pc.ReadFrom(buf)
+			n, raddr, err := conn.ReadFrom(buf)
 			if err != nil {
 				select {
 				case <-stopCh:
@@ -680,11 +734,19 @@ func (m *Manager) startUDPService(ip string, port uint16, protoName string, _ *p
 				rIP, rPort := splitHostPort(remote)
 				sid := uuid.NewString()
 				rKey := remote.String()
+				localIP := ip
+				if vp, ok := remote.(*virtualUDPPeerAddr); ok && vp.localIP != "" {
+					localIP = vp.localIP
+				}
+				bus := m.bus
+				if m.isExcluded(remote) {
+					bus = nil
+				}
 
 				hash, tag := "", "unknown"
-				if m.bus != nil {
-					hash, tag = m.bus.RecordProbeHit(protoName, "udp", port, rIP, "", sid, payload)
-					m.bus.RecordPayload(telemetry.PayloadChunk{
+				if bus != nil {
+					hash, tag = bus.RecordProbeHit(protoName, "udp", port, rIP, "", sid, payload)
+					bus.RecordPayload(telemetry.PayloadChunk{
 						SessionID: sid,
 						Seq:       1,
 						Timestamp: start,
@@ -699,7 +761,7 @@ func (m *Manager) startUDPService(ip string, port uint16, protoName string, _ *p
 				})
 				defer m.tracker.Unregister(protoName, rKey)
 
-				wrappedPC := &udpTelemetryPacketConn{PacketConn: pc, bus: m.bus, sessionID: sid}
+				wrappedPC := &udpTelemetryPacketConn{PacketConn: conn, bus: bus, sessionID: sid}
 				wrappedPC.seq.Store(1)
 				uc := protocols.NewUDPConnection(wrappedPC, remote, ci)
 				err := fn(uc, payload)
@@ -709,8 +771,8 @@ func (m *Manager) startUDPService(ip string, port uint16, protoName string, _ *p
 				if err != nil {
 					status = "parse_error"
 					parseOK = false
-					if m.bus != nil {
-						m.bus.RecordEvent(telemetry.Event{
+					if bus != nil {
+						bus.RecordEvent(telemetry.Event{
 							SessionID: sid,
 							Timestamp: end,
 							Protocol:  protoName,
@@ -721,14 +783,14 @@ func (m *Manager) startUDPService(ip string, port uint16, protoName string, _ *p
 						})
 					}
 				}
-				if m.bus != nil {
-					m.bus.RecordSession(telemetry.Session{
+				if bus != nil {
+					bus.RecordSession(telemetry.Session{
 						ID:         sid,
 						Protocol:   protoName,
 						Transport:  "udp",
 						RemoteIP:   rIP,
 						RemotePort: rPort,
-						LocalIP:    ip,
+						LocalIP:    localIP,
 						LocalPort:  port,
 						ScannerTag: tag,
 						ProbeHash:  hash,
@@ -743,10 +805,27 @@ func (m *Manager) startUDPService(ip string, port uint16, protoName string, _ *p
 				}
 			}(data, raddr)
 		}
-	}()
+	}
+	go servePacketConn(pc)
+
+	// In localhost mode, also join SSDP multicast group 239.255.255.250:1900 so LAN
+	// UPnP/SSDP M-SEARCH discovery probes are answered seamlessly.
+	var mcastPC net.PacketConn
+	if protoName == "ssdp" && port == 1900 && m.cfg.Network.Mode == config.ModeLocalhost {
+		if mc, merr := net.ListenMulticastUDP("udp4", nil, &net.UDPAddr{IP: net.IPv4(239, 255, 255, 250), Port: 1900}); merr == nil {
+			mcastPC = mc
+			go servePacketConn(mc)
+		} else {
+			logrus.Debugf("[ssdp] multicast 239.255.255.250:1900 join skipped: %v", merr)
+		}
+	}
+
 	return func() {
 		close(stopCh)
 		_ = pc.Close()
+		if mcastPC != nil {
+			_ = mcastPC.Close()
+		}
 	}, nil
 }
 

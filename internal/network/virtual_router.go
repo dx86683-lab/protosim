@@ -228,9 +228,12 @@ func (r *virtualRouter) handleUDP(req *udp.ForwarderRequest) bool {
 		return false
 	}
 	conn := gonet.NewUDPConn(&wq, ep)
-	remoteAddr := &net.UDPAddr{
-		IP:   append(net.IP(nil), id.RemoteAddress.AsSlice()...),
-		Port: int(id.RemotePort),
+	remoteAddr := &virtualUDPPeerAddr{
+		UDPAddr: &net.UDPAddr{
+			IP:   append(net.IP(nil), id.RemoteAddress.AsSlice()...),
+			Port: int(id.RemotePort),
+		},
+		localIP: dstIP.String(),
 	}
 	r.udpAccepted.Add(1)
 	go pc.pumpFlow(conn, remoteAddr)
@@ -325,6 +328,15 @@ func (l *virtualTCPListener) Close() error {
 
 func (l *virtualTCPListener) Addr() net.Addr { return l.addr }
 
+type virtualUDPPeerAddr struct {
+	*net.UDPAddr
+	localIP string
+}
+
+func (a *virtualUDPPeerAddr) peerKey() string {
+	return a.UDPAddr.String() + "|" + a.localIP
+}
+
 type virtualUDPDatagram struct {
 	data   []byte
 	remote net.Addr
@@ -344,8 +356,8 @@ type virtualUDPPacketConn struct {
 	once sync.Once
 }
 
-func (p *virtualUDPPacketConn) pumpFlow(conn *gonet.UDPConn, remote *net.UDPAddr) {
-	peerKey := remote.String()
+func (p *virtualUDPPacketConn) pumpFlow(conn *gonet.UDPConn, remote *virtualUDPPeerAddr) {
+	peerKey := remote.peerKey()
 	p.peerMu.Lock()
 	prev := p.peers[peerKey]
 	p.peers[peerKey] = conn
@@ -404,8 +416,20 @@ func (p *virtualUDPPacketConn) WriteTo(b []byte, addr net.Addr) (int, error) {
 	if addr == nil {
 		return 0, errors.New("nil remote address")
 	}
+	var conn *gonet.UDPConn
 	p.peerMu.RLock()
-	conn := p.peers[addr.String()]
+	if vp, ok := addr.(*virtualUDPPeerAddr); ok {
+		conn = p.peers[vp.peerKey()]
+	} else {
+		// Fallback for handlers that construct a plain *net.UDPAddr
+		prefix := addr.String() + "|"
+		for k, c := range p.peers {
+			if len(k) >= len(prefix) && k[:len(prefix)] == prefix {
+				conn = c
+				break
+			}
+		}
+	}
 	p.peerMu.RUnlock()
 	if conn == nil {
 		return 0, net.ErrClosed

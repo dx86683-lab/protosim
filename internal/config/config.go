@@ -32,14 +32,16 @@ type Config struct {
 }
 
 type NetworkConfig struct {
-	Mode       string `json:"mode" yaml:"mode"`               // localhost | userdef | all
-	CIDR       string `json:"cidr" yaml:"cidr"`               // e.g. 192.168.124.15/24 (bare IP auto-normalized)
-	Gateway    string `json:"gateway" yaml:"gateway"`         // optional gateway for TUN modes
-	DevName    string `json:"dev_name" yaml:"dev_name"`       // e.g. protosim0
-	MTU        int    `json:"mtu" yaml:"mtu"`                 // default 1500
-	TimeoutSec int    `json:"timeout_sec" yaml:"timeout_sec"` // per-session idle/read timeout
-	MaxConns   int    `json:"max_conns" yaml:"max_conns"`     // global concurrent TCP connection cap (default 4096)
-	LogLevel   string `json:"log_level" yaml:"log_level"`     // debug | info | warn | error
+	Mode       string   `json:"mode" yaml:"mode"`                             // localhost | userdef | all
+	CIDR       string   `json:"cidr" yaml:"cidr"`                             // e.g. 192.168.124.15/24 (bare IP auto-normalized)
+	Gateway    string   `json:"gateway" yaml:"gateway"`                       // optional gateway for TUN modes
+	DevName    string   `json:"dev_name" yaml:"dev_name"`                     // e.g. protosim0
+	MTU        int      `json:"mtu" yaml:"mtu"`                               // default 1500
+	TTL        int      `json:"ttl" yaml:"ttl"`                               // virtual stack IPv4/IPv6 TTL (default 64, 1..255)
+	TimeoutSec int      `json:"timeout_sec" yaml:"timeout_sec"`               // per-session idle/read timeout
+	MaxConns   int      `json:"max_conns" yaml:"max_conns"`                   // global concurrent TCP connection cap (default 4096)
+	Exclusions []string `json:"exclusions,omitempty" yaml:"exclusions,omitempty"` // source IPs or CIDRs excluded from telemetry
+	LogLevel   string   `json:"log_level" yaml:"log_level"`                   // debug | info | warn | error
 }
 
 type APIConfig struct {
@@ -113,6 +115,7 @@ func DefaultConfig() *Config {
 			CIDR:       "0.0.0.0/24",
 			DevName:    "protosim0",
 			MTU:        1500,
+			TTL:        64,
 			TimeoutSec: 30,
 			MaxConns:   4096,
 			LogLevel:   "info",
@@ -181,6 +184,9 @@ func (c *Config) Normalize() error {
 	}
 	if c.Network.MTU <= 0 {
 		c.Network.MTU = 1500
+	}
+	if c.Network.TTL <= 0 || c.Network.TTL > 255 {
+		c.Network.TTL = 64
 	}
 	if c.Network.TimeoutSec <= 0 {
 		c.Network.TimeoutSec = 30
