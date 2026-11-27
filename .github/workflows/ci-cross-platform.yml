@@ -80,8 +80,8 @@ jobs:
             python scripts/e2e_cross_platform.py "${{ matrix.bin }}"
           fi
 
-      - name: Run Linux TUN + gVisor dynamic Forwarder E2E (/16 all mode)
-        if: matrix.os == 'ubuntu-24.04'
+      - name: Run Unix TUN + gVisor dynamic Forwarder E2E (/16 all mode)
+        if: matrix.os == 'ubuntu-24.04' || matrix.os == 'macos-latest'
         shell: bash
         run: |
           cat <<'EOF' >/tmp/ci-tun16.json
@@ -97,10 +97,19 @@ jobs:
           }
           EOF
           sudo ./bin/protosim run -c /tmp/ci-tun16.json >/tmp/ci-tun16.log 2>&1 &
+          READY=0
           for i in $(seq 1 50); do
-            curl -sf http://127.0.0.1:15566/api/v2/health >/dev/null && break
-            sleep 0.1
+            if curl -sf http://127.0.0.1:15566/api/v2/health >/dev/null; then
+              READY=1
+              break
+            fi
+            sleep 0.2
           done
+          if [ "$READY" -ne 1 ]; then
+            echo "=== TUN STARTUP FAILED ==="
+            cat /tmp/ci-tun16.log || true
+            exit 1
+          fi
           python3 - <<'PYEOF'
           import socket
           # Exact override -> Jenkins 403
@@ -128,6 +137,68 @@ jobs:
               raise AssertionError("expected TCP RST")
           except ConnectionRefusedError:
               pass
-          print("LINUX_TUN_GVISOR_SLASH16_E2E: ALL PASSED")
+          print("UNIX_TUN_GVISOR_SLASH16_E2E: ALL PASSED")
           PYEOF
           sudo pkill -f "bin/protosim run -c /tmp/ci-tun16.json" || true
+
+      - name: Run Windows TUN + gVisor dynamic Forwarder E2E (/16 all mode, without pre-downloaded wintun.dll)
+        if: matrix.os == 'windows-latest'
+        shell: bash
+        run: |
+          cat <<'EOF' >ci-tun16-win.json
+          {
+            "scenario": "ci-tun16-win",
+            "network": { "mode": "all", "cidr": "10.201.0.1/16", "dev_name": "protosim0", "mtu": 1500 },
+            "api": { "listen": "127.0.0.1:15566" },
+            "storage": { "db_path": "ci-tun16-win.db", "payload_enabled": false },
+            "hosts": [
+              { "ip": "0.0.0.0", "services": [{ "protocol": "http", "port": 80 }, { "protocol": "tftp", "port": 69 }] },
+              { "ip": "10.201.1.10", "services": [{ "protocol": "jenkins", "port": 80 }] }
+            ]
+          }
+          EOF
+          ./bin/protosim.exe run -c ci-tun16-win.json >ci-tun16-win.log 2>&1 &
+          WINPID=$!
+          READY=0
+          for i in $(seq 1 40); do
+            if curl -sf http://127.0.0.1:15566/api/v2/health >/dev/null 2>&1; then
+              READY=1
+              break
+            fi
+            if ! kill -0 "$WINPID" 2>/dev/null; then
+              break
+            fi
+            sleep 0.2
+          done
+          if [ "$READY" -ne 1 ]; then
+            echo "=== WINDOWS TUN STARTUP FAILED (verifying wintun.dll requirement) ==="
+            cat ci-tun16-win.log || true
+            exit 1
+          fi
+          PYBIN=$(command -v python3 || command -v python)
+          "$PYBIN" - <<'PYEOF'
+          import socket
+          s = socket.create_connection(("10.201.1.10", 80), timeout=3)
+          s.settimeout(3)
+          s.sendall(b"GET / HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n")
+          assert b"Jenkins" in s.recv(512), "expected Jenkins override"
+          s.close()
+          s = socket.create_connection(("10.201.200.88", 80), timeout=3)
+          s.settimeout(3)
+          s.sendall(b"GET / HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n")
+          assert b"200 OK" in s.recv(512), "expected HTTP 200 wildcard"
+          s.close()
+          u = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+          u.settimeout(3)
+          u.sendto(b"\x00\x01x.txt\x00octet\x00", ("10.201.200.88", 69))
+          d, _ = u.recvfrom(256)
+          assert len(d) >= 10, "expected TFTP reply"
+          u.close()
+          try:
+              s = socket.create_connection(("10.201.200.88", 9998), timeout=2)
+              raise AssertionError("expected TCP RST")
+          except ConnectionRefusedError:
+              pass
+          print("WINDOWS_TUN_GVISOR_SLASH16_E2E: ALL PASSED")
+          PYEOF
+          kill "$WINPID" || true
