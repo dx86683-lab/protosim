@@ -18,7 +18,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"golang.org/x/time/rate"
 	"gvisor.dev/gvisor/pkg/tcpip"
-	"gvisor.dev/gvisor/pkg/tcpip/adapters/gonet"
 	"gvisor.dev/gvisor/pkg/tcpip/header"
 	"gvisor.dev/gvisor/pkg/tcpip/network/ipv4"
 	"gvisor.dev/gvisor/pkg/tcpip/network/ipv6"
@@ -70,11 +69,12 @@ type Manager struct {
 	protoLog *logrus.Logger
 	catchAll *CatchAllRunner
 
-	tunIP  net.IP
-	ipNet  *net.IPNet
-	nic    tcpip.NICID
-	stack  *stack.Stack
-	device core.Device
+	tunIP   net.IP
+	ipNet   *net.IPNet
+	nic     tcpip.NICID
+	stack   *stack.Stack
+	vrouter *virtualRouter
+	device  core.Device
 
 	mu       sync.RWMutex
 	services map[string]*runningService
@@ -216,6 +216,12 @@ func (m *Manager) initVirtualStack() error {
 		NetworkProtocols:   []stack.NetworkProtocolFactory{ipv4.NewProtocol, ipv6.NewProtocol},
 		TransportProtocols: []stack.TransportProtocolFactory{tcp.NewProtocol, udp.NewProtocol, icmp.NewProtocol4, icmp.NewProtocol6},
 	})
+
+	// Attach dynamic TCP/UDP forwarder BEFORE CreateNIC so no inbound packets
+	// race with handler registration.
+	vrouter := newVirtualRouter(m.ipNet, m.tunIP)
+	vrouter.Attach(s)
+
 	if tcperr := s.CreateNIC(m.nic, ep); tcperr != nil {
 		return fmt.Errorf("create NIC: %s", tcperr)
 	}
@@ -240,55 +246,13 @@ func (m *Manager) initVirtualStack() error {
 
 	m.device = dev
 	m.stack = s
-
-	if m.cfg.Network.Mode == config.ModeAll {
-		inc := func(ip net.IP) {
-			for j := len(ip) - 1; j >= 0; j-- {
-				ip[j]++
-				if ip[j] > 0 {
-					break
-				}
-			}
-		}
-		ones, bits := m.ipNet.Mask.Size()
-		netIP := m.ipNet.IP.Mask(m.ipNet.Mask).To4()
-		for ip := m.ipNet.IP.Mask(m.ipNet.Mask); m.ipNet.Contains(ip); inc(ip) {
-			ip4 := ip.To4()
-			if ip4 == nil {
-				continue
-			}
-			// Never register the OS-side TUN host IP or .0 network address into gVisor.
-			if ip4.Equal(m.tunIP) || (bits == 32 && ones < 31 && ip4.Equal(netIP)) {
-				continue
-			}
-			pa := tcpip.ProtocolAddress{
-				Protocol:          ipv4.ProtocolNumber,
-				AddressWithPrefix: tcpip.AddrFromSlice(ip4).WithPrefix(),
-			}
-			_ = s.AddProtocolAddress(m.nic, pa, stack.AddressProperties{})
-		}
-	}
+	m.vrouter = vrouter
 	return nil
 }
 
 func (m *Manager) ensureVirtualIP(ipStr string) error {
-	if m.cfg.Network.Mode != config.ModeUserdef || m.stack == nil {
-		return nil
-	}
-	ip := net.ParseIP(ipStr)
-	if ip == nil || ip.To4() == nil {
-		return nil
-	}
-	pa := tcpip.ProtocolAddress{
-		Protocol:          ipv4.ProtocolNumber,
-		AddressWithPrefix: tcpip.AddrFromSlice(ip.To4()).WithPrefix(),
-	}
-	if err := m.stack.AddProtocolAddress(m.nic, pa, stack.AddressProperties{}); err != nil {
-		// Ignore duplicate address errors
-		if !strings.Contains(strings.ToLower(err.String()), "duplicate") {
-			return errors.New(err.String())
-		}
-	}
+	// Promiscuous + Spoofing + dynamic Forwarder handles any virtual IP inside
+	// m.ipNet on demand without upfront AddProtocolAddress fan-out.
 	return nil
 }
 
@@ -504,24 +468,20 @@ func (m *Manager) listenTCP(ip string, port uint16) (net.Listener, error) {
 	if m.cfg.Network.Mode == config.ModeLocalhost {
 		return net.Listen("tcp", fmt.Sprintf("%s:%d", ip, port))
 	}
-	addr := tcpip.FullAddress{
-		NIC:  m.nic,
-		Addr: ipToAddress(net.ParseIP(ip)),
-		Port: port,
+	if m.vrouter == nil {
+		return nil, errors.New("virtual router not initialized")
 	}
-	return gonet.ListenTCP(m.stack, addr, ipv4.ProtocolNumber)
+	return m.vrouter.ListenTCP(ip, port)
 }
 
 func (m *Manager) listenUDP(ip string, port uint16) (net.PacketConn, error) {
 	if m.cfg.Network.Mode == config.ModeLocalhost {
 		return net.ListenPacket("udp", fmt.Sprintf("%s:%d", ip, port))
 	}
-	addr := tcpip.FullAddress{
-		NIC:  m.nic,
-		Addr: ipToAddress(net.ParseIP(ip)),
-		Port: port,
+	if m.vrouter == nil {
+		return nil, errors.New("virtual router not initialized")
 	}
-	return gonet.DialUDP(m.stack, &addr, nil, ipv4.ProtocolNumber)
+	return m.vrouter.ListenUDP(ip, port)
 }
 
 func (m *Manager) allowIP(remoteAddr net.Addr) bool {
@@ -929,6 +889,9 @@ func (m *Manager) Close() {
 		if rs.stopFn != nil {
 			rs.stopFn()
 		}
+	}
+	if m.vrouter != nil {
+		m.vrouter.Close()
 	}
 	if m.stack != nil {
 		m.stack.Close()
