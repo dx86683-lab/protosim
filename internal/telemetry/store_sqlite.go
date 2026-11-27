@@ -45,6 +45,8 @@ func OpenStore(dbPath string) (*Store, error) {
 		"PRAGMA busy_timeout=5000;",
 		"PRAGMA foreign_keys=ON;",
 		"PRAGMA temp_store=MEMORY;",
+		"PRAGMA cache_size=-32000;",
+		"PRAGMA wal_autocheckpoint=4000;",
 	}
 	for _, p := range pragmas {
 		if _, err := db.Exec(p); err != nil {
@@ -270,12 +272,125 @@ type ProbeHitInput struct {
 	Payload    []byte
 }
 
+type coalescedProbeHit struct {
+	first      ProbeHitInput
+	lastSeen   time.Time
+	hitCount   int64
+	remoteIPs  map[string]struct{}
+	scannerSet map[string]struct{}
+}
+
+func mergeSessionSnapshot(dst *Session, src *Session) {
+	if src.JA3 != "" {
+		dst.JA3 = src.JA3
+	}
+	if src.ScannerTag != "" && src.ScannerTag != "unknown" {
+		dst.ScannerTag = src.ScannerTag
+	}
+	if src.ProbeHash != "" {
+		dst.ProbeHash = src.ProbeHash
+	}
+	if src.EndedAt.After(dst.EndedAt) {
+		dst.EndedAt = src.EndedAt
+	}
+	if src.DurationMs > dst.DurationMs {
+		dst.DurationMs = src.DurationMs
+	}
+	if src.BytesIn > dst.BytesIn {
+		dst.BytesIn = src.BytesIn
+	}
+	if src.BytesOut > dst.BytesOut {
+		dst.BytesOut = src.BytesOut
+	}
+	if src.EventCount > dst.EventCount {
+		dst.EventCount = src.EventCount
+	}
+	if !src.ParseOK {
+		dst.ParseOK = false
+	}
+	if src.Status != "" && src.Status != "open" {
+		dst.Status = src.Status
+	}
+}
+
 // WriteBatch commits a slice of telemetry records in a single SQLite transaction.
-// It returns any newly discovered Probes so the Bus can notify SSE/Webhook subscribers.
+// It coalesces duplicate session snapshots, event count bumps, and identical probe
+// hits in memory and reuses prepared statements to sustain high scan throughput.
 func (s *Store) WriteBatch(items []BatchWriteItem) ([]Probe, error) {
 	if len(items) == 0 {
 		return nil, nil
 	}
+
+	// Pre-aggregate in memory before acquiring the SQLite write lock.
+	sessionOrder := make([]string, 0, len(items)/2+1)
+	sessionsByID := make(map[string]*Session, len(items)/2+1)
+	events := make([]*Event, 0, len(items)/2)
+	eventCountDelta := make(map[string]int, len(items)/2)
+	creds := make([]*Credential, 0)
+	payloads := make([]*PayloadChunk, 0)
+	probeOrder := make([]string, 0, 16)
+	probesByHash := make(map[string]*coalescedProbeHit, 16)
+
+	for _, it := range items {
+		if it.Session != nil {
+			if existing, ok := sessionsByID[it.Session.ID]; ok {
+				mergeSessionSnapshot(existing, it.Session)
+			} else {
+				cp := *it.Session
+				sessionsByID[cp.ID] = &cp
+				sessionOrder = append(sessionOrder, cp.ID)
+			}
+		}
+		if it.Event != nil {
+			events = append(events, it.Event)
+			if it.Event.SessionID != "" {
+				eventCountDelta[it.Event.SessionID]++
+			}
+		}
+		if it.Credential != nil {
+			creds = append(creds, it.Credential)
+		}
+		if it.Payload != nil {
+			payloads = append(payloads, it.Payload)
+		}
+		if it.ProbeHit != nil {
+			in := *it.ProbeHit
+			ts := in.Timestamp
+			if ts.IsZero() {
+				ts = time.Now().UTC()
+			}
+			if agg, ok := probesByHash[in.Hash]; ok {
+				agg.hitCount++
+				if ts.After(agg.lastSeen) {
+					agg.lastSeen = ts
+				}
+				if in.RemoteIP != "" {
+					agg.remoteIPs[in.RemoteIP] = struct{}{}
+				}
+				if in.ScannerTag != "" {
+					agg.scannerSet[in.ScannerTag] = struct{}{}
+				}
+			} else {
+				agg := &coalescedProbeHit{
+					first:      in,
+					lastSeen:   ts,
+					hitCount:   1,
+					remoteIPs:  make(map[string]struct{}, 2),
+					scannerSet: make(map[string]struct{}, 2),
+				}
+				agg.first.Timestamp = ts
+				if in.RemoteIP != "" {
+					agg.remoteIPs[in.RemoteIP] = struct{}{}
+				}
+				if in.ScannerTag != "" {
+					agg.scannerSet[in.ScannerTag] = struct{}{}
+				}
+				probesByHash[in.Hash] = agg
+				probeOrder = append(probeOrder, in.Hash)
+			}
+		}
+	}
+
 	s.writeM.Lock()
 	defer s.writeM.Unlock()
 
@@ -291,88 +406,127 @@ func (s *Store) WriteBatch(items []BatchWriteItem) ([]Probe, error) {
 
 	var newProbes []Probe
 
-	for _, it := range items {
-		if it.Session != nil {
-			sess := it.Session
+	if len(sessionOrder) > 0 {
+		stmtSess, err := tx.Prepare(`
+			INSERT INTO sessions (
+				id, protocol, transport, remote_ip, remote_port, local_ip, local_port,
+				country, ja3, scanner_tag, probe_hash, started_at, ended_at, duration_ms,
+				bytes_in, bytes_out, event_count, parse_ok, status
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			ON CONFLICT(id) DO UPDATE SET
+				ja3 = CASE WHEN excluded.ja3 != '' THEN excluded.ja3 ELSE sessions.ja3 END,
+				scanner_tag = CASE WHEN excluded.scanner_tag != '' AND excluded.scanner_tag != 'unknown' THEN excluded.scanner_tag ELSE sessions.scanner_tag END,
+				probe_hash = CASE WHEN excluded.probe_hash != '' THEN excluded.probe_hash ELSE sessions.probe_hash END,
+				ended_at = CASE WHEN excluded.ended_at > sessions.ended_at THEN excluded.ended_at ELSE sessions.ended_at END,
+				duration_ms = CASE WHEN excluded.duration_ms > sessions.duration_ms THEN excluded.duration_ms ELSE sessions.duration_ms END,
+				bytes_in = CASE WHEN excluded.bytes_in > sessions.bytes_in THEN excluded.bytes_in ELSE sessions.bytes_in END,
+				bytes_out = CASE WHEN excluded.bytes_out > sessions.bytes_out THEN excluded.bytes_out ELSE sessions.bytes_out END,
+				event_count = CASE WHEN excluded.event_count > sessions.event_count THEN excluded.event_count ELSE sessions.event_count END,
+				parse_ok = CASE WHEN excluded.parse_ok = 0 THEN 0 ELSE sessions.parse_ok END,
+				status = CASE WHEN excluded.status != 'open' THEN excluded.status ELSE sessions.status END
+		`)
+		if err != nil {
+			return nil, fmt.Errorf("prepare session upsert: %w", err)
+		}
+		defer stmtSess.Close()
+
+		for _, id := range sessionOrder {
+			sess := sessionsByID[id]
 			parseOK := 0
 			if sess.ParseOK {
 				parseOK = 1
 			}
-			_, err := tx.Exec(`
-				INSERT INTO sessions (
-					id, protocol, transport, remote_ip, remote_port, local_ip, local_port,
-					country, ja3, scanner_tag, probe_hash, started_at, ended_at, duration_ms,
-					bytes_in, bytes_out, event_count, parse_ok, status
-				) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-				ON CONFLICT(id) DO UPDATE SET
-					ja3 = CASE WHEN excluded.ja3 != '' THEN excluded.ja3 ELSE sessions.ja3 END,
-					scanner_tag = CASE WHEN excluded.scanner_tag != '' AND excluded.scanner_tag != 'unknown' THEN excluded.scanner_tag ELSE sessions.scanner_tag END,
-					probe_hash = CASE WHEN excluded.probe_hash != '' THEN excluded.probe_hash ELSE sessions.probe_hash END,
-					ended_at = CASE WHEN excluded.ended_at > sessions.ended_at THEN excluded.ended_at ELSE sessions.ended_at END,
-					duration_ms = CASE WHEN excluded.duration_ms > sessions.duration_ms THEN excluded.duration_ms ELSE sessions.duration_ms END,
-					bytes_in = CASE WHEN excluded.bytes_in > sessions.bytes_in THEN excluded.bytes_in ELSE sessions.bytes_in END,
-					bytes_out = CASE WHEN excluded.bytes_out > sessions.bytes_out THEN excluded.bytes_out ELSE sessions.bytes_out END,
-					event_count = CASE WHEN excluded.event_count > sessions.event_count THEN excluded.event_count ELSE sessions.event_count END,
-					parse_ok = CASE WHEN excluded.parse_ok = 0 THEN 0 ELSE sessions.parse_ok END,
-					status = CASE WHEN excluded.status != 'open' THEN excluded.status ELSE sessions.status END
-			`,
+			if _, err := stmtSess.Exec(
 				sess.ID, sess.Protocol, sess.Transport, sess.RemoteIP, sess.RemotePort,
 				sess.LocalIP, sess.LocalPort, sess.Country, sess.JA3, sess.ScannerTag,
 				sess.ProbeHash, sess.StartedAt.UnixMilli(), sess.EndedAt.UnixMilli(),
 				sess.DurationMs, sess.BytesIn, sess.BytesOut, sess.EventCount, parseOK, sess.Status,
-			)
-			if err != nil {
+			); err != nil {
 				return nil, fmt.Errorf("upsert session: %w", err)
 			}
 		}
+	}
 
-		if it.Event != nil {
-			ev := it.Event
-			_, err := tx.Exec(`
-				INSERT INTO events (session_id, ts, protocol, remote_ip, local_port, kind, summary, detail_json)
-				VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-			`, ev.SessionID, ev.Timestamp.UnixMilli(), ev.Protocol, ev.RemoteIP, ev.LocalPort, ev.Kind, ev.Summary, ev.DetailJSON)
-			if err != nil {
+	if len(events) > 0 {
+		stmtEv, err := tx.Prepare(`
+			INSERT INTO events (session_id, ts, protocol, remote_ip, local_port, kind, summary, detail_json)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+		`)
+		if err != nil {
+			return nil, fmt.Errorf("prepare event insert: %w", err)
+		}
+		defer stmtEv.Close()
+
+		for _, ev := range events {
+			if _, err := stmtEv.Exec(
+				ev.SessionID, ev.Timestamp.UnixMilli(), ev.Protocol, ev.RemoteIP,
+				ev.LocalPort, ev.Kind, ev.Summary, ev.DetailJSON,
+			); err != nil {
 				return nil, fmt.Errorf("insert event: %w", err)
 			}
-			_, _ = tx.Exec(`UPDATE sessions SET event_count = event_count + 1 WHERE id = ?`, ev.SessionID)
 		}
 
-		if it.Credential != nil {
-			cr := it.Credential
+		stmtBump, err := tx.Prepare(`UPDATE sessions SET event_count = event_count + ? WHERE id = ?`)
+		if err != nil {
+			return nil, fmt.Errorf("prepare session event bump: %w", err)
+		}
+		defer stmtBump.Close()
+		for sid, delta := range eventCountDelta {
+			_, _ = stmtBump.Exec(delta, sid)
+		}
+	}
+
+	if len(creds) > 0 {
+		stmtCred, err := tx.Prepare(`
+			INSERT INTO credentials (session_id, ts, protocol, remote_ip, scanner_tag, username, secret, mechanism, accepted)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+		`)
+		if err != nil {
+			return nil, fmt.Errorf("prepare credential insert: %w", err)
+		}
+		defer stmtCred.Close()
+
+		for _, cr := range creds {
 			acc := 0
 			if cr.Accepted {
 				acc = 1
 			}
-			_, err := tx.Exec(`
-				INSERT INTO credentials (session_id, ts, protocol, remote_ip, scanner_tag, username, secret, mechanism, accepted)
-				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-			`, cr.SessionID, cr.Timestamp.UnixMilli(), cr.Protocol, cr.RemoteIP, cr.ScannerTag, cr.Username, cr.Secret, cr.Mechanism, acc)
-			if err != nil {
+			if _, err := stmtCred.Exec(
+				cr.SessionID, cr.Timestamp.UnixMilli(), cr.Protocol, cr.RemoteIP,
+				cr.ScannerTag, cr.Username, cr.Secret, cr.Mechanism, acc,
+			); err != nil {
 				return nil, fmt.Errorf("insert credential: %w", err)
 			}
 		}
+	}
 
-		if it.Payload != nil {
-			pl := it.Payload
-			_, err := tx.Exec(`
-				INSERT INTO payloads (session_id, seq, ts, direction, data)
-				VALUES (?, ?, ?, ?, ?)
-			`, pl.SessionID, pl.Seq, pl.Timestamp.UnixMilli(), pl.Direction, pl.Data)
-			if err != nil {
+	if len(payloads) > 0 {
+		stmtPay, err := tx.Prepare(`
+			INSERT INTO payloads (session_id, seq, ts, direction, data)
+			VALUES (?, ?, ?, ?, ?)
+		`)
+		if err != nil {
+			return nil, fmt.Errorf("prepare payload insert: %w", err)
+		}
+		defer stmtPay.Close()
+
+		for _, pl := range payloads {
+			if _, err := stmtPay.Exec(
+				pl.SessionID, pl.Seq, pl.Timestamp.UnixMilli(), pl.Direction, pl.Data,
+			); err != nil {
 				return nil, fmt.Errorf("insert payload: %w", err)
 			}
 		}
+	}
 
-		if it.ProbeHit != nil {
-			p, isNew, err := upsertProbeTx(tx, *it.ProbeHit)
-			if err != nil {
-				return nil, err
-			}
-			if isNew {
-				p.IsNew = true
-				newProbes = append(newProbes, p)
-			}
+	for _, h := range probeOrder {
+		p, isNew, err := upsertProbeCoalescedTx(tx, probesByHash[h])
+		if err != nil {
+			return nil, err
+		}
+		if isNew {
+			p.IsNew = true
+			newProbes = append(newProbes, p)
 		}
 	}
 
@@ -383,48 +537,51 @@ func (s *Store) WriteBatch(items []BatchWriteItem) ([]Probe, error) {
 	return newProbes, nil
 }
 
-func upsertProbeTx(tx *sql.Tx, in ProbeHitInput) (Probe, bool, error) {
-	ts := in.Timestamp
-	if ts.IsZero() {
-		ts = time.Now().UTC()
-	}
-	tsMs := ts.UnixMilli()
+func upsertProbeCoalescedTx(tx *sql.Tx, agg *coalescedProbeHit) (Probe, bool, error) {
+	in := agg.first
+	firstMs := in.Timestamp.UnixMilli()
+	lastMs := agg.lastSeen.UnixMilli()
 
 	var existingTags string
 	var hitCount int64
 	err := tx.QueryRow(`SELECT scanner_tags, hit_count FROM probes WHERE hash = ?`, in.Hash).Scan(&existingTags, &hitCount)
 	if err == sql.ErrNoRows {
-		tags := []string{}
-		if in.ScannerTag != "" {
-			tags = append(tags, in.ScannerTag)
+		tags := make([]string, 0, len(agg.scannerSet))
+		for tag := range agg.scannerSet {
+			tags = append(tags, tag)
 		}
+		sort.Strings(tags)
 		tagsJSON, _ := json.Marshal(tags)
 		sample := in.Payload
 		if len(sample) > 8192 {
 			sample = sample[:8192]
+		}
+		uniqueIPs := int64(len(agg.remoteIPs))
+		if uniqueIPs == 0 {
+			uniqueIPs = 1
 		}
 		_, err = tx.Exec(`
 			INSERT INTO probes (
 				hash, protocol, transport, port, first_seen, last_seen,
 				hit_count, unique_ips, sample_payload, sample_session_id,
 				scanner_tags, status, note, pinned
-			) VALUES (?, ?, ?, ?, ?, ?, 1, 1, ?, ?, ?, 'new', '', 0)
-		`, in.Hash, in.Protocol, in.Transport, in.Port, tsMs, tsMs, sample, in.SessionID, string(tagsJSON))
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new', '', 0)
+		`, in.Hash, in.Protocol, in.Transport, in.Port, firstMs, lastMs, agg.hitCount, uniqueIPs, sample, in.SessionID, string(tagsJSON))
 		if err != nil {
 			return Probe{}, false, fmt.Errorf("insert probe: %w", err)
 		}
-		if in.RemoteIP != "" {
-			_, _ = tx.Exec(`INSERT OR IGNORE INTO probe_ips (probe_hash, remote_ip) VALUES (?, ?)`, in.Hash, in.RemoteIP)
+		for rip := range agg.remoteIPs {
+			_, _ = tx.Exec(`INSERT OR IGNORE INTO probe_ips (probe_hash, remote_ip) VALUES (?, ?)`, in.Hash, rip)
 		}
 		return Probe{
 			Hash:            in.Hash,
 			Protocol:        in.Protocol,
 			Transport:       in.Transport,
 			Port:            in.Port,
-			FirstSeen:       ts,
-			LastSeen:        ts,
-			HitCount:        1,
-			UniqueIPs:       1,
+			FirstSeen:       in.Timestamp,
+			LastSeen:        agg.lastSeen,
+			HitCount:        agg.hitCount,
+			UniqueIPs:       uniqueIPs,
 			SamplePayload:   sample,
 			SampleHex:       hex.EncodeToString(sample),
 			SampleASCII:     FormatASCII(sample),
@@ -439,14 +596,20 @@ func upsertProbeTx(tx *sql.Tx, in ProbeHitInput) (Probe, bool, error) {
 
 	var tags []string
 	_ = json.Unmarshal([]byte(existingTags), &tags)
-	if in.ScannerTag != "" && !containsString(tags, in.ScannerTag) {
-		tags = append(tags, in.ScannerTag)
+	changed := false
+	for tag := range agg.scannerSet {
+		if !containsString(tags, tag) {
+			tags = append(tags, tag)
+			changed = true
+		}
+	}
+	if changed {
 		sort.Strings(tags)
 	}
 	tagsJSON, _ := json.Marshal(tags)
 
-	if in.RemoteIP != "" {
-		_, _ = tx.Exec(`INSERT OR IGNORE INTO probe_ips (probe_hash, remote_ip) VALUES (?, ?)`, in.Hash, in.RemoteIP)
+	for rip := range agg.remoteIPs {
+		_, _ = tx.Exec(`INSERT OR IGNORE INTO probe_ips (probe_hash, remote_ip) VALUES (?, ?)`, in.Hash, rip)
 	}
 	var uniqueIPs int64
 	_ = tx.QueryRow(`SELECT COUNT(1) FROM probe_ips WHERE probe_hash = ?`, in.Hash).Scan(&uniqueIPs)
@@ -457,15 +620,15 @@ func upsertProbeTx(tx *sql.Tx, in ProbeHitInput) (Probe, bool, error) {
 	_, err = tx.Exec(`
 		UPDATE probes
 		SET last_seen = CASE WHEN ? > last_seen THEN ? ELSE last_seen END,
-			hit_count = hit_count + 1,
+			hit_count = hit_count + ?,
 			unique_ips = ?,
 			scanner_tags = ?
 		WHERE hash = ?
-	`, tsMs, tsMs, uniqueIPs, string(tagsJSON), in.Hash)
+	`, lastMs, lastMs, agg.hitCount, uniqueIPs, string(tagsJSON), in.Hash)
 	if err != nil {
 		return Probe{}, false, fmt.Errorf("update probe: %w", err)
 	}
-	return Probe{Hash: in.Hash, HitCount: hitCount + 1, UniqueIPs: uniqueIPs, ScannerTags: tags}, false, nil
+	return Probe{Hash: in.Hash, HitCount: hitCount + agg.hitCount, UniqueIPs: uniqueIPs, ScannerTags: tags}, false, nil
 }
 
 func containsString(slice []string, target string) bool {

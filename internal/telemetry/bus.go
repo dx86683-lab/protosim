@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -25,10 +26,12 @@ type Bus struct {
 	storageCfg config.StorageConfig
 	webhookCfg config.WebhookConfig
 
-	ch     chan BatchWriteItem
-	flushC chan chan struct{}
-	done   chan struct{}
-	closeO sync.Once
+	ch          chan BatchWriteItem
+	flushC      chan chan struct{}
+	done        chan struct{}
+	closeO      sync.Once
+	dropped     atomic.Uint64
+	lastDropLog atomic.Int64
 
 	subMu sync.RWMutex
 	subs  map[chan LiveMessage]struct{}
@@ -47,7 +50,7 @@ func NewBus(store *Store, storageCfg config.StorageConfig, webhookCfg config.Web
 		attributor: NewAttributor(rules),
 		storageCfg: storageCfg,
 		webhookCfg: webhookCfg,
-		ch:         make(chan BatchWriteItem, 4096),
+		ch:         make(chan BatchWriteItem, 65536),
 		flushC:     make(chan chan struct{}),
 		done:       make(chan struct{}),
 		subs:       make(map[chan LiveMessage]struct{}),
@@ -125,7 +128,12 @@ func (b *Bus) enqueue(item BatchWriteItem) {
 	select {
 	case b.ch <- item:
 	default:
-		logrus.Warn("telemetry bus queue full; dropping item")
+		n := b.dropped.Add(1)
+		now := time.Now().Unix()
+		last := b.lastDropLog.Load()
+		if now-last >= 5 && b.lastDropLog.CompareAndSwap(last, now) {
+			logrus.Warnf("telemetry bus queue full; total dropped=%d", n)
+		}
 	}
 }
 
@@ -262,10 +270,11 @@ func (b *Bus) Close() {
 func (b *Bus) loop() {
 	defer close(b.done)
 
-	ticker := time.NewTicker(200 * time.Millisecond)
+	ticker := time.NewTicker(250 * time.Millisecond)
 	defer ticker.Stop()
 
-	batch := make([]BatchWriteItem, 0, 200)
+	const maxBatchSize = 2000
+	batch := make([]BatchWriteItem, 0, maxBatchSize)
 	flush := func() {
 		if len(batch) == 0 {
 			return
@@ -288,7 +297,7 @@ func (b *Bus) loop() {
 				return
 			}
 			batch = append(batch, item)
-			if len(batch) >= 200 {
+			if len(batch) >= maxBatchSize {
 				flush()
 			}
 		case <-ticker.C:
