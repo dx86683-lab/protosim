@@ -1,0 +1,122 @@
+name: Cross-Platform CI & E2E
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  e2e-matrix:
+    name: E2E (${{ matrix.os }})
+    fail-fast: false
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            bin: bin/protosim
+            race: "true"
+          - os: windows-latest
+            bin: bin/protosim.exe
+            race: "false"
+          - os: macos-latest
+            bin: bin/protosim
+            race: "true"
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: "web/package-lock.json"
+
+      - name: Build embedded Vue 3 frontend
+        working-directory: web
+        run: |
+          npm ci
+          npm run build
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: "go.mod"
+
+      - name: Run go vet
+        run: go vet ./cmd/... ./internal/... ./pkg/netstack/core/...
+
+      - name: Run Go unit tests (with -race on Unix)
+        shell: bash
+        run: |
+          if [ "${{ matrix.race }}" = "true" ]; then
+            go test -race -count=1 ./internal/... ./cmd/... ./pkg/netstack/core/...
+          else
+            CGO_ENABLED=0 go test -count=1 ./internal/... ./cmd/... ./pkg/netstack/core/...
+          fi
+
+      - name: Build pure-Go standalone binary
+        shell: bash
+        run: |
+          mkdir -p bin
+          CGO_ENABLED=0 go build -o "${{ matrix.bin }}" ./cmd/protosim
+          "./${{ matrix.bin }}" --version
+
+      - name: Run cross-platform E2E suite (localhost mode)
+        shell: bash
+        run: python3 scripts/e2e_cross_platform.py "${{ matrix.bin }}"
+
+      - name: Run Linux TUN + gVisor dynamic Forwarder E2E (/16 all mode)
+        if: matrix.os == 'ubuntu-24.04'
+        shell: bash
+        run: |
+          cat <<'EOF' >/tmp/ci-tun16.json
+          {
+            "scenario": "ci-tun16",
+            "network": { "mode": "all", "cidr": "10.201.0.1/16", "dev_name": "utun7", "mtu": 1500 },
+            "api": { "listen": "127.0.0.1:15566" },
+            "storage": { "db_path": "/tmp/ci-tun16.db", "payload_enabled": false },
+            "hosts": [
+              { "ip": "0.0.0.0", "services": [{ "protocol": "http", "port": 80 }, { "protocol": "tftp", "port": 69 }] },
+              { "ip": "10.201.1.10", "services": [{ "protocol": "jenkins", "port": 80 }] }
+            ]
+          }
+          EOF
+          sudo ./bin/protosim run -c /tmp/ci-tun16.json >/tmp/ci-tun16.log 2>&1 &
+          for i in $(seq 1 50); do
+            curl -sf http://127.0.0.1:15566/api/v2/health >/dev/null && break
+            sleep 0.1
+          done
+          python3 - <<'PYEOF'
+          import socket
+          # Exact override -> Jenkins 403
+          s = socket.create_connection(("10.201.1.10", 80), timeout=3)
+          s.settimeout(3)
+          s.sendall(b"GET / HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n")
+          assert b"Jenkins" in s.recv(512), "expected Jenkins override"
+          s.close()
+          # Wildcard /16 -> HTTP 200
+          s = socket.create_connection(("10.201.200.88", 80), timeout=3)
+          s.settimeout(3)
+          s.sendall(b"GET / HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n")
+          assert b"200 OK" in s.recv(512), "expected HTTP 200 wildcard"
+          s.close()
+          # Wildcard /16 -> UDP TFTP
+          u = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+          u.settimeout(3)
+          u.sendto(b"\x00\x01x.txt\x00octet\x00", ("10.201.200.88", 69))
+          d, _ = u.recvfrom(256)
+          assert len(d) >= 10, "expected TFTP reply"
+          u.close()
+          # Closed port -> authentic TCP RST
+          try:
+              s = socket.create_connection(("10.201.200.88", 9998), timeout=2)
+              raise AssertionError("expected TCP RST")
+          except ConnectionRefusedError:
+              pass
+          print("LINUX_TUN_GVISOR_SLASH16_E2E: ALL PASSED")
+          PYEOF
+          sudo pkill -f "bin/protosim run -c /tmp/ci-tun16.json" || true
