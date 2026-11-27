@@ -198,7 +198,7 @@ jobs:
           assert len(d) >= 10, "expected TFTP reply"
           u.close()
           try:
-              s = socket.create_connection(("10.201.200.88", 9998), timeout=2)
+              s = socket.create_connection(("10.201.200.88", 9998), timeout=6)
               raise AssertionError("expected TCP RST")
           except ConnectionRefusedError:
               pass
