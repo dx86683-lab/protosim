@@ -73,6 +73,11 @@ jobs:
           rm -f release/protosim
 
           # 2. Cross-platform pure-Go builds (CGO_ENABLED=0)
+          curl -fsSL https://www.wintun.net/builds/wintun-0.14.1.zip -o release/wintun.zip
+          unzip -q -o release/wintun.zip wintun/bin/amd64/wintun.dll -d release
+          mv release/wintun/bin/amd64/wintun.dll release/wintun.dll
+          rm -rf release/wintun release/wintun.zip
+
           for target in "linux/arm64" "darwin/amd64" "darwin/arm64" "windows/amd64"; do
             GOOS="${target%/*}"
             GOARCH="${target#*/}"
@@ -82,7 +87,8 @@ jobs:
 
             CGO_ENABLED=0 GOOS="${GOOS}" GOARCH="${GOARCH}" go build -ldflags "${LDFLAGS}" -o "release/${BIN}" ./cmd/protosim
             if [ "${GOOS}" = "windows" ]; then
-              (cd release && zip -q "protosim-${TAG}-${GOOS}-${GOARCH}.zip" "${BIN}")
+              (cd release && zip -q "protosim-${TAG}-${GOOS}-${GOARCH}.zip" "${BIN}" wintun.dll)
+              rm -f release/wintun.dll
             elif [ "${GOOS}" = "linux" ]; then
               tar -czf "release/protosim-${TAG}-${GOOS}-${GOARCH}.tar.gz" -C release "${BIN}" -C ../deploy/systemd protosim.service
             else

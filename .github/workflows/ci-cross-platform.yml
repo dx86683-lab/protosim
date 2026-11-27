@@ -141,10 +141,13 @@ jobs:
           PYEOF
           sudo pkill -f "bin/protosim run -c /tmp/ci-tun16.json" || true
 
-      - name: Run Windows TUN + gVisor dynamic Forwarder E2E (/16 all mode, without pre-downloaded wintun.dll)
+      - name: Run Windows TUN + gVisor dynamic Forwarder E2E (/16 all mode with WinTun)
         if: matrix.os == 'windows-latest'
         shell: bash
         run: |
+          curl -fsSL https://www.wintun.net/builds/wintun-0.14.1.zip -o wintun.zip
+          unzip -q -o wintun.zip wintun/bin/amd64/wintun.dll
+          cp wintun/bin/amd64/wintun.dll ./bin/wintun.dll
           cat <<'EOF' >ci-tun16-win.json
           {
             "scenario": "ci-tun16-win",
@@ -160,7 +163,7 @@ jobs:
           ./bin/protosim.exe run -c ci-tun16-win.json >ci-tun16-win.log 2>&1 &
           WINPID=$!
           READY=0
-          for i in $(seq 1 40); do
+          for i in $(seq 1 50); do
             if curl -sf http://127.0.0.1:15566/api/v2/health >/dev/null 2>&1; then
               READY=1
               break
@@ -171,7 +174,7 @@ jobs:
             sleep 0.2
           done
           if [ "$READY" -ne 1 ]; then
-            echo "=== WINDOWS TUN STARTUP FAILED (verifying wintun.dll requirement) ==="
+            echo "=== WINDOWS TUN STARTUP FAILED ==="
             cat ci-tun16-win.log || true
             exit 1
           fi
