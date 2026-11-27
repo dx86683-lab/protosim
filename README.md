@@ -14,7 +14,7 @@
 - **Zero-Dependency SQLite WAL Store**: Built-in pure-Go SQLite (`modernc.org/sqlite`) with asynchronous batched writes, rolling retention (default 30 days / 2 GB), and **permanent preservation of deduplicated probes and pinned samples**.
 - **Probe Library (Auto-Clustering)**: Deduplicates incoming probes by `(protocol, port, first_payload_sha256)`, tracking first/last seen, hit counts, unique source IPs, Hex/ASCII previews, triage status (`new` / `known` / `adopted`), and 1-click export to **Hex / Python / Go** reproducer snippets.
 - **Scanner Attribution Engine**: Hot-reloadable rule engine matching `cidr`, `ua` (HTTP User-Agent), `ja3` (TLS fingerprint), and `payload_regex` to tag traffic (`nmap`, `zgrab`, `censys`, `shodan`, `masscan`, `self-scanner`, `unknown`, etc.).
-- **Test Runs & Full-Protocol Coverage Matrix**: Start/stop named evaluation runs, inspect per-protocol coverage across all 159 protocols (`hit` / `missed` / `parse_error` / average latency), and diff any two runs side by side.
+- **Test Runs & 5-State Coverage Matrix**: Start/stop named evaluation runs, inspect per-protocol coverage across all 159 protocols with 5-state classification (`hit` / `banner_only` / `connect_only` / `parse_error` / `missed`, excluding empty TCP connects from effective hits), and diff any two runs side by side.
 - **Full Session Replay & PCAP Export**: Captures bounded bidirectional payloads (64 KiB cap per session) — always persisting initial bytes even when protocol parsing fails or peers disconnect early — plus optional TCP/UDP **Catch-All** ports and 1-click Wireshark-ready `.pcap` export.
 - **Embedded Vue 3 Console**: Single binary (`//go:embed`) bundling 7 observability views built with Vue 3 + Vite + TypeScript + Element Plus + ECharts, listening on `0.0.0.0:5555` by default.
 
@@ -60,6 +60,35 @@ flowchart LR
     Bus -.SSE.-> API["/api/v2 REST + SSE Server"]
     DB <--> API <--> UI["Embedded Vue 3 Console (:5555)"]
 ```
+
+---
+
+## Network Modes, Scale Support & Benchmarks
+
+ProtoSim separates single-host protocol simulation from large virtual subnet simulation:
+
+| Network Mode | Dispatch Mechanism | Virtual IP Scale | Privileges (Linux) | Best Fit |
+|---|---|---|---|---|
+| **`localhost`** | Upfront OS `net.Listen` / `net.ListenPacket` | Single host / host IPs | Non-root + `CAP_NET_BIND_SERVICE` | Daily 159-protocol scanner regression & public probe observatory |
+| **`userdef`** | TUN + gVisor dynamic `tcp/udp.Forwarder` | `/24`–`/12` (exact IP + wildcard `0.0.0.0`) | `CAP_NET_ADMIN` / root | Multi-host topology simulation (Web/DB/ICS hosts with exact IP overrides) |
+| **`all`** | TUN + gVisor dynamic `tcp/udp.Forwarder` | **`/16` (65,534 IPs) to `/12` (1,048,574+ IPs)** in O(1) memory | `CAP_NET_ADMIN` / root | Large subnet scans with subnet-wide baseline services + exact IP overrides; closed ports return authentic `TCP RST` |
+
+### Verified Benchmarks (`v1.3.1`)
+
+Measured on a 4-core LAN test host (`Intel Core i5-6400 @ 2.70GHz`, 15 GiB RAM, Linux 7.0, SQLite WAL with batched coalescing). All TUN benchmarks used **cross-subnet source IPs** (`192.168.124.15` → virtual subnet) with `payload_enabled: false`:
+
+| Scenario / Mode | Address Space | Startup | TCP Full Interaction (`HTTP+MySQL+Redis`) | UDP Interaction (`TFTP+NetBIOS`) | Memory / FDs | Drop / Error Rate |
+|---|---|---|---|---|---|---|
+| **`localhost`** (156 services) | Host loopback | `< 0.5 s` | 2,000 reqs (64C): **5,302.7 QPS** (`p50=9.3ms`, `p95=19.8ms`) | 1,000 reqs (50C): **9,839.7 QPS** (`p50=3.0ms`, `p95=7.8ms`) | — | **0%** |
+| **`userdef` (`/24`)** | 254 virtual IPs | **134 ms** | 1,000 reqs (64C): **4,712.1 QPS** (`p50=9.3ms`, `p95=18.5ms`) | 500 reqs (50C): **6,600.9 QPS** (`p50=3.3ms`, `p95=9.9ms`) | O(1) | **0%** (`0` warnings) |
+| **`all` (`/16`)** | 65,534 virtual IPs | **118 ms** | 1,000 reqs (64C): **4,089.3 QPS** (`p50=13.6ms`, `p95=17.6ms`) | 500 reqs (50C): **4,757.3 QPS** (`p50=7.8ms`, `p95=10.3ms`) | `45.4 → 67.5 MB` / `14 FD` | **0%** (`0` warnings; closed-port RST `0.16ms`) |
+| **`all` (`/12`, 1M+ IPs)** | **1,048,574 virtual IPs** | **117 ms** | 14,000 open + 1,000 closed RST (24C sustained): **753.7 QPS** (`p50=32.3ms`, `p95=60.7ms`) | 5,000 reqs (20C sustained): **2,633.6 QPS** (`p50=7.2ms`, `p95=8.8ms`) | Flat, `0` FD growth | **0% network drop, 0% telemetry drop** |
+
+### Capacity Boundaries & Recommendations
+
+- **1M+ IP Address Space (`/12` or larger)**: Fully supported out of the box with O(1) startup (~120 ms) and constant memory when using wildcard `0.0.0.0` baseline services plus optional exact-IP overrides.
+- **Recommended Scan Rates**: Smoothly handles **low-to-medium rate full-protocol scans (hundreds to ~4,000 QPS)** with zero packet loss and zero telemetry queue drops. For 1M+ IP runs, set `storage.payload_enabled: false` and increase `network.max_conns` (e.g. `16384`).
+- **Ultra-High-Rate Ceiling**: Single-TUN userspace gVisor is bounded by single-queue TUN I/O (~4k–5k full TCP QPS on 4 cores). Ultra-high-rate raw-packet scans (50k–100k+ PPS via Masscan/ZMap) are outside the single-TUN design target and would require kernel-level Linux `TPROXY`.
 
 ---
 
