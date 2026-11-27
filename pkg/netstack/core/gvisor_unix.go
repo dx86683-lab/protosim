@@ -52,7 +52,7 @@ func NewEndpoint(dev Device, mtu int) stack.LinkEndpoint {
 		log.Panic(errors.New("not a valid tun for unix"))
 	}
 	ep := &Endpoint{
-		Endpoint: channel.New(512, uint32(mtu), ""),
+		Endpoint: channel.New(2048, uint32(mtu), ""),
 		Reader:   rt,
 		Writer:   wt,
 		mtu:      mtu,
@@ -70,23 +70,24 @@ func (e *Endpoint) Attach(dispatcher stack.NetworkDispatcher) {
 	}
 }
 
-// WriteNotify is to write packets back to system
+// WriteNotify drains all queued packets from gVisor back to the TUN device.
 func (e *Endpoint) WriteNotify() {
-	pkt := e.Endpoint.Read()
-	if pkt == nil {
-		return
+	for {
+		pkt := e.Endpoint.Read()
+		if pkt == nil {
+			return
+		}
+		e.mu.Lock()
+		buf := append(e.buff[:unixPacketOffset], pkt.NetworkHeader().Slice()...)
+		buf = append(buf, pkt.TransportHeader().Slice()...)
+		buf = append(buf, pkt.Data().AsRange().ToSlice()...)
+		// Darwin returns packet count; the current Linux backend returns byte count.
+		if n, err := e.Writer.Write([][]byte{buf}, unixPacketOffset); err != nil || n == 0 {
+			log.Printf("TUN packet write failed: count=%d error=%v", n, err)
+		}
+		e.mu.Unlock()
+		pkt.DecRef()
 	}
-	defer pkt.DecRef()
-
-	e.mu.Lock()
-	buf := append(e.buff[:unixPacketOffset], pkt.NetworkHeader().Slice()...)
-	buf = append(buf, pkt.TransportHeader().Slice()...)
-	buf = append(buf, pkt.Data().AsRange().ToSlice()...)
-	// Darwin returns packet count; the current Linux backend returns byte count.
-	if n, err := e.Writer.Write([][]byte{buf}, unixPacketOffset); err != nil || n == 0 {
-		log.Printf("TUN packet write failed: count=%d error=%v", n, err)
-	}
-	e.mu.Unlock()
 }
 
 // Writer is for Unix batch TUN writes with platform header space.

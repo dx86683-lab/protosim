@@ -49,7 +49,7 @@ func NewEndpoint(dev Device, mtu int) stack.LinkEndpoint {
 		log.Panic(errors.New("not a valid device for windows"))
 	}
 	ep := &Endpoint{
-		Endpoint: channel.New(512, uint32(mtu), ""),
+		Endpoint: channel.New(2048, uint32(mtu), ""),
 		Device:   dev,
 		Writer:   wt,
 		mtu:      mtu,
@@ -84,20 +84,21 @@ func (e *Endpoint) Attach(dispatcher stack.NetworkDispatcher) {
 	go readPackets(r, e.mtu, 0, e.Endpoint)
 }
 
-// WriteNotify is to write packets back to system
+// WriteNotify drains all queued packets from gVisor back to the Windows TUN device.
 func (e *Endpoint) WriteNotify() {
-	pkt := e.Endpoint.Read()
-	if pkt == nil {
-		return
+	for {
+		pkt := e.Endpoint.Read()
+		if pkt == nil {
+			return
+		}
+		e.mu.Lock()
+		buf := append(e.buff[:0], pkt.NetworkHeader().Slice()...)
+		buf = append(buf, pkt.TransportHeader().Slice()...)
+		buf = append(buf, pkt.Data().AsRange().ToSlice()...)
+		_, _ = e.Writer.Write(buf)
+		e.mu.Unlock()
+		pkt.DecRef()
 	}
-	defer pkt.DecRef()
-
-	e.mu.Lock()
-	buf := append(e.buff[:0], pkt.NetworkHeader().Slice()...)
-	buf = append(buf, pkt.TransportHeader().Slice()...)
-	buf = append(buf, pkt.Data().AsRange().ToSlice()...)
-	e.Writer.Write(buf)
-	e.mu.Unlock()
 }
 
 // endpoint is for WinDivert

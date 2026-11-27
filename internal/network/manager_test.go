@@ -138,3 +138,26 @@ func TestManagerLocalhostHTTPAndCatchAll(t *testing.T) {
 	}
 	fmt.Printf("Verified %d registered protocols, %d sessions, %d probes\n", len(protos), total, pTotal)
 }
+
+func TestResolveTunHostIP(t *testing.T) {
+	cases := []struct {
+		cidr string
+		want string
+	}{
+		{"10.199.0.0/24", "10.199.0.1"},
+		{"10.199.0.1/24", "10.199.0.1"},
+		{"10.199.0.5/24", "10.199.0.5"},
+		{"192.168.0.0/16", "192.168.0.1"},
+		{"192.168.50.0/16", "192.168.50.0"},
+	}
+	for _, tc := range cases {
+		ip, ipNet, err := net.ParseCIDR(tc.cidr)
+		if err != nil {
+			t.Fatalf("ParseCIDR(%q): %v", tc.cidr, err)
+		}
+		got := resolveTunHostIP(ip, ipNet).String()
+		if got != tc.want {
+			t.Errorf("resolveTunHostIP(%q) = %s, want %s", tc.cidr, got, tc.want)
+		}
+	}
+}

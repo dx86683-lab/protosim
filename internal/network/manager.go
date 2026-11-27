@@ -19,9 +19,11 @@ import (
 	"golang.org/x/time/rate"
 	"gvisor.dev/gvisor/pkg/tcpip"
 	"gvisor.dev/gvisor/pkg/tcpip/adapters/gonet"
+	"gvisor.dev/gvisor/pkg/tcpip/header"
 	"gvisor.dev/gvisor/pkg/tcpip/network/ipv4"
 	"gvisor.dev/gvisor/pkg/tcpip/network/ipv6"
 	"gvisor.dev/gvisor/pkg/tcpip/stack"
+	"gvisor.dev/gvisor/pkg/tcpip/transport/icmp"
 	"gvisor.dev/gvisor/pkg/tcpip/transport/tcp"
 	"gvisor.dev/gvisor/pkg/tcpip/transport/udp"
 
@@ -68,6 +70,7 @@ type Manager struct {
 	protoLog *logrus.Logger
 	catchAll *CatchAllRunner
 
+	tunIP  net.IP
 	ipNet  *net.IPNet
 	nic    tcpip.NICID
 	stack  *stack.Stack
@@ -86,10 +89,11 @@ func NewManager(cfg *config.Config, bus *telemetry.Bus) (*Manager, error) {
 	if err := cfg.Normalize(); err != nil {
 		return nil, err
 	}
-	_, ipNet, err := net.ParseCIDR(cfg.Network.CIDR)
+	parsedIP, ipNet, err := net.ParseCIDR(cfg.Network.CIDR)
 	if err != nil {
 		return nil, fmt.Errorf("parse cidr %q: %w", cfg.Network.CIDR, err)
 	}
+	tunIP := resolveTunHostIP(parsedIP, ipNet)
 	if cfg.GeoIP.CityDBPath != "" {
 		if err := protocols.SetGeoDB(cfg.GeoIP.CityDBPath); err != nil {
 			logrus.Warnf("GeoIP DB load failed (%s): %v", cfg.GeoIP.CityDBPath, err)
@@ -112,6 +116,7 @@ func NewManager(cfg *config.Config, bus *telemetry.Bus) (*Manager, error) {
 		tracker:  tracker,
 		protoLog: pLog,
 		catchAll: NewCatchAllRunner(bus, tracker),
+		tunIP:    tunIP,
 		ipNet:    ipNet,
 		nic:      1,
 		services: make(map[string]*runningService),
@@ -167,6 +172,28 @@ func (m *Manager) Start() error {
 	return nil
 }
 
+// resolveTunHostIP picks a valid host IP for the OS-side TUN interface.
+// If the user supplied a network address like 10.99.0.0/24, bump it to .1 so
+// the host TUN interface never takes the .0 network address or collides with
+// virtual hosts inside gVisor.
+func resolveTunHostIP(parsedIP net.IP, ipNet *net.IPNet) net.IP {
+	if ip4 := parsedIP.To4(); ip4 != nil {
+		res := make(net.IP, len(ip4))
+		copy(res, ip4)
+		ones, bits := ipNet.Mask.Size()
+		if bits == 32 && ones < 31 && res.Equal(ipNet.IP.To4()) {
+			res[3]++
+		}
+		return res
+	}
+	return parsedIP
+}
+
+func (m *Manager) tunCIDR() string {
+	ones, _ := m.ipNet.Mask.Size()
+	return fmt.Sprintf("%s/%d", m.tunIP.String(), ones)
+}
+
 func (m *Manager) initVirtualStack() error {
 	dev, err := tun.NewDeviceWithMTU(m.cfg.Network.DevName, m.cfg.Network.MTU)
 	if err != nil {
@@ -175,8 +202,8 @@ func (m *Manager) initVirtualStack() error {
 	if err := dev.Activate(); err != nil {
 		return fmt.Errorf("activate tun: %w", err)
 	}
-	if err := dev.SetInterfaceAddress(m.ipNet.String()); err != nil {
-		return fmt.Errorf("set tun addr %s: %w", m.ipNet.String(), err)
+	if err := dev.SetInterfaceAddress(m.tunCIDR()); err != nil {
+		return fmt.Errorf("set tun addr %s: %w", m.tunCIDR(), err)
 	}
 	if runtime.GOOS != "windows" {
 		if err := dev.AddRouteEntry([]string{m.ipNet.String()}); err != nil {
@@ -187,20 +214,29 @@ func (m *Manager) initVirtualStack() error {
 	ep := core.NewEndpoint(dev, m.cfg.Network.MTU)
 	s := stack.New(stack.Options{
 		NetworkProtocols:   []stack.NetworkProtocolFactory{ipv4.NewProtocol, ipv6.NewProtocol},
-		TransportProtocols: []stack.TransportProtocolFactory{tcp.NewProtocol, udp.NewProtocol},
+		TransportProtocols: []stack.TransportProtocolFactory{tcp.NewProtocol, udp.NewProtocol, icmp.NewProtocol4, icmp.NewProtocol6},
 	})
 	if tcperr := s.CreateNIC(m.nic, ep); tcperr != nil {
 		return fmt.Errorf("create NIC: %s", tcperr)
 	}
 
-	subnet, err := tcpip.NewSubnet(ipToAddress(m.ipNet.IP), ipMaskToAddressMask(m.ipNet.Mask))
-	if err != nil {
-		return err
-	}
-	s.SetRouteTable([]tcpip.Route{{Destination: subnet, NIC: m.nic}})
+	// Follow tun2socks best practices: route all outbound replies (0.0.0.0/0 and ::/0)
+	// back through the TUN NIC so cross-subnet / external scanners never hit
+	// "network is unreachable" inside gVisor.
+	s.SetRouteTable([]tcpip.Route{
+		{Destination: header.IPv4EmptySubnet, NIC: m.nic},
+		{Destination: header.IPv6EmptySubnet, NIC: m.nic},
+	})
+	_ = s.SetPromiscuousMode(m.nic, true)
+	_ = s.SetSpoofing(m.nic, true)
 
 	ttl := tcpip.DefaultTTLOption(64)
 	_ = s.SetNetworkProtocolOption(ipv4.ProtocolNumber, &ttl)
+	_ = s.SetNetworkProtocolOption(ipv6.ProtocolNumber, &ttl)
+	tcpDelay := tcpip.TCPDelayEnabled(false)
+	_ = s.SetTransportProtocolOption(tcp.ProtocolNumber, &tcpDelay)
+	tcpSACK := tcpip.TCPSACKEnabled(true)
+	_ = s.SetTransportProtocolOption(tcp.ProtocolNumber, &tcpSACK)
 
 	m.device = dev
 	m.stack = s
@@ -214,10 +250,20 @@ func (m *Manager) initVirtualStack() error {
 				}
 			}
 		}
+		ones, bits := m.ipNet.Mask.Size()
+		netIP := m.ipNet.IP.Mask(m.ipNet.Mask).To4()
 		for ip := m.ipNet.IP.Mask(m.ipNet.Mask); m.ipNet.Contains(ip); inc(ip) {
+			ip4 := ip.To4()
+			if ip4 == nil {
+				continue
+			}
+			// Never register the OS-side TUN host IP or .0 network address into gVisor.
+			if ip4.Equal(m.tunIP) || (bits == 32 && ones < 31 && ip4.Equal(netIP)) {
+				continue
+			}
 			pa := tcpip.ProtocolAddress{
 				Protocol:          ipv4.ProtocolNumber,
-				AddressWithPrefix: tcpip.AddrFromSlice(ip.To4()).WithPrefix(),
+				AddressWithPrefix: tcpip.AddrFromSlice(ip4).WithPrefix(),
 			}
 			_ = s.AddProtocolAddress(m.nic, pa, stack.AddressProperties{})
 		}
