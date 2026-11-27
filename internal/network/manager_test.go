@@ -258,3 +258,97 @@ func TestApplyScenarioRejectsIncompatibleModeWithoutStoppingServices(t *testing.
 		t.Fatalf("expected existing service to remain running, got %d services", got)
 	}
 }
+
+func TestExclusionsCIDREventsCatchAllUDPAndInstanceIsolation(t *testing.T) {
+	// Instance A excludes 127.0.0.0/8
+	storeA, err := telemetry.OpenStore(":memory:")
+	if err != nil {
+		t.Fatalf("OpenStore A: %v", err)
+	}
+	defer storeA.Close()
+	busA := telemetry.NewBus(storeA, config.StorageConfig{PayloadEnabled: true}, config.WebhookConfig{})
+	defer busA.Close()
+
+	cfgA := config.DefaultConfig()
+	cfgA.Network.Mode = config.ModeLocalhost
+	cfgA.Network.Exclusions = []string{"127.0.0.0/8"}
+	cfgA.Hosts = []config.HostConfig{{
+		IP:       "127.0.0.1",
+		Services: []config.ServiceConfig{{Protocol: "http", Port: 28901}},
+	}}
+	cfgA.CatchAll = config.CatchAllConfig{Enabled: true, UDPPorts: []uint16{28902}}
+	mgrA, err := NewManager(cfgA, busA)
+	if err != nil {
+		t.Fatalf("NewManager A: %v", err)
+	}
+	if err := mgrA.Start(); err != nil {
+		t.Fatalf("Start A: %v", err)
+	}
+	defer mgrA.Close()
+
+	// Instance B in the same process has NO exclusions
+	storeB, err := telemetry.OpenStore(":memory:")
+	if err != nil {
+		t.Fatalf("OpenStore B: %v", err)
+	}
+	defer storeB.Close()
+	busB := telemetry.NewBus(storeB, config.StorageConfig{PayloadEnabled: true}, config.WebhookConfig{})
+	defer busB.Close()
+
+	cfgB := config.DefaultConfig()
+	cfgB.Network.Mode = config.ModeLocalhost
+	cfgB.Hosts = []config.HostConfig{{
+		IP:       "127.0.0.1",
+		Services: []config.ServiceConfig{{Protocol: "http", Port: 28903}},
+	}}
+	mgrB, err := NewManager(cfgB, busB)
+	if err != nil {
+		t.Fatalf("NewManager B: %v", err)
+	}
+	if err := mgrB.Start(); err != nil {
+		t.Fatalf("Start B: %v", err)
+	}
+	defer mgrB.Close()
+
+	// Probe A (HTTP + Catch-All UDP from excluded 127.0.0.1)
+	connA, err := net.DialTimeout("tcp", "127.0.0.1:28901", 2*time.Second)
+	if err != nil {
+		t.Fatalf("dial A http: %v", err)
+	}
+	_, _ = connA.Write([]byte("GET /excluded HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n"))
+	_, _ = bufio.NewReader(connA).ReadString('\n')
+	_ = connA.Close()
+
+	uconnA, err := net.DialTimeout("udp", "127.0.0.1:28902", 2*time.Second)
+	if err != nil {
+		t.Fatalf("dial A catchall udp: %v", err)
+	}
+	_, _ = uconnA.Write([]byte("EXCLUDED-UDP-CATCHALL"))
+	_ = uconnA.Close()
+
+	// Probe B (HTTP from 127.0.0.1, NOT excluded in B)
+	connB, err := net.DialTimeout("tcp", "127.0.0.1:28903", 2*time.Second)
+	if err != nil {
+		t.Fatalf("dial B http: %v", err)
+	}
+	_, _ = connB.Write([]byte("GET /included HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n"))
+	_, _ = bufio.NewReader(connB).ReadString('\n')
+	_ = connB.Close()
+
+	time.Sleep(150 * time.Millisecond)
+	busA.Flush()
+	busB.Flush()
+
+	_, sessA, _ := storeA.QuerySessions(telemetry.SessionFilter{Limit: 10})
+	evA, _, _ := storeA.QueryEvents("", "", "", 1, 10)
+	_, probesA, _ := storeA.QueryProbes(telemetry.ProbeFilter{Limit: 10})
+	if sessA != 0 || len(evA) != 0 || probesA != 0 {
+		t.Fatalf("expected 0 sessions/events/probes for excluded CIDR in A, got sess=%d events=%d probes=%d", sessA, len(evA), probesA)
+	}
+
+	_, sessB, _ := storeB.QuerySessions(telemetry.SessionFilter{Limit: 10})
+	evB, _, _ := storeB.QueryEvents("", "", "", 1, 10)
+	if sessB == 0 || len(evB) == 0 {
+		t.Fatalf("expected instance B to record sessions & events independently of A, got sess=%d events=%d", sessB, len(evB))
+	}
+}

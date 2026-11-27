@@ -170,6 +170,12 @@ func (c *CatchAllRunner) serveUDP(pc net.PacketConn, bindIP string, port uint16,
 		if n <= 0 || raddr == nil {
 			continue
 		}
+		c.mu.Lock()
+		excl := c.excludeFn
+		c.mu.Unlock()
+		if excl != nil && excl(raddr) {
+			continue
+		}
 		payload := make([]byte, n)
 		copy(payload, buf[:n])
 		rIP, rPort := splitHostPort(raddr)

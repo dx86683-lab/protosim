@@ -103,10 +103,11 @@ func NewManager(cfg *config.Config, bus *telemetry.Bus) (*Manager, error) {
 	}
 
 	tracker := NewSessionTracker()
+	hook := NewTelemetryHook(bus, tracker)
 	pLog := logrus.New()
 	pLog.SetOutput(io.Discard) // structured events flow through TelemetryHook to SQLite + SSE
 	pLog.SetLevel(logrus.InfoLevel)
-	pLog.AddHook(NewTelemetryHook(bus, tracker))
+	pLog.AddHook(hook)
 
 	maxConns := cfg.Network.MaxConns
 	if maxConns <= 0 {
@@ -127,7 +128,6 @@ func NewManager(cfg *config.Config, bus *telemetry.Bus) (*Manager, error) {
 		}
 		if ip := net.ParseIP(entry); ip != nil {
 			excludedIPs[ip.String()] = struct{}{}
-			protocols.AddLogRemoteIpExclusion(ip.String())
 		}
 	}
 
@@ -145,6 +145,7 @@ func NewManager(cfg *config.Config, bus *telemetry.Bus) (*Manager, error) {
 		excludedNets: excludedNets,
 		connSem:      make(chan struct{}, maxConns),
 	}
+	hook.SetExcludeIPFn(m.isExcludedIP)
 	m.catchAll.SetListeners(m.listenTCP, m.listenUDP, m.isExcluded)
 	return m, nil
 }
@@ -518,12 +519,8 @@ func (m *Manager) listenUDP(ip string, port uint16) (net.PacketConn, error) {
 	return m.vrouter.ListenUDP(ip, port)
 }
 
-func (m *Manager) isExcluded(remoteAddr net.Addr) bool {
-	if remoteAddr == nil || (len(m.excludedIPs) == 0 && len(m.excludedNets) == 0) {
-		return false
-	}
-	ipStr, _ := splitHostPort(remoteAddr)
-	if ipStr == "" {
+func (m *Manager) isExcludedIP(ipStr string) bool {
+	if ipStr == "" || (len(m.excludedIPs) == 0 && len(m.excludedNets) == 0) {
 		return false
 	}
 	if _, ok := m.excludedIPs[ipStr]; ok {
@@ -539,6 +536,14 @@ func (m *Manager) isExcluded(remoteAddr net.Addr) bool {
 		}
 	}
 	return false
+}
+
+func (m *Manager) isExcluded(remoteAddr net.Addr) bool {
+	if remoteAddr == nil || (len(m.excludedIPs) == 0 && len(m.excludedNets) == 0) {
+		return false
+	}
+	ipStr, _ := splitHostPort(remoteAddr)
+	return m.isExcludedIP(ipStr)
 }
 
 func (m *Manager) allowIP(remoteAddr net.Addr) bool {

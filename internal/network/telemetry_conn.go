@@ -468,14 +468,19 @@ func (tl *TelemetryListener) Accept() (net.Conn, error) {
 func (tl *TelemetryListener) Close() error   { return tl.GetListener().Close() }
 func (tl *TelemetryListener) Addr() net.Addr { return tl.GetListener().Addr() }
 
-// TelemetryHook bridges logrus entries emitted by all 61 protocol handlers into telemetry.Bus.
+// TelemetryHook bridges logrus entries emitted by all protocol handlers into telemetry.Bus.
 type TelemetryHook struct {
-	bus     *telemetry.Bus
-	tracker *SessionTracker
+	bus         *telemetry.Bus
+	tracker     *SessionTracker
+	excludeIPFn func(ip string) bool
 }
 
 func NewTelemetryHook(bus *telemetry.Bus, tracker *SessionTracker) *TelemetryHook {
 	return &TelemetryHook{bus: bus, tracker: tracker}
+}
+
+func (h *TelemetryHook) SetExcludeIPFn(fn func(ip string) bool) {
+	h.excludeIPFn = fn
 }
 
 func (h *TelemetryHook) Levels() []logrus.Level {
@@ -500,6 +505,19 @@ func (h *TelemetryHook) Fire(entry *logrus.Entry) error {
 	remoteAddr := stringField(entry.Data, "remote")
 	if proto == "" && remoteIP == "" {
 		return nil
+	}
+	if h.excludeIPFn != nil {
+		checkIP := remoteIP
+		if checkIP == "" && remoteAddr != "" {
+			if host, _, err := net.SplitHostPort(remoteAddr); err == nil {
+				checkIP = host
+			} else {
+				checkIP = remoteAddr
+			}
+		}
+		if checkIP != "" && h.excludeIPFn(checkIP) {
+			return nil
+		}
 	}
 	if proto == "" {
 		proto = "capture"
