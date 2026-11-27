@@ -1619,7 +1619,8 @@ func (s *Store) RunRetention(retentionDays int, maxSizeMB int) (int64, error) {
 				WHERE started_at < ?
 				AND id NOT IN (SELECT sample_session_id FROM probes WHERE pinned = 1 AND sample_session_id != '')
 			)
-		`, cutMs)
+			OR ((session_id = '' OR session_id IS NULL) AND ts < ?)
+		`, cutMs, cutMs)
 		if err != nil {
 			return 0, err
 		}
@@ -1659,23 +1660,46 @@ func (s *Store) RunRetention(retentionDays int, maxSizeMB int) (int64, error) {
 	}
 	totalDeleted += n
 
-	// Also enforce DB size ceiling if file-backed.
+	// Also enforce DB size ceiling using actual occupied SQLite pages
+	// ((page_count - freelist_count) * page_size) instead of physical file size,
+	// because SQLite reuses freed pages without shrinking the file on disk.
 	if maxSizeMB > 0 && s.dbPath != ":memory:" {
-		if fi, err := os.Stat(s.dbPath); err == nil && fi.Size() > int64(maxSizeMB)*1024*1024 {
-			// Delete oldest 1000 non-pinned sessions
+		maxBytes := int64(maxSizeMB) * 1024 * 1024
+		usedBytes := func() int64 {
+			var pageCount, freeCount, pageSize int64
+			if err := s.db.QueryRow(`PRAGMA page_count;`).Scan(&pageCount); err != nil {
+				return 0
+			}
+			if err := s.db.QueryRow(`PRAGMA freelist_count;`).Scan(&freeCount); err != nil {
+				return 0
+			}
+			if err := s.db.QueryRow(`PRAGMA page_size;`).Scan(&pageSize); err != nil {
+				return 0
+			}
+			if pageCount <= freeCount {
+				return 0
+			}
+			return (pageCount - freeCount) * pageSize
+		}
+
+		for usedBytes() > maxBytes {
+			// Delete oldest 1000 non-pinned sessions per batch and re-evaluate occupied pages.
 			var cutMs int64
 			err := s.db.QueryRow(`
-				SELECT MAX(started_at) FROM (
+				SELECT COALESCE(MAX(started_at), 0) FROM (
 					SELECT started_at FROM sessions
 					WHERE id NOT IN (SELECT sample_session_id FROM probes WHERE pinned = 1 AND sample_session_id != '')
 					ORDER BY started_at ASC LIMIT 1000
 				)
 			`).Scan(&cutMs)
-			if err == nil && cutMs > 0 {
-				if extra, err := delByCutoff(cutMs + 1); err == nil {
-					totalDeleted += extra
-				}
+			if err != nil || cutMs <= 0 {
+				break
 			}
+			extra, err := delByCutoff(cutMs + 1)
+			if err != nil || extra == 0 {
+				break
+			}
+			totalDeleted += extra
 		}
 	}
 

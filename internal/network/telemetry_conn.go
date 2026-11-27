@@ -415,6 +415,7 @@ type TelemetryListener struct {
 	listener  net.Listener
 	bus       *telemetry.Bus
 	tracker   *SessionTracker
+	excludeFn func(net.Addr) bool
 	protocol  string
 	localIP   string
 	localPort uint16
@@ -443,12 +444,25 @@ func (tl *TelemetryListener) UpdateListener(ln net.Listener) {
 	tl.mu.Unlock()
 }
 
+func (tl *TelemetryListener) SetExcludeFn(fn func(net.Addr) bool) {
+	tl.mu.Lock()
+	tl.excludeFn = fn
+	tl.mu.Unlock()
+}
+
 func (tl *TelemetryListener) Accept() (net.Conn, error) {
 	c, err := tl.GetListener().Accept()
 	if err != nil {
 		return nil, err
 	}
-	return NewTelemetryConn(c, tl.bus, tl.tracker, tl.protocol, tl.localIP, tl.localPort), nil
+	bus := tl.bus
+	tl.mu.Lock()
+	excl := tl.excludeFn
+	tl.mu.Unlock()
+	if excl != nil && excl(c.RemoteAddr()) {
+		bus = nil
+	}
+	return NewTelemetryConn(c, bus, tl.tracker, tl.protocol, tl.localIP, tl.localPort), nil
 }
 
 func (tl *TelemetryListener) Close() error   { return tl.GetListener().Close() }
@@ -524,8 +538,22 @@ func (h *TelemetryHook) Fire(entry *logrus.Entry) error {
 		}
 	}
 
-	detailBytes, _ := json.Marshal(entry.Data)
-	kind := classifyEventKind(entry.Message, entry.Data)
+	detailData := entry.Data
+	if h.bus.StorageConfig().RedactCredentials && len(entry.Data) > 0 {
+		redacted := make(logrus.Fields, len(entry.Data))
+		for k, v := range entry.Data {
+			if isSensitiveEventKey(k) {
+				if s, ok := v.(string); ok && s != "" {
+					redacted[k] = "***REDACTED***"
+					continue
+				}
+			}
+			redacted[k] = v
+		}
+		detailData = redacted
+	}
+	detailBytes, _ := json.Marshal(detailData)
+	kind := classifyEventKind(entry.Message, detailData)
 	h.bus.RecordEvent(telemetry.Event{
 		SessionID:  sid,
 		Timestamp:  entry.Time.UTC(),
@@ -605,6 +633,15 @@ func stringField(fields logrus.Fields, key string) string {
 		return s
 	}
 	return fmt.Sprintf("%v", v)
+}
+
+func isSensitiveEventKey(k string) bool {
+	switch strings.ToLower(strings.TrimSpace(k)) {
+	case "password", "pass", "passwd", "secret", "token", "authorization", "credential", "apikey", "api_key":
+		return true
+	default:
+		return false
+	}
 }
 
 func firstNonEmpty(vals ...string) string {

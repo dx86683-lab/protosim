@@ -22,7 +22,7 @@ import (
 	"github.com/dx86683-lab/protosim/web"
 )
 
-var Version = "1.3.3"
+var Version = "1.3.4"
 
 func main() {
 	if len(os.Args) < 2 {
@@ -80,6 +80,8 @@ func genConfigCmd(args []string) {
 	scenario := fs.String("scenario", "all-standard", "Preset scenario: all-standard | high-ports-obfuscated | core-20-quick | virtual-multi-ip-gvisor")
 	safeSSH := fs.Bool("safe-ssh", true, "Bind simulated SSH to port 2222 instead of 22")
 	_ = fs.Parse(args)
+	explicitFlags := make(map[string]bool)
+	fs.Visit(func(f *flag.Flag) { explicitFlags[f.Name] = true })
 
 	cfg := config.DefaultConfig()
 	cfg.Network.Mode = *mode
@@ -89,6 +91,12 @@ func genConfigCmd(args []string) {
 	for _, p := range config.BuiltinScenarios("0.0.0.0", *safeSSH) {
 		if p.ID == *scenario {
 			cfg.Hosts = p.Hosts
+			if !explicitFlags["mode"] && p.Mode != "" {
+				cfg.Network.Mode = p.Mode
+			}
+			if !explicitFlags["cidr"] && p.Mode != "" && p.Mode != config.ModeLocalhost && len(p.Hosts) > 0 && p.Hosts[0].IP != "" && p.Hosts[0].IP != "0.0.0.0" {
+				cfg.Network.CIDR = p.Hosts[0].IP + "/24"
+			}
 			break
 		}
 	}

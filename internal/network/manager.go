@@ -145,6 +145,7 @@ func NewManager(cfg *config.Config, bus *telemetry.Bus) (*Manager, error) {
 		excludedNets: excludedNets,
 		connSem:      make(chan struct{}, maxConns),
 	}
+	m.catchAll.SetListeners(m.listenTCP, m.listenUDP, m.isExcluded)
 	return m, nil
 }
 
@@ -462,6 +463,12 @@ func (m *Manager) StartService(ip string, svc config.ServiceConfig) error {
 		if udpFn := pi.DatagramHandler(bi); udpFn != nil {
 			if sf, uerr := m.startUDPService(ip, port, protoName, bi, ci, udpFn); uerr == nil && sf != nil {
 				stopFns = append(stopFns, sf)
+			} else if uerr != nil {
+				logrus.Warnf("[Manager] companion UDP listener for %s on %s:%d failed (running TCP-only): %v", protoName, ip, port, uerr)
+				if transport == "tcp+udp" {
+					transport = "tcp"
+					svcID = fmt.Sprintf("%s:%d:%s:%s", ip, port, transport, protoName)
+				}
 			}
 		}
 	}
@@ -628,6 +635,7 @@ func (m *Manager) startTCPListenerService(ip string, port uint16, protoName stri
 		return nil, err
 	}
 	tl := NewTelemetryListener(rawLn, m.bus, m.tracker, protoName, ip, port)
+	tl.SetExcludeFn(m.isExcluded)
 	sslW := NewSSLWrapper(bi.GetCertName())
 	if bi.GetBoolParams("ssl") {
 		if err := sslW.InitSslConfig(bi.GenCert()); err != nil {
@@ -656,6 +664,7 @@ func (m *Manager) startHTTPService(ip string, port uint16, protoName string, bi 
 		return nil, err
 	}
 	tl := NewTelemetryListener(rawLn, m.bus, m.tracker, protoName, ip, port)
+	tl.SetExcludeFn(m.isExcluded)
 	if bi.GetBoolParams("ssl") {
 		sslW := NewSSLWrapper(bi.GetCertName())
 		if err := sslW.InitSslConfig(bi.GenCert()); err != nil {
@@ -683,24 +692,35 @@ func (m *Manager) startHTTPService(ip string, port uint16, protoName string, bi 
 
 type udpTelemetryPacketConn struct {
 	net.PacketConn
-	bus       *telemetry.Bus
-	sessionID string
-	seq       atomic.Int32
-	bytesOut  atomic.Int64
+	bus        *telemetry.Bus
+	sessionID  string
+	seq        atomic.Int32
+	bytesOut   atomic.Int64
+	maxCapture int64
+	captured   atomic.Int64
 }
 
 func (u *udpTelemetryPacketConn) WriteTo(p []byte, addr net.Addr) (int, error) {
 	n, err := u.PacketConn.WriteTo(p, addr)
 	if n > 0 {
 		u.bytesOut.Add(int64(n))
-		if u.bus != nil {
-			u.bus.RecordPayload(telemetry.PayloadChunk{
-				SessionID: u.sessionID,
-				Seq:       int(u.seq.Add(1)),
-				Timestamp: time.Now().UTC(),
-				Direction: "out",
-				Data:      p[:n],
-			})
+		if u.bus != nil && u.maxCapture > 0 {
+			prev := u.captured.Load()
+			if prev < u.maxCapture {
+				take := int64(n)
+				if prev+take > u.maxCapture {
+					take = u.maxCapture - prev
+				}
+				if take > 0 && u.captured.Add(take) <= u.maxCapture+take {
+					u.bus.RecordPayload(telemetry.PayloadChunk{
+						SessionID: u.sessionID,
+						Seq:       int(u.seq.Add(1)),
+						Timestamp: time.Now().UTC(),
+						Direction: "out",
+						Data:      p[:take],
+					})
+				}
+			}
 		}
 	}
 	return n, err
@@ -744,14 +764,22 @@ func (m *Manager) startUDPService(ip string, port uint16, protoName string, _ *p
 				}
 
 				hash, tag := "", "unknown"
+				maxCap := int64(65536)
 				if bus != nil {
+					if mc := bus.StorageConfig().MaxPayloadBytes; mc > 0 {
+						maxCap = int64(mc)
+					}
 					hash, tag = bus.RecordProbeHit(protoName, "udp", port, rIP, "", sid, payload)
+					inCap := payload
+					if int64(len(inCap)) > maxCap {
+						inCap = inCap[:maxCap]
+					}
 					bus.RecordPayload(telemetry.PayloadChunk{
 						SessionID: sid,
 						Seq:       1,
 						Timestamp: start,
 						Direction: "in",
-						Data:      payload,
+						Data:      inCap,
 					})
 				}
 				m.tracker.Register(protoName, rKey, &activeSessionMeta{
@@ -761,8 +789,18 @@ func (m *Manager) startUDPService(ip string, port uint16, protoName string, _ *p
 				})
 				defer m.tracker.Unregister(protoName, rKey)
 
-				wrappedPC := &udpTelemetryPacketConn{PacketConn: conn, bus: bus, sessionID: sid}
+				wrappedPC := &udpTelemetryPacketConn{
+					PacketConn: conn,
+					bus:        bus,
+					sessionID:  sid,
+					maxCapture: maxCap,
+				}
 				wrappedPC.seq.Store(1)
+				if int64(len(payload)) > maxCap {
+					wrappedPC.captured.Store(maxCap)
+				} else {
+					wrappedPC.captured.Store(int64(len(payload)))
+				}
 				uc := protocols.NewUDPConnection(wrappedPC, remote, ci)
 				err := fn(uc, payload)
 				end := time.Now().UTC()
@@ -905,7 +943,19 @@ func (m *Manager) ListServices() []ServiceStatus {
 }
 
 // ApplyScenario stops all current services and starts all services defined in the ScenarioPreset.
+// It pre-validates network mode compatibility and rolls back to the previous hosts if all new
+// services fail to start.
 func (m *Manager) ApplyScenario(preset config.ScenarioPreset) (int, []string) {
+	if preset.Mode != "" && preset.Mode != m.cfg.Network.Mode {
+		return 0, []string{fmt.Sprintf(
+			"scenario %q requires network mode %q, but ProtoSim is running in %q mode (restart with --mode %s)",
+			preset.ID, preset.Mode, m.cfg.Network.Mode, preset.Mode,
+		)}
+	}
+
+	prevScenario := m.cfg.Scenario
+	prevHosts := m.cfg.Hosts
+
 	m.mu.Lock()
 	old := make([]*runningService, 0, len(m.services))
 	for _, rs := range m.services {
@@ -931,6 +981,19 @@ func (m *Manager) ApplyScenario(preset config.ScenarioPreset) (int, []string) {
 			}
 		}
 	}
+
+	// If every service in the target scenario failed, roll back to the previous scenario.
+	if started == 0 && len(errs) > 0 {
+		for _, host := range prevHosts {
+			for _, svc := range host.Services {
+				_ = m.StartService(host.IP, svc)
+			}
+		}
+		m.cfg.Scenario = prevScenario
+		m.cfg.Hosts = prevHosts
+		return 0, errs
+	}
+
 	m.cfg.Scenario = preset.ID
 	m.cfg.Hosts = preset.Hosts
 	return started, errs

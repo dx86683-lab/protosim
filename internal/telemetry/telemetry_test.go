@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"path/filepath"
 	"strings"
+	"fmt"
 	"testing"
 	"time"
 
@@ -273,5 +274,117 @@ func TestRetentionPreservesProbesAndPinnedSamples(t *testing.T) {
 	}
 	if _, err := store.GetProbe(hashNormal); err != nil {
 		t.Fatalf("probe must be permanently preserved after retention: %v", err)
+	}
+}
+
+func TestRunRetentionOccupiedPagesAndOrphanEvents(t *testing.T) {
+	dbPath := t.TempDir() + "/retention.db"
+	store, err := OpenStore(dbPath)
+	if err != nil {
+		t.Fatalf("OpenStore: %v", err)
+	}
+	defer store.Close()
+
+	now := time.Now().UTC()
+	items := make([]BatchWriteItem, 0, 1505)
+	bigPayload := make([]byte, 2048)
+	for i := range bigPayload {
+		bigPayload[i] = byte('A' + (i % 26))
+	}
+	for i := 0; i < 1500; i++ {
+		sid := fmt.Sprintf("sess-%04d", i)
+		ts := now.Add(time.Duration(i) * time.Millisecond)
+		items = append(items, BatchWriteItem{
+			Session: &Session{
+				ID:        sid,
+				Protocol:  "http",
+				Transport: "tcp",
+				RemoteIP:  "10.0.0.1",
+				LocalPort: 80,
+				StartedAt: ts,
+				EndedAt:   ts.Add(time.Millisecond),
+				BytesIn:   2048,
+				ParseOK:   true,
+				Status:    "closed",
+			},
+			Payload: &PayloadChunk{
+				SessionID: sid,
+				Seq:       1,
+				Timestamp: ts,
+				Direction: "in",
+				Data:      bigPayload,
+			},
+		})
+	}
+	// Orphan event from 1970 with empty session_id
+	items = append(items, BatchWriteItem{
+		Event: &Event{
+			SessionID: "",
+			Timestamp: time.Unix(0, 0).UTC(),
+			Protocol:  "capture",
+			RemoteIP:  "10.0.0.9",
+			LocalPort: 80,
+			Kind:      "syn",
+			Summary:   "ancient orphan",
+		},
+	})
+	if _, err := store.WriteBatch(items); err != nil {
+		t.Fatalf("WriteBatch: %v", err)
+	}
+
+	del1, err := store.RunRetention(30, 1)
+	if err != nil {
+		t.Fatalf("RunRetention #1: %v", err)
+	}
+	if del1 == 0 {
+		t.Fatalf("expected RunRetention #1 to delete sessions when occupied pages > 1 MiB")
+	}
+
+	// Second retention call with no new inserts must NOT delete remaining non-expired sessions
+	// even though the physical SQLite file size on disk did not shrink.
+	del2, err := store.RunRetention(30, 1)
+	if err != nil {
+		t.Fatalf("RunRetention #2: %v", err)
+	}
+	if del2 != 0 {
+		t.Fatalf("expected RunRetention #2 to delete 0 sessions after pages freed, got %d", del2)
+	}
+
+	// Verify 1970 orphan event was purged
+	var orphanCount int
+	if err := store.db.QueryRow(`SELECT COUNT(1) FROM events WHERE session_id = ''`).Scan(&orphanCount); err != nil {
+		t.Fatalf("count orphan events: %v", err)
+	}
+	if orphanCount != 0 {
+		t.Fatalf("expected 0 orphan events after retention, got %d", orphanCount)
+	}
+}
+
+func TestBuildSessionPCAPPreservesLargeUDPDatagram(t *testing.T) {
+	sess := Session{
+		ID:         "udp-large",
+		Protocol:   "snmp",
+		Transport:  "udp",
+		RemoteIP:   "192.168.1.10",
+		RemotePort: 50000,
+		LocalIP:    "192.168.1.20",
+		LocalPort:  161,
+		StartedAt:  time.Now().UTC(),
+	}
+	payload := make([]byte, 3000)
+	for i := range payload {
+		payload[i] = byte(i % 251)
+	}
+	pcap := BuildSessionPCAP(sess, []PayloadChunk{{
+		SessionID: "udp-large",
+		Seq:       1,
+		Timestamp: sess.StartedAt,
+		Direction: "in",
+		Data:      payload,
+	}})
+	// 24-byte global header + 16-byte pkt header + 14 Eth + 20 IP + 8 UDP + 3000 payload = 3082 bytes (exactly 1 packet)
+	wantLen := 24 + 16 + 14 + 20 + 8 + 3000
+	if len(pcap) != wantLen {
+		t.Fatalf("expected single intact UDP datagram PCAP length %d, got %d", wantLen, len(pcap))
 	}
 }

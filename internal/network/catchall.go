@@ -17,6 +17,9 @@ type CatchAllRunner struct {
 	mu           sync.Mutex
 	bus          *telemetry.Bus
 	tracker      *SessionTracker
+	listenTCPFn  func(ip string, port uint16) (net.Listener, error)
+	listenUDPFn  func(ip string, port uint16) (net.PacketConn, error)
+	excludeFn    func(net.Addr) bool
 	tcpListeners []net.Listener
 	udpConns     []net.PacketConn
 	stopCh       chan struct{}
@@ -30,25 +33,52 @@ func NewCatchAllRunner(bus *telemetry.Bus, tracker *SessionTracker) *CatchAllRun
 	}
 }
 
+func (c *CatchAllRunner) SetListeners(
+	tcpFn func(ip string, port uint16) (net.Listener, error),
+	udpFn func(ip string, port uint16) (net.PacketConn, error),
+	excludeFn func(net.Addr) bool,
+) {
+	c.mu.Lock()
+	c.listenTCPFn = tcpFn
+	c.listenUDPFn = udpFn
+	c.excludeFn = excludeFn
+	c.mu.Unlock()
+}
+
 func (c *CatchAllRunner) Start(bindIP string, tcpPorts, udpPorts []uint16) error {
 	c.Stop()
 
 	c.mu.Lock()
 	c.stopCh = make(chan struct{})
 	stopCh := c.stopCh
+	tcpFn := c.listenTCPFn
+	udpFn := c.listenUDPFn
 	c.mu.Unlock()
 
 	if bindIP == "" {
 		bindIP = "0.0.0.0"
 	}
 
+	var started int
+	var lastErr error
+
 	for _, port := range tcpPorts {
 		addr := fmt.Sprintf("%s:%d", bindIP, port)
-		ln, err := net.Listen("tcp", addr)
+		var (
+			ln  net.Listener
+			err error
+		)
+		if tcpFn != nil {
+			ln, err = tcpFn(bindIP, port)
+		} else {
+			ln, err = net.Listen("tcp", addr)
+		}
 		if err != nil {
+			lastErr = err
 			logrus.Warnf("[CatchAll] TCP listen %s failed: %v", addr, err)
 			continue
 		}
+		started++
 		c.mu.Lock()
 		c.tcpListeners = append(c.tcpListeners, ln)
 		c.mu.Unlock()
@@ -58,16 +88,30 @@ func (c *CatchAllRunner) Start(bindIP string, tcpPorts, udpPorts []uint16) error
 
 	for _, port := range udpPorts {
 		addr := fmt.Sprintf("%s:%d", bindIP, port)
-		pc, err := net.ListenPacket("udp", addr)
+		var (
+			pc  net.PacketConn
+			err error
+		)
+		if udpFn != nil {
+			pc, err = udpFn(bindIP, port)
+		} else {
+			pc, err = net.ListenPacket("udp", addr)
+		}
 		if err != nil {
+			lastErr = err
 			logrus.Warnf("[CatchAll] UDP listen %s failed: %v", addr, err)
 			continue
 		}
+		started++
 		c.mu.Lock()
 		c.udpConns = append(c.udpConns, pc)
 		c.mu.Unlock()
 		logrus.Infof("[CatchAll] UDP listening on %s", addr)
 		go c.serveUDP(pc, bindIP, port, stopCh)
+	}
+
+	if (len(tcpPorts)+len(udpPorts) > 0) && started == 0 && lastErr != nil {
+		return fmt.Errorf("catch-all failed to bind any configured port: %w", lastErr)
 	}
 	return nil
 }
@@ -84,13 +128,20 @@ func (c *CatchAllRunner) acceptTCP(ln net.Listener, bindIP string, port uint16, 
 			}
 		}
 		go func(conn net.Conn) {
-			tc := NewTelemetryConn(conn, c.bus, c.tracker, "catch_all", bindIP, port)
+			bus := c.bus
+			c.mu.Lock()
+			excl := c.excludeFn
+			c.mu.Unlock()
+			if excl != nil && excl(conn.RemoteAddr()) {
+				bus = nil
+			}
+			tc := NewTelemetryConn(conn, bus, c.tracker, "catch_all", bindIP, port)
 			defer tc.Close()
 			_ = tc.SetReadDeadline(time.Now().Add(3 * time.Second))
 			buf := make([]byte, 4096)
 			n, _ := tc.Read(buf)
-			if c.bus != nil {
-				c.bus.RecordEvent(telemetry.Event{
+			if bus != nil {
+				bus.RecordEvent(telemetry.Event{
 					SessionID: tc.SessionID(),
 					Timestamp: time.Now().UTC(),
 					Protocol:  "catch_all",

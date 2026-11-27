@@ -187,7 +187,21 @@ async function loadAll() {
 
 async function applyScenario(id: string) {
   const res = await api.applyScenario(id)
-  ElMessage.success(t('场景 {id} 已切换，启动 {count} 个服务', { id, count: res.started }))
+  const errs: string[] = Array.isArray(res.errors) ? res.errors : []
+  if (errs.length > 0 && (!res.started || res.started === 0)) {
+    ElMessage.error(errs[0])
+  } else if (errs.length > 0) {
+    ElMessage.warning(
+      t('场景 {id} 已切换，启动 {count} 个服务（{failed} 个失败：{first}）', {
+        id,
+        count: res.started,
+        failed: errs.length,
+        first: errs[0],
+      }),
+    )
+  } else {
+    ElMessage.success(t('场景 {id} 已切换，启动 {count} 个服务', { id, count: res.started }))
+  }
   await loadAll()
   emit('changed')
 }

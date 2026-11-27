@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/dx86683-lab/protosim/internal/config"
 	"github.com/dx86683-lab/protosim/internal/telemetry"
 )
@@ -181,5 +183,78 @@ func TestManagerExclusions(t *testing.T) {
 	}
 	if mgr.isExcluded(&net.TCPAddr{IP: net.ParseIP("192.168.11.1"), Port: 12345}) {
 		t.Errorf("expected non-matching IP 192.168.11.1 NOT to be excluded")
+	}
+}
+
+func TestTelemetryHookRedactsEventDetailJSON(t *testing.T) {
+	store, err := telemetry.OpenStore(":memory:")
+	if err != nil {
+		t.Fatalf("OpenStore: %v", err)
+	}
+	defer store.Close()
+
+	bus := telemetry.NewBus(store, config.StorageConfig{
+		PayloadEnabled:    false,
+		RedactCredentials: true,
+	}, config.WebhookConfig{})
+	defer bus.Close()
+
+	hook := NewTelemetryHook(bus, NewSessionTracker())
+	entry := &logrus.Entry{
+		Time:    time.Now().UTC(),
+		Message: "smtp auth attempt",
+		Data: logrus.Fields{
+			"protocol":  "smtp",
+			"remote_ip": "10.0.0.5",
+			"username":  "admin",
+			"password":  "Sup3rS3cr3t!",
+		},
+	}
+	if err := hook.Fire(entry); err != nil {
+		t.Fatalf("Fire: %v", err)
+	}
+	bus.Flush()
+
+	events, _, err := store.QueryEvents("", "", "", 1, 10)
+	if err != nil || len(events) == 0 {
+		t.Fatalf("QueryEvents: %v len=%d", err, len(events))
+	}
+	if strings.Contains(events[0].DetailJSON, "Sup3rS3cr3t!") {
+		t.Fatalf("event detail_json leaked plaintext password: %s", events[0].DetailJSON)
+	}
+	if !strings.Contains(events[0].DetailJSON, "***REDACTED***") {
+		t.Fatalf("expected redacted marker in detail_json: %s", events[0].DetailJSON)
+	}
+}
+
+func TestApplyScenarioRejectsIncompatibleModeWithoutStoppingServices(t *testing.T) {
+	cfg := config.DefaultConfig()
+	cfg.Network.Mode = config.ModeLocalhost
+	cfg.Hosts = []config.HostConfig{{
+		IP:       "127.0.0.1",
+		Services: []config.ServiceConfig{{Protocol: "redis", Port: 28895}},
+	}}
+	mgr, err := NewManager(cfg, nil)
+	if err != nil {
+		t.Fatalf("NewManager: %v", err)
+	}
+	if err := mgr.Start(); err != nil {
+		t.Fatalf("Start: %v", err)
+	}
+	defer mgr.Close()
+
+	started, errs := mgr.ApplyScenario(config.ScenarioPreset{
+		ID:   "virtual-multi-ip-gvisor",
+		Mode: config.ModeUserdef,
+		Hosts: []config.HostConfig{{
+			IP:       "10.99.0.10",
+			Services: []config.ServiceConfig{{Protocol: "http", Port: 80}},
+		}},
+	})
+	if started != 0 || len(errs) == 0 {
+		t.Fatalf("expected incompatible mode rejection, got started=%d errs=%v", started, errs)
+	}
+	if got := len(mgr.ListServices()); got != 1 {
+		t.Fatalf("expected existing service to remain running, got %d services", got)
 	}
 }

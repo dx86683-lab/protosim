@@ -621,19 +621,21 @@ func (s *Server) handleConfigRuntimeUpdate(w http.ResponseWriter, r *http.Reques
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
+	nextStorage := s.cfg.Storage
 	if body.Storage != nil {
-		s.cfg.Storage.PayloadEnabled = body.Storage.PayloadEnabled
+		nextStorage.PayloadEnabled = body.Storage.PayloadEnabled
 		if body.Storage.MaxPayloadBytes > 0 {
-			s.cfg.Storage.MaxPayloadBytes = body.Storage.MaxPayloadBytes
+			nextStorage.MaxPayloadBytes = body.Storage.MaxPayloadBytes
 		}
-		s.cfg.Storage.RedactCredentials = body.Storage.RedactCredentials
+		nextStorage.RedactCredentials = body.Storage.RedactCredentials
 		if body.Storage.RetentionDays > 0 {
-			s.cfg.Storage.RetentionDays = body.Storage.RetentionDays
+			nextStorage.RetentionDays = body.Storage.RetentionDays
 		}
 		if body.Storage.MaxSizeMB > 0 {
-			s.cfg.Storage.MaxSizeMB = body.Storage.MaxSizeMB
+			nextStorage.MaxSizeMB = body.Storage.MaxSizeMB
 		}
 	}
+	nextWebhook := s.cfg.Webhook
 	if body.Webhook != nil {
 		if body.Webhook.URL != "" {
 			if err := validateWebhookURL(body.Webhook.URL); err != nil {
@@ -641,13 +643,16 @@ func (s *Server) handleConfigRuntimeUpdate(w http.ResponseWriter, r *http.Reques
 				return
 			}
 		}
-		s.cfg.Webhook.Enabled = body.Webhook.Enabled
-		s.cfg.Webhook.URL = body.Webhook.URL
-		s.cfg.Webhook.OnNewProbe = body.Webhook.OnNewProbe
+		nextWebhook.Enabled = body.Webhook.Enabled
+		nextWebhook.URL = body.Webhook.URL
+		nextWebhook.OnNewProbe = body.Webhook.OnNewProbe
 		if body.Webhook.Secret != "" {
-			s.cfg.Webhook.Secret = body.Webhook.Secret
+			nextWebhook.Secret = body.Webhook.Secret
 		}
 	}
+	// Commit both configs atomically only after full validation succeeds.
+	s.cfg.Storage = nextStorage
+	s.cfg.Webhook = nextWebhook
 	s.bus.UpdateRuntimeConfig(s.cfg.Storage, s.cfg.Webhook)
 	writeJSON(w, http.StatusOK, map[string]any{
 		"storage": s.cfg.Storage,

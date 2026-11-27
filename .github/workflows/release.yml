@@ -21,8 +21,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag || github.ref }}
+          fetch-depth: 0
 
-      - name: Determine release version
+      - name: Determine and verify release version
         id: meta
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
@@ -30,6 +33,13 @@ jobs:
           else
             TAG="${GITHUB_REF_NAME}"
           fi
+          HEAD_SHA=$(git rev-parse HEAD)
+          TAG_SHA=$(git rev-parse "refs/tags/${TAG}^{commit}")
+          if [ "$HEAD_SHA" != "$TAG_SHA" ]; then
+            echo "ERROR: HEAD ($HEAD_SHA) does not match tag ${TAG} ($TAG_SHA)"
+            exit 1
+          fi
+          echo "Verified checkout SHA ${HEAD_SHA} matches tag ${TAG}"
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
           echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
 
@@ -57,7 +67,7 @@ jobs:
           sudo apt-get install -y libpcap-dev
 
       - name: Run Go tests
-        run: go test ./internal/... ./cmd/...
+        run: go test ./internal/... ./cmd/... ./pkg/netstack/core/... ./protocols/...
 
       - name: Build release binaries
         env:

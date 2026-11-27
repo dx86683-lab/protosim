@@ -270,3 +270,41 @@ func TestAPIv2SecurityHardening(t *testing.T) {
 	}
 	resp.Body.Close()
 }
+
+func TestRuntimeConfigUpdateAtomicOnInvalidWebhook(t *testing.T) {
+	store, err := telemetry.OpenStore(":memory:")
+	if err != nil {
+		t.Fatalf("OpenStore: %v", err)
+	}
+	defer store.Close()
+
+	cfg := config.DefaultConfig()
+	cfg.Storage.RedactCredentials = false
+	bus := telemetry.NewBus(store, cfg.Storage, cfg.Webhook)
+	defer bus.Close()
+	mgr, err := network.NewManager(cfg, bus)
+	if err != nil {
+		t.Fatalf("NewManager: %v", err)
+	}
+	defer mgr.Close()
+
+	srv := NewServer(cfg, bus, mgr, nil, "test")
+	ts := httptest.NewServer(srv.Router())
+	defer ts.Close()
+
+	req, _ := http.NewRequest(http.MethodPut, ts.URL+"/api/v2/config/runtime", bytes.NewBufferString(`{
+		"storage": {"redact_credentials": true, "payload_enabled": false},
+		"webhook": {"enabled": true, "url": "http://169.254.169.254/latest/meta-data"}
+	}`))
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("PUT runtime config: %v", err)
+	}
+	_ = resp.Body.Close()
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d", resp.StatusCode)
+	}
+	if cfg.Storage.RedactCredentials {
+		t.Fatalf("storage config was mutated despite 400 validation failure")
+	}
+}

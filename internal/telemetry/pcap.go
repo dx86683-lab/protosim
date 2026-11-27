@@ -75,7 +75,21 @@ func BuildSessionPCAP(sess Session, chunks []PayloadChunk) []byte {
 		if len(ch.Data) == 0 {
 			continue
 		}
-		// Fragment into <= 1400-byte frames to stay well within Ethernet MTU.
+		if isUDP {
+			// Preserve single UDP datagram message boundaries (do not split at 1400B).
+			part := ch.Data
+			if len(part) > 65507 {
+				part = part[:65507]
+			}
+			ts := nextTS(ch.Timestamp)
+			if ch.Direction == "out" {
+				writePacket(&buf, ts, buildUDPFrame(serverMAC, clientMAC, localIP, remoteIP, localPort, remotePort, nextID(), part))
+			} else {
+				writePacket(&buf, ts, buildUDPFrame(clientMAC, serverMAC, remoteIP, localIP, remotePort, localPort, nextID(), part))
+			}
+			continue
+		}
+		// Segment TCP streams into <= 1400-byte MSS chunks to stay within Ethernet MTU.
 		for offset := 0; offset < len(ch.Data); offset += 1400 {
 			end := offset + 1400
 			if end > len(ch.Data) {
@@ -83,22 +97,14 @@ func BuildSessionPCAP(sess Session, chunks []PayloadChunk) []byte {
 			}
 			part := ch.Data[offset:end]
 			ts := nextTS(ch.Timestamp)
-			if isUDP {
-				if ch.Direction == "out" {
-					writePacket(&buf, ts, buildUDPFrame(serverMAC, clientMAC, localIP, remoteIP, localPort, remotePort, nextID(), part))
-				} else {
-					writePacket(&buf, ts, buildUDPFrame(clientMAC, serverMAC, remoteIP, localIP, remotePort, localPort, nextID(), part))
-				}
+			if ch.Direction == "out" {
+				writePacket(&buf, ts, buildTCPFrame(serverMAC, clientMAC, localIP, remoteIP, localPort, remotePort, nextID(), serverSeq, clientSeq, 0x18, part))
+				serverSeq += uint32(len(part))
+				writePacket(&buf, nextTS(ts.Add(time.Microsecond*200)), buildTCPFrame(clientMAC, serverMAC, remoteIP, localIP, remotePort, localPort, nextID(), clientSeq, serverSeq, 0x10, nil))
 			} else {
-				if ch.Direction == "out" {
-					writePacket(&buf, ts, buildTCPFrame(serverMAC, clientMAC, localIP, remoteIP, localPort, remotePort, nextID(), serverSeq, clientSeq, 0x18, part))
-					serverSeq += uint32(len(part))
-					writePacket(&buf, nextTS(ts.Add(time.Microsecond*200)), buildTCPFrame(clientMAC, serverMAC, remoteIP, localIP, remotePort, localPort, nextID(), clientSeq, serverSeq, 0x10, nil))
-				} else {
-					writePacket(&buf, ts, buildTCPFrame(clientMAC, serverMAC, remoteIP, localIP, remotePort, localPort, nextID(), clientSeq, serverSeq, 0x18, part))
-					clientSeq += uint32(len(part))
-					writePacket(&buf, nextTS(ts.Add(time.Microsecond*200)), buildTCPFrame(serverMAC, clientMAC, localIP, remoteIP, localPort, remotePort, nextID(), serverSeq, clientSeq, 0x10, nil))
-				}
+				writePacket(&buf, ts, buildTCPFrame(clientMAC, serverMAC, remoteIP, localIP, remotePort, localPort, nextID(), clientSeq, serverSeq, 0x18, part))
+				clientSeq += uint32(len(part))
+				writePacket(&buf, nextTS(ts.Add(time.Microsecond*200)), buildTCPFrame(serverMAC, clientMAC, localIP, remoteIP, localPort, remotePort, nextID(), serverSeq, clientSeq, 0x10, nil))
 			}
 		}
 	}
