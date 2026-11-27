@@ -10,8 +10,8 @@ on:
 jobs:
   e2e-matrix:
     name: E2E (${{ matrix.os }})
-    fail-fast: false
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: ubuntu-24.04
@@ -67,7 +67,12 @@ jobs:
 
       - name: Run cross-platform E2E suite (localhost mode)
         shell: bash
-        run: python3 scripts/e2e_cross_platform.py "${{ matrix.bin }}"
+        run: |
+          if command -v python3 >/dev/null 2>&1; then
+            python3 scripts/e2e_cross_platform.py "${{ matrix.bin }}"
+          else
+            python scripts/e2e_cross_platform.py "${{ matrix.bin }}"
+          fi
 
       - name: Run Linux TUN + gVisor dynamic Forwarder E2E (/16 all mode)
         if: matrix.os == 'ubuntu-24.04'
